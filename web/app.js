@@ -6,7 +6,7 @@ const titles=['Режим Мастера','Тип Изображения','Пр�
 function status(text){$('status').textContent=text;}
 function card(title,description,symbol,selected,action){const b=document.createElement('button');b.className='card'+(selected?' selected':'');const icon=document.createElement('span');icon.className='symbol';icon.textContent=symbol;const text=document.createElement('span');const strong=document.createElement('strong');strong.textContent=title;const small=document.createElement('small');small.textContent=description;text.append(strong,small);b.append(icon,text);b.onclick=action;return b;}
 function show(){
- $('stepTitle').textContent=titles[step];const p=$('page');p.replaceChildren();$('back').disabled=busy||step===0;$('home').disabled=busy;$('next').disabled=busy||!source;$('next').textContent=step===5?'Сохранить SVG':'Вперёд ▶';
+ $('stepTitle').textContent=titles[step];const p=$('page');p.replaceChildren();$('back').disabled=busy||step===0;$('home').disabled=busy;$('next').disabled=busy||!source||(step===5&&!svg);$('next').textContent=step===5?'Сохранить SVG':'Вперёд ▶';
  const add=(title,desc,symbol,selected,action)=>p.append(card(title,desc,symbol,selected,action));
  const advance=()=>{step++;show();};
  if(step===0){
@@ -47,7 +47,7 @@ async function run(){
  worker.onerror=event=>{cancel();status('Ошибка WASM: '+event.message);};
  worker.postMessage({pixels:pixels.buffer,width:source.width,height:source.height,...config},[pixels.buffer]);
 }
-function cancel(){worker?.terminate();worker=null;busy=false;show();status('Трассировка отменена');}
+function cancel(){worker?.terminate();worker=null;busy=false;if(!svg){$('outlines').checked=false;display(false);}show();status('Трассировка отменена');}
 function save(){if(!svg)return;const a=document.createElement('a');a.href=vectorUrl;a.download=name+'.svg';a.click();}
 $('file').onchange=async event=>{const file=event.target.files[0];if(!file)return;cancel();try{const original=await createImageBitmap(file);const scale=Math.min(1,2400/Math.max(original.width,original.height),Math.sqrt(8000000/(original.width*original.height)));const width=Math.max(1,Math.round(original.width*scale)),height=Math.max(1,Math.round(original.height*scale));const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;canvas.getContext('2d').drawImage(original,0,0,width,height);original.close();source?.close();source=await createImageBitmap(canvas);if(sourceUrl)URL.revokeObjectURL(sourceUrl);sourceUrl=URL.createObjectURL(await new Promise(resolve=>canvas.toBlob(resolve)));name=file.name.replace(/\.[^.]+$/,'');svg='';$('vector').disabled=true;step=0;display();show();fit();status(`${width}×${height} • ${file.name}${scale<1?' • уменьшено для обработки':''}`);}catch(error){status('Не удалось открыть изображение: '+error.message);}};
 $('next').onclick=()=>{if(step===5)save();else if(config.mode==='auto'||step===4)run();else{step++;show();}};
