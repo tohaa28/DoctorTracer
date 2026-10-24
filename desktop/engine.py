@@ -17,6 +17,10 @@ from geometry import absolute_path
 NS='http://www.w3.org/2000/svg'
 
 
+def spatial_photo(cfg):
+    return bool(cfg.get('photo_spatial')) and cfg.get('category')=='photo' and bool(cfg.get('palette') or cfg.get('colors'))
+
+
 def load_source(path,cfg):
     with Image.open(path) as src:
         im=ImageOps.exif_transpose(src).convert('RGBA')
@@ -37,7 +41,7 @@ def load_source(path,cfg):
         padded=np.pad(near,1,constant_values=1)
         cv2.floodFill(padded,None,(0,0),2)
         a[:,:,3][padded[1:-1,1:-1]==2]=0
-    if cfg.get('denoise') or cfg.get('quality',2)==0:
+    if cfg.get('denoise') or cfg.get('quality',2)==0 or spatial_photo(cfg):
         a[:,:,:3]=cv2.bilateralFilter(a[:,:,:3],5,25,3)
     return a,original
 
@@ -102,10 +106,15 @@ def segment(path,cfg):
         palette=find_palette(a,cfg.get('colors',0),cfg.get('category')=='photo' or cfg.get('preset')=='Фотография')
     if cfg.get('supersample',1)>1:
         a=cv2.resize(a,None,fx=cfg['supersample'],fy=cfg['supersample'],interpolation=cv2.INTER_LINEAR)
-    from accelerator import assign
-    labels,compute=assign(a,palette,cfg.get('category','aa')=='aa' and cfg.get('palette_aa',True) and len(palette)<=24,3*cfg.get('supersample',1),cfg.get('compute','auto'))
+    if spatial_photo(cfg):
+        from spatial_palette import assign
+        labels,compute=assign(a,palette,cfg.get('compute','auto'),cfg.get('spatial_strength',700),cfg.get('spatial_iterations',2))
+    else:
+        from accelerator import assign
+        labels,compute=assign(a,palette,cfg.get('category','aa')=='aa' and cfg.get('palette_aa',True) and len(palette)<=24,3*cfg.get('supersample',1),cfg.get('compute','auto'))
     if '_metrics' in cfg:cfg['_metrics'].update(compute)
     min_area=cfg.get('speckle',2)
+    if spatial_photo(cfg):min_area=max(min_area,8)
     if 'segmentation_complexity' in cfg:
         min_area=max(min_area,max(0,6-cfg['segmentation_complexity'])**2)
     if cfg.get('artifact_strength',0):
@@ -134,7 +143,10 @@ def native_trace(mask,cfg,scale=1.):
     detail=cfg.get('detail',2)
     tolerance=cfg.get('curve_tolerance',[.5,.2,.12][detail])
     alpha=cfg.get('alphamax',1.) if cfg.get('mode','spline')=='spline' else 0
-    args=[str(exe),'-s','-o','-','--flat','-t','0','-a',str(alpha),'-O',str(tolerance),'-u','100']
+    # Keep each connected component and its holes together. Flattening every
+    # component of a color into one path can exceed Qt SVG's path limits and
+    # silently discard that entire color on detailed photographs.
+    args=[str(exe),'-s','-o','-','-t','0','-a',str(alpha),'-O',str(tolerance),'-u','100']
     proc=subprocess.run(args,input=data,stdout=subprocess.PIPE,stderr=subprocess.PIPE,
                         creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0),timeout=90)
     if proc.returncode:raise RuntimeError(proc.stderr.decode('utf-8',errors='replace'))
