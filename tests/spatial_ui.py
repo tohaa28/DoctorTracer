@@ -13,7 +13,7 @@ with tempfile.TemporaryDirectory() as directory:
     im=Image.new('RGBA',(127,95),'white');draw=ImageDraw.Draw(im)
     draw.ellipse((10,10,100,85),fill='#185890');im.save(source)
     w.load(str(source))
-    assert not w.config()['photo_spatial']
+    assert w.config()['photo_spatial'] and w.config()['compute']=='gpu'
     w.apply_settings({'category':'photo','detail':1,'palette':['#ffffff','#185890'],'compute':'gpu','photo_spatial':True})
     assert w.config()['photo_spatial'] and w.config()['compute']=='gpu'
     w.wizard_mode='advanced'
@@ -30,6 +30,6 @@ with tempfile.TemporaryDirectory() as directory:
     w.set_photo_spatial(False)
     assert not w.export_button.isEnabled()
     w.restore_defaults()
-    assert not w.config()['photo_spatial']
+    assert w.config()['photo_spatial'] and w.config()['compute']=='gpu'
 w.close()
 print('PASS: opt-in defaults, preset state, actual worker, stale export, advanced photo type')

@@ -42,7 +42,9 @@ def load_source(path,cfg):
         cv2.floodFill(padded,None,(0,0),2)
         a[:,:,3][padded[1:-1,1:-1]==2]=0
     if cfg.get('denoise') or cfg.get('quality',2)==0 or spatial_photo(cfg):
-        a[:,:,:3]=cv2.bilateralFilter(a[:,:,:3],5,25,3)
+        from gpu_filter import apply
+        a,filter_stats=apply(a,cfg.get('compute','auto'))
+        if '_metrics' in cfg:cfg['_metrics'].update(filter_stats)
     return a,original
 
 
@@ -162,7 +164,7 @@ def native_trace(mask,cfg,scale=1.):
 def trace_graphic(path,cfg):
     aa=cfg.get('category','aa')=='aa'
     metrics={};stage=time.perf_counter()
-    source=load_source(path,cfg)
+    source=load_source(path,{**cfg,'_metrics':metrics})
     # Transparent illustrations need a smooth silhouette independently of their
     # interior color regions. A solid underlayer also prevents pale seams.
     layered=aa and cfg.get('shape_strategy','auto')!='independent' and bool(np.any(source[0][:,:,3]<128)) and 'supersample' not in cfg

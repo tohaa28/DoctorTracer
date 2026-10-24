@@ -309,7 +309,9 @@ def partition(svg):
                 groups[color]=ET.SubElement(out,'{'+NS+'}g',{'id':'color-'+color.lstrip('#'),'fill':color,'data-color':color})
             ET.SubElement(groups[color],'{'+NS+'}path',{'d':data,'fill':color,'fill-rule':'nonzero'});count+=1
     ET.register_namespace('',NS)
-    return ET.tostring(out,encoding='unicode',xml_declaration=True),{
+    from color_objects import merge_colors
+    merged,count=merge_colors(ET.tostring(out,encoding='unicode',xml_declaration=True),preserve_curves=tiles<=1)
+    return merged,{
         'paths':count,'color_groups':len(groups),'vector_layout':'disjoint color groups',
         'partition_seconds':time.perf_counter()-started,'partition_operations':operations,
         'partition_tiles':tiles,'partition_polygon_tiles':fallbacks,'geometry_compute':'Skia/Clipper CPU','geometry_workers':workers,

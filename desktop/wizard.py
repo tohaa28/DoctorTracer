@@ -7,7 +7,7 @@ from PIL import Image,ImageDraw
 from PySide6.QtCore import Qt,QRectF,QSize,QPointF,QByteArray,Signal,QTimer
 from PySide6.QtGui import QPainter,QColor,QPen,QFont,QPixmap,QImage,QLinearGradient,QRadialGradient,QPainterPath,QPolygonF,QAction,QKeySequence,QIcon
 from PySide6.QtWidgets import QApplication,QWidget,QPushButton,QLabel,QFrame,QVBoxLayout,QHBoxLayout,QGridLayout,QScrollArea,QGroupBox,QComboBox,QSpinBox,QSlider,QCheckBox,QFileDialog,QMessageBox,QColorDialog,QMenu,QListWidget,QListWidgetItem,QProgressBar
-from PySide6.QtSvg import QSvgRenderer
+from vector_render import QSvgRenderer
 from legacy import MainWindow as ServiceWindow,Canvas as BaseCanvas
 from engine import analyze_image,segment,find_palette
 
@@ -36,57 +36,8 @@ QSlider::groove:vertical {background:#aaa;width:4px;}
 QSlider::handle:vertical {background:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 #aaa,stop:1 #ddd);border:1px solid #888;height:14px;margin:0 -7px;border-radius:4px;}
 '''
 
-def icon(kind):
-    """Original drawings, without artwork copied from the proprietary executable."""
-    im=QPixmap(100,90);im.fill(Qt.white);p=QPainter(im);p.setRenderHint(QPainter.Antialiasing)
-    def gradient(rect,top,bottom):
-        g=QLinearGradient(rect.topLeft(),rect.bottomLeft());g.setColorAt(0,QColor(top));g.setColorAt(1,QColor(bottom));return g
-    p.setPen(QPen(QColor('#55676b'),2))
-    if kind=='folder':
-        p.setBrush(QColor('#a8cec8'));p.drawRoundedRect(QRectF(7,9,80,65),5,5)
-        p.setBrush(QColor('#ecdfa5'));p.drawPolygon(QPolygonF([QPointF(12,22),QPointF(37,22),QPointF(43,29),QPointF(91,29),QPointF(84,79),QPointF(15,70)]))
-        p.setBrush(gradient(QRectF(10,30,81,50),'#c4e8e5','#46787e'));p.drawPolygon(QPolygonF([QPointF(10,30),QPointF(39,35),QPointF(49,30),QPointF(91,38),QPointF(84,79),QPointF(15,70)]));p.setPen(QPen(Qt.white,2));p.drawLine(19,44,78,53)
-    elif kind=='clipboard':
-        p.setBrush(gradient(QRectF(17,9,68,75),'#d6b189','#8a633b'));p.drawRoundedRect(QRectF(17,9,68,75),6,6);p.setBrush(Qt.white);p.drawRect(24,22,54,53)
-        p.setBrush(gradient(QRectF(31,3,40,20),'#ddd','#777'));p.drawRoundedRect(QRectF(31,3,40,20),5,5);p.setPen(QPen(QColor('#aebdc2'),2))
-        for y in range(32,67,8):p.drawLine(31,y,69,y)
-    elif kind in ('auto','review'):
-        p.setPen(QPen(QColor('#777'),2));p.setBrush(gradient(QRectF(15,33,72,49),'#e9e9e9','#666'));p.drawEllipse(QRectF(15,33,72,49))
-        p.setPen(QPen(QColor('#62992c'),2));g=QRadialGradient(38,26,61);g.setColorAt(0,QColor('#a2f548'));g.setColorAt(.6,QColor('#4cba00'));g.setColorAt(1,QColor('#247f00'));p.setBrush(g);p.drawEllipse(QRectF(19,5,66,63))
-        if kind=='review':p.setPen(QPen(Qt.white,6,Qt.SolidLine,Qt.RoundCap,Qt.RoundJoin));p.drawPolyline(QPolygonF([QPointF(34,35),QPointF(47,49),QPointF(70,22)]))
-    elif kind in ('basic','advanced'):
-        if kind=='basic':
-            p.setPen(QPen(QColor('#777'),5));p.drawArc(QRectF(8,15,80,55),320,4560)
-            for x,y in [(10,12),(48,33),(75,64)]:p.setPen(QPen(QColor('#39678b'),1));p.setBrush(gradient(QRectF(x,y,23,18),'#83b9df','#2f5989'));p.drawRect(QRectF(x,y,23,18))
-        else:
-            p.fillRect(3,2,94,87,QColor('#39566e'))
-            for x in range(13,90,18):p.setPen(QPen(QColor('#263c4c'),4));p.drawLine(x,9,x-7,78);p.setPen(QPen(QColor('#c2d5e0'),1));p.setBrush(QColor('#b8cdd9'));p.drawRect(QRectF(x-8,20+(x%30),14,20))
-    elif kind in ('gears','batch'):
-        for cx,cy,r in [(37,53,29),(72,27,23),(79,70,13)]:
-            path=QPainterPath()
-            for j in range(48):
-                a=j*math.pi/24;rr=r if j%4 in (0,1) else r*.84;pt=QPointF(cx+rr*math.cos(a),cy+rr*math.sin(a));path.moveTo(pt) if j==0 else path.lineTo(pt)
-            path.closeSubpath();p.setPen(QPen(QColor('#59768b'),1));p.setBrush(gradient(QRectF(cx-r,cy-r,r*2,r*2),'#d7e9f5','#4d7e9e'));p.drawPath(path);p.setBrush(QColor('#c2d9e9'));p.drawEllipse(QRectF(cx-r*.3,cy-r*.3,r*.6,r*.6))
-    elif kind=='save':
-        p.setPen(QPen(QColor('#304d64'),3));p.setBrush(gradient(QRectF(12,6,77,78),'#668aa0','#23475e'));p.drawRoundedRect(QRectF(12,6,77,78),4,4);p.setBrush(QColor('#eee'));p.drawRect(28,8,46,27);p.setBrush(QColor('#737d85'));p.drawRect(31,15,35,5);p.setBrush(QColor('#c3d3dd'));p.drawRect(27,51,48,30);p.setBrush(QColor('#4e6b7e'));p.drawRect(38,56,10,23)
-    elif kind=='photo':
-        p.fillRect(2,2,96,86,gradient(QRectF(2,2,96,86),'#3b66a0','#bfd8e5'));p.setPen(QPen(QColor('#6d685f'),1));p.setBrush(QColor('#e3dbc9'));p.drawRect(29,35,44,54);p.setBrush(QColor('#b57e4e'));p.drawEllipse(QRectF(29,17,44,35));p.setBrush(QColor('#eee2c7'));p.drawRect(29,34,44,8);p.setBrush(QColor('#4a5360'))
-        for x in [38,53,65]:
-            for y in [49,64,78]:p.drawRoundedRect(QRectF(x,y,6,10),3,3)
-    elif kind in ('aa','hard','high','medium','low'):
-        small=QImage(14,14,QImage.Format_RGB32);small.fill(Qt.white);q=QPainter(small);q.setRenderHint(QPainter.Antialiasing,kind!='hard');q.setPen(Qt.NoPen);q.setBrush(QColor('#155888'));path=QPainterPath();path.moveTo(0,14);path.lineTo(2,13);path.lineTo(8,7);path.lineTo(9,1);path.lineTo(11,8);path.lineTo(14,14);path.closeSubpath();q.drawPath(path);q.end();p.setRenderHint(QPainter.SmoothPixmapTransform,kind not in ('hard','low'));p.drawImage(QRectF(3,3,94,84),small)
-    elif kind=='flex':
-        g=QLinearGradient(0,0,100,80)
-        for j,c in enumerate(['#da002c','#ffc32e','#09c251','#09a0d4','#7033d0']):g.setColorAt(j/4,QColor(c))
-        p.fillRect(3,2,94,86,g)
-    elif kind=='two':
-        p.setBrush(Qt.black);p.setPen(Qt.NoPen)
-        for x,y,r in [(24,32,17),(51,51,28),(77,26,15)]:p.drawEllipse(QRectF(x-r,y-r,r*2,r*2))
-        p.setPen(QPen(Qt.white,2));p.drawLine(20,65,80,13)
-    else:
-        p.setPen(QPen(QColor('#97652c'),2));p.setBrush(QColor('#d1ad67'));p.drawEllipse(QRectF(9,9,82,73))
-        for x,y,c in [(30,28,'#d92127'),(55,21,'#276cab'),(72,40,'#37a55a'),(49,64,'#e6ab12')]:p.setBrush(QColor(c));p.drawEllipse(QRectF(x-9,y-8,17,16))
-    p.end();return im
+from ui_icons import icon
+
 
 class Choice(QPushButton):
     def __init__(self,title,text,kind,callback,selected=False,recommended=False):
