@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 const $=id=>document.getElementById(id);
-const defaults=()=>({mode:'basic',category:'photo',detail:2,colors:32,speckle:2,flatten:false,polygon:false});
+const defaults=()=>({mode:'basic',category:'photo',detail:2,colors:64,speckle:2,flatten:false,polygon:false});
 let config=defaults(),step=0,source=null,sourceUrl='',vectorUrl='',svg='',worker=null,busy=false,name='image',elapsed=0,outlineUrl='';
 const titles=['Режим Мастера','Тип Изображения','Прозрачность','Качество Вывода','Цветовой Режим','Обзор Результата'];
 function status(text){$('status').textContent=text;}
@@ -15,7 +15,7 @@ function show(){
   add('Расширенный','Настройка цветов, кривых и мелких деталей.','☷',config.mode==='advanced',()=>{config.mode='advanced';step=4;show();});
   const hint=document.createElement('p');hint.className='hint';hint.textContent='WASM preview: 2–128 цветов, прозрачность, кривые Безье и SVG. Режим фотографий рабочего стола с неограниченными цветами пока не перенесён.';p.append(hint);
  }else if(step===1){
-  for(const [value,title,desc,symbol] of [['photo','Фотоснимок','Много оттенков и плавные переходы.','▧'],['aa','Смешанные края','Иллюстрации со сглаживанием.','◩'],['hard','Чистые края','Изображения без сглаживания.','◼']])add(title,desc,symbol,config.category===value,()=>{config.category=value;advance();});
+  for(const [value,title,desc,symbol] of [['photo','Фотоснимок','Начальная палитра: 64 цвета.','▧'],['aa','Смешанные края','Начальная палитра иллюстрации: 16 цветов.','◩'],['hard','Чистые края','Начальная дискретная палитра: 8 цветов.','◼']])add(title,desc,symbol,config.category===value,()=>{config.category=value;config.colors=value==='photo'?64:value==='aa'?16:8;advance();});
  }else if(step===2){
   add('Оставить Прозрачность','Сохранить прозрачные области PNG.','▨',!config.flatten,()=>{config.flatten=false;advance();});
   add('Свести в Белый Цвет','Заменить прозрачные области белым.','□',config.flatten,()=>{config.flatten=true;advance();});
