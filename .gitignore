@@ -6,3 +6,5 @@ rebuilt/
 node_modules/
 .venv/
 *.log
+*.pdb
+*.lib

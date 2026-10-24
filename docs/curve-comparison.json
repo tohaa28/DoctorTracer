@@ -1,0 +1,135 @@
+{
+  "input_sha256": "35a771180be6f40fbe4e53fec8d1fdb3244f8be6b6c711432d57c8602c29d9fc",
+  "image_size": [
+    800,
+    954
+  ],
+  "reference": "Vector Magic Desktop Rus 1.15; Basic > Photo > Preserve transparency > High/Medium/Low > Unlimited colors",
+  "method": "Qt SVG renderer at native 800x954; RGB MAE on white and RGB40; alpha silhouette IoU threshold128; timings include preprocessing and SVG serialization, exclude interpreter startup. One timed run per quality.",
+  "cases": [
+    {
+      "setting": "high",
+      "config": {
+        "category": "photo",
+        "detail": 2,
+        "colors": 0,
+        "speckle": 2,
+        "mode": "spline",
+        "flatten": false
+      },
+      "previous": {
+        "white_mae": 8.80422306060791,
+        "foreground_mae": 13.965571403503418,
+        "dark_mae": 8.809425354003906,
+        "alpha_iou": 0.9845345124675983
+      },
+      "current": {
+        "white_mae": 8.715710639953613,
+        "foreground_mae": 13.817951202392578,
+        "dark_mae": 8.62907886505127,
+        "alpha_iou": 0.9851977365005276
+      },
+      "wall_seconds": 6.198926699929871,
+      "stats": {
+        "paths": 9051,
+        "seconds": 6.2,
+        "width": 800,
+        "height": 954,
+        "working_size": [
+          800,
+          954
+        ],
+        "colors": 9012,
+        "backend": "spatial color regions + VTracer",
+        "curve_backend": "Potrace Bezier refit",
+        "curve_refit_seconds": 3.139,
+        "compute": "CPU",
+        "alpha_threshold": 128
+      },
+      "reference_paths": 7791
+    },
+    {
+      "setting": "medium",
+      "config": {
+        "category": "photo",
+        "detail": 1,
+        "colors": 0,
+        "speckle": 2,
+        "mode": "spline",
+        "flatten": false
+      },
+      "previous": {
+        "white_mae": 9.436376571655273,
+        "foreground_mae": 14.925020217895508,
+        "dark_mae": 9.469265937805176,
+        "alpha_iou": 0.9847603338192296
+      },
+      "current": {
+        "white_mae": 9.313688278198242,
+        "foreground_mae": 14.727200508117676,
+        "dark_mae": 9.283716201782227,
+        "alpha_iou": 0.985433508262022
+      },
+      "wall_seconds": 4.120721400016919,
+      "stats": {
+        "paths": 3446,
+        "seconds": 4.12,
+        "width": 800,
+        "height": 954,
+        "working_size": [
+          800,
+          954
+        ],
+        "colors": 3438,
+        "backend": "spatial color regions + VTracer",
+        "curve_backend": "Potrace Bezier refit",
+        "curve_refit_seconds": 1.5112,
+        "compute": "CPU",
+        "alpha_threshold": 128
+      },
+      "reference_paths": 3228
+    },
+    {
+      "setting": "low",
+      "config": {
+        "category": "photo",
+        "detail": 0,
+        "colors": 0,
+        "speckle": 2,
+        "mode": "spline",
+        "flatten": false
+      },
+      "previous": {
+        "white_mae": 11.711207389831543,
+        "foreground_mae": 18.833894729614258,
+        "dark_mae": 11.885417938232422,
+        "alpha_iou": 0.9855200126265319
+      },
+      "current": {
+        "white_mae": 11.671846389770508,
+        "foreground_mae": 18.772571563720703,
+        "dark_mae": 11.778581619262695,
+        "alpha_iou": 0.9862756730916975
+      },
+      "wall_seconds": 2.76944539998658,
+      "stats": {
+        "paths": 783,
+        "seconds": 2.77,
+        "width": 800,
+        "height": 954,
+        "working_size": [
+          800,
+          954
+        ],
+        "colors": 782,
+        "backend": "spatial color regions + VTracer",
+        "curve_backend": "Potrace Bezier refit",
+        "curve_refit_seconds": 0.5186,
+        "compute": "CPU",
+        "alpha_threshold": 128
+      },
+      "reference_paths": 702
+    }
+  ],
+  "limitation": "Not near-identical. Region topology, colors, partial opacity and fitted curves still differ. WASM uses a separate limited-palette preview engine, not this photo algorithm."
+}

@@ -1,6 +1,8 @@
 DoctorTracer contains separately licensed components.
 
 The desktop application source is MIT licensed; see desktop/LICENSE.
+The combined Windows 0.6 distribution linking Potrace is GPL-3.0-or-later;
+see NOTICE.md and licenses/GPL-3.0.txt.
 The WASM application and linked Potrace core are GPL-2.0-or-later;
 see NOTICE.md and core/potrace-1.16/COPYING.
 

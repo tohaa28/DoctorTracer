@@ -5,3 +5,4 @@ desktop/vendor/potrace/** -text -whitespace
 *.exe binary
 *.ico binary
 *.gz binary
+*.dll binary

@@ -250,6 +250,12 @@ def trace(path, cfg):
         layer_difference=8 if cfg.get('colors') else [32, 24, 16][detail],
         corner_threshold=cfg.get('corner', 60), length_threshold=[6., 4., 3.][detail],
         max_iterations=10, splice_threshold=45, path_precision=3)
+    refit_seconds=0.
+    if photo and not use_palette and cfg.get('mode','spline')=='spline' and cfg.get('photo_curve_refit',True):
+        from photo_curves import refit_curves
+        stage=time.perf_counter()
+        svg,_=refit_curves(svg,cfg.get('photo_curve_tolerance',[.6,.4,.25][detail]),cfg.get('photo_curve_alpha',1.2))
+        refit_seconds=time.perf_counter()-stage
     root = ET.fromstring(svg)
     # Preserve physical image dimensions even when processing resolution is limited.
     root.set('viewBox', f'0 0 {im.width} {im.height}')
@@ -261,6 +267,8 @@ def trace(path, cfg):
                  'width': original[0], 'height': original[1], 'working_size': list(im.size),
                  'colors': len(set(p.get('fill') for p in root)),
                  'backend':'spatial color regions + VTracer' if photo and not use_palette else 'VTracer',
+                 'curve_backend':'Potrace Bezier refit' if refit_seconds else 'VTracer',
+                 'curve_refit_seconds':round(refit_seconds,4),
                  'compute':'CPU', 'alpha_threshold':128 if photo and not use_palette else None}
 
 
