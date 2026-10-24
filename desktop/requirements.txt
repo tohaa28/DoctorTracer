@@ -1,0 +1,7 @@
+PySide6==6.12.0
+Pillow==11.1.0
+numpy==2.2.3
+vtracer==0.6.15
+pyinstaller==6.22.3
+opencv-python-headless==5.0.0.93
+pyopencl==2026.1.4

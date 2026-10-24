@@ -1,0 +1,7 @@
+* text=auto
+core/potrace-1.16/** -text -whitespace
+desktop/vendor/potrace/** -text -whitespace
+*.wasm binary
+*.exe binary
+*.ico binary
+*.gz binary

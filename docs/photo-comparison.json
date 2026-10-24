@@ -1,0 +1,129 @@
+{
+  "input_sha256": "35a771180be6f40fbe4e53fec8d1fdb3244f8be6b6c711432d57c8602c29d9fc",
+  "image_size": [
+    800,
+    954
+  ],
+  "reference": "Vector Magic Desktop Rus 1.15; Basic > Photo > Preserve transparency > High/Medium/Low > Unlimited colors",
+  "method": "Qt SVG renderer at native 800x954; RGB MAE on white and RGB40; alpha silhouette IoU threshold128; timings include preprocessing and SVG serialization, exclude interpreter startup. One timed run per quality.",
+  "cases": [
+    {
+      "setting": "high",
+      "config": {
+        "category": "photo",
+        "detail": 2,
+        "colors": 0,
+        "speckle": 2,
+        "mode": "spline",
+        "flatten": false
+      },
+      "previous": {
+        "white_mae": 9.236000061035156,
+        "foreground_mae": 14.461128234863281,
+        "dark_mae": 12.238056182861328,
+        "alpha_iou": 0.958868329733293
+      },
+      "current": {
+        "white_mae": 8.80422306060791,
+        "foreground_mae": 13.965571403503418,
+        "dark_mae": 8.809425354003906,
+        "alpha_iou": 0.9845345124675983
+      },
+      "wall_seconds": 3.2852544999914244,
+      "stats": {
+        "paths": 9220,
+        "seconds": 3.28,
+        "width": 800,
+        "height": 954,
+        "working_size": [
+          800,
+          954
+        ],
+        "colors": 9170,
+        "backend": "spatial color regions + VTracer",
+        "compute": "CPU",
+        "alpha_threshold": 128
+      },
+      "reference_paths": 7791
+    },
+    {
+      "setting": "medium",
+      "config": {
+        "category": "photo",
+        "detail": 1,
+        "colors": 0,
+        "speckle": 2,
+        "mode": "spline",
+        "flatten": false
+      },
+      "previous": {
+        "white_mae": 9.637288093566895,
+        "foreground_mae": 15.10964584350586,
+        "dark_mae": 12.713622093200684,
+        "alpha_iou": 0.9587097576649599
+      },
+      "current": {
+        "white_mae": 9.436376571655273,
+        "foreground_mae": 14.925020217895508,
+        "dark_mae": 9.469265937805176,
+        "alpha_iou": 0.9847603338192296
+      },
+      "wall_seconds": 2.663923199987039,
+      "stats": {
+        "paths": 3615,
+        "seconds": 2.66,
+        "width": 800,
+        "height": 954,
+        "working_size": [
+          800,
+          954
+        ],
+        "colors": 3596,
+        "backend": "spatial color regions + VTracer",
+        "compute": "CPU",
+        "alpha_threshold": 128
+      },
+      "reference_paths": 3228
+    },
+    {
+      "setting": "low",
+      "config": {
+        "category": "photo",
+        "detail": 0,
+        "colors": 0,
+        "speckle": 2,
+        "mode": "spline",
+        "flatten": false
+      },
+      "previous": {
+        "white_mae": 12.458930969238281,
+        "foreground_mae": 19.589176177978516,
+        "dark_mae": 15.548347473144531,
+        "alpha_iou": 0.9595426323945211
+      },
+      "current": {
+        "white_mae": 11.711207389831543,
+        "foreground_mae": 18.833894729614258,
+        "dark_mae": 11.885417938232422,
+        "alpha_iou": 0.9855200126265319
+      },
+      "wall_seconds": 2.4360409000655636,
+      "stats": {
+        "paths": 952,
+        "seconds": 2.43,
+        "width": 800,
+        "height": 954,
+        "working_size": [
+          800,
+          954
+        ],
+        "colors": 942,
+        "backend": "spatial color regions + VTracer",
+        "compute": "CPU",
+        "alpha_threshold": 128
+      },
+      "reference_paths": 702
+    }
+  ],
+  "limitation": "Not near-identical. Region topology, colors, partial opacity and fitted curves still differ. WASM uses a separate limited-palette preview engine, not this photo algorithm."
+}
