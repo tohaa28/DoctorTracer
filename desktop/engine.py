@@ -188,8 +188,10 @@ def trace_graphic(path,cfg):
             for data in paths:ET.SubElement(root,'{'+NS+'}path',{'d':data,'fill':'#%02x%02x%02x'%tuple(palette[i]),'fill-rule':'nonzero'})
     metrics['curves_seconds']=time.perf_counter()-stage
     ET.register_namespace('',NS)
-    return ET.tostring(root,encoding='unicode',xml_declaration=True),{
-        'paths':len(root),'colors':len(order),'width':original[0],'height':original[1],
+    from vector_partition import partition
+    svg,layout=partition(ET.tostring(root,encoding='unicode',xml_declaration=True))
+    return svg,{
+        'colors':layout['color_groups'],'width':original[0],'height':original[1],**layout,
         'working_size':[w,h],'palette':['#%02x%02x%02x'%tuple(c) for c in palette],**metrics}
 
 
@@ -275,9 +277,11 @@ def trace(path, cfg):
     root.set('height', str(original[1]))
     ET.register_namespace('', 'http://www.w3.org/2000/svg')
     svg = ET.tostring(root, encoding='unicode', xml_declaration=True)
-    return svg, {'paths': len(list(root)), 'seconds': round(time.monotonic()-start, 2),
+    from vector_partition import partition
+    svg,layout=partition(svg)
+    return svg, {**layout,'seconds': round(time.monotonic()-start, 2),
                  'width': original[0], 'height': original[1], 'working_size': list(im.size),
-                 'colors': len(set(p.get('fill') for p in root)),
+                 'colors': layout['color_groups'],
                  'backend':'spatial color regions + VTracer' if photo and not use_palette else 'VTracer',
                  'curve_backend':'Potrace Bezier refit' if refit_seconds else 'VTracer',
                  'curve_refit_seconds':round(refit_seconds,4),
@@ -292,9 +296,9 @@ def to_eps(svg):
     lines = ['%!PS-Adobe-3.0 EPSF-3.0', f'%%BoundingBox: 0 0 {int(width+.999)} {int(height+.999)}',
              '%%Creator: DoctorTracer', '%%EndComments', f'0 {height} translate',
              f'{width/view[2]} {-height/view[3]} scale']
-    for el in root:
-        if not el.tag.endswith('path'):
-            raise ValueError('Unsupported SVG element')
+    if any(el.tag not in ('{'+NS+'}svg','{'+NS+'}g','{'+NS+'}path') for el in root.iter()):
+        raise ValueError('Unsupported SVG element')
+    for el in root.iter('{'+NS+'}path'):
         color = el.get('fill', '#000000').lstrip('#')
         if len(color) != 6:
             raise ValueError('Unsupported SVG color')

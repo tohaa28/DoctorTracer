@@ -5,3 +5,5 @@ vtracer==0.6.15
 pyinstaller==6.22.3
 opencv-python-headless==5.0.0.93
 pyopencl==2026.1.4
+skia-pathops==0.9.2
+pyclipper==1.4.0
