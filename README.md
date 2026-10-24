@@ -4,7 +4,7 @@
 
 ## Windows
 
-Portable-сборка: **Releases → v0.5.0 → DoctorTracer-0.5-Windows-x64.zip**. Распакуйте весь архив и запустите `DoctorTracer.exe`. Python для portable-сборки не нужен.
+Portable-сборка: **Releases → v0.5.1 → DoctorTracer-0.5.1-Windows-x64.zip**. Распакуйте весь архив и запустите `DoctorTracer.exe`. Python для portable-сборки не нужен.
 
 Запуск исходников (Python 3.13, Windows x64):
 
