@@ -1,3 +1,5 @@
+> Полная сводная история и продолжение: [PROJECT_HISTORY.md](PROJECT_HISTORY.md), [CONTINUE_HERE.md](CONTINUE_HERE.md). Этот файл сохраняет прежние записи.
+
 # Разработка после 0.6
 
 ## 2026-10-25 — 0.9 preview
