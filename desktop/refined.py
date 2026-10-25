@@ -107,7 +107,7 @@ class Window(wizard.WizardWindow):
         self.canvas.layer_buttons['Сегменты'].setText('Сегменты')
         for button in self.canvas.nav.findChildren(QPushButton):button.setStyleSheet('padding:0px;');button.setFixedSize(19,19)
         for label in self.statusBar().findChildren(QLabel):
-            if label.text()=='v2.0':label.setText('v0.10.2 preview')
+            if label.text()=='v2.0':label.setText('v0.10.3 preview')
         self.auto_timer=QTimer(self);self.auto_timer.setSingleShot(True);self.auto_timer.timeout.connect(self.apply_pending)
         for key,fn in [('A',lambda:self.set_background_tool('drag') if self.page=='background' else self.set_tool('drag')),('D',lambda:self.set_background_tool('cut') if self.page=='background' else self.set_tool('adapt')),('F',lambda:self.set_tool('fill')),('X',lambda:self.set_tool('pencil')),('C',lambda:self.set_tool('color')),('Z',lambda:self.undo_background() if self.page=='background' else self.undo_edit()),('Y',lambda:self.redo_background() if self.page=='background' else self.redo_edit()),('T',lambda:self.reset_background() if self.page=='background' else self.update_segmentation())]:
             action=wizard.QAction(self);action.setShortcut(key);action.triggered.connect(fn);self.addAction(action)
@@ -471,10 +471,10 @@ class Window(wizard.WizardWindow):
         self.flatten_mode='preserve';self.selected_color=0
         super().load(path)
     def about(self):
-        QMessageBox.information(self,'Паспорт DoctorTracer','DoctorTracer 0.10.2 preview\n\nЛокальная трассировка SVG / EPS / PDF / PNG.\nSVG: группы по цветам, устранение наложений геометрии.\n\nGPU ускоряет фильтрацию фотографий, назначение цветов и пространственную сегментацию.\nОбщие границы, объединение областей и проверка геометрии выполняются на CPU.\n\nНастройки находятся в меню «Дополнительные Параметры».')
+        QMessageBox.information(self,'Паспорт DoctorTracer','DoctorTracer 0.10.3 preview\n\nЛокальная трассировка SVG / EPS / PDF / PNG.\nSVG: группы по цветам, устранение наложений геометрии.\n\nGPU ускоряет фильтрацию фотографий, назначение цветов и пространственную сегментацию.\nОбщие границы, объединение областей и проверка геометрии выполняются на CPU.\n\nНастройки находятся в меню «Дополнительные Параметры».')
     def build_export(self):
         self.choice('Сохранение Результата','• Совет: Попробуйте перетащить изображение в нужное вам место.\n• Клавиши быстрого доступа: Ctrl-S.','save',self.export)
-        g=self.group('Перетаскивание Файла');row=QHBoxLayout();fmt=QComboBox();fmt.addItems(['.svg','.eps','.pdf']);mini=QCheckBox('Минимизировать окно');mini.setChecked(True);row.addWidget(DragFile(self,fmt,mini));right=QVBoxLayout();right.addWidget(fmt,0,Qt.AlignLeft);self.paragraph(right,'Перетащите файл в нужную директорию.');row.addLayout(right);g.addLayout(row);g.addWidget(mini)
+        g=self.group('Перетаскивание Файла');row=QHBoxLayout();fmt=QComboBox();fmt.addItems(['.pdf','.svg','.eps']);mini=QCheckBox('Минимизировать окно');mini.setChecked(True);row.addWidget(DragFile(self,fmt,mini));right=QVBoxLayout();right.addWidget(fmt,0,Qt.AlignLeft);self.paragraph(right,'Перетащите файл в нужную директорию.');row.addLayout(right);g.addLayout(row);g.addWidget(mini)
         q=self.collapsible('Быстрое Сохранение');self.export_fields(q,False)
         q=self.collapsible('Экспорт Bitmap');self.export_fields(q,True)
         q=self.collapsible('Параметры Экспорта');self.paragraph(q,'SVG / EPS / PDF: кривые Безье и составные контуры.\nPNG: прозрачный фон, заданный размер.\nAI, EMF и DXF в этой версии не поддерживаются.')
@@ -484,7 +484,7 @@ class Window(wizard.WizardWindow):
         def choose():
             p=QFileDialog.getExistingDirectory(self,'Папка экспорта',folder.text())
             if p:folder.setText(p)
-        browse.clicked.connect(choose);row=QHBoxLayout();row.addWidget(QLabel('Имя:'));name=QLineEdit((self.quick_name or Path(self.file).stem)+('_vectorized' if bitmap else ''));name.setMinimumWidth(0);name.setSizePolicy(QSizePolicy.Ignored,QSizePolicy.Fixed);row.addWidget(name);fmt=QComboBox();fmt.addItems(['.png'] if bitmap else ['.svg','.eps','.pdf']);row.addWidget(fmt);g.addLayout(row)
+        browse.clicked.connect(choose);row=QHBoxLayout();row.addWidget(QLabel('Имя:'));name=QLineEdit((self.quick_name or Path(self.file).stem)+('_vectorized' if bitmap else ''));name.setMinimumWidth(0);name.setSizePolicy(QSizePolicy.Ignored,QSizePolicy.Fixed);row.addWidget(name);fmt=QComboBox();fmt.addItems(['.png'] if bitmap else ['.pdf','.svg','.eps']);row.addWidget(fmt);g.addLayout(row)
         width=height=None
         if bitmap:
             width=QSpinBox();height=QSpinBox()
@@ -520,7 +520,7 @@ class Window(wizard.WizardWindow):
         self.statusBar().showMessage(f'Сохранено: {target}')
     def export(self):
         if not self.svg_text or not self.export_button.isEnabled():return
-        p,fmt=QFileDialog.getSaveFileName(self,'Сохранение Результата',str(Path(self.file).with_suffix('.svg')),'SVG (*.svg);;EPS (*.eps);;PDF (*.pdf);;PNG (*.png)')
+        p,fmt=QFileDialog.getSaveFileName(self,'Сохранение Результата',str(Path(self.file).with_suffix('.pdf')),'PDF (*.pdf);;SVG (*.svg);;EPS (*.eps);;PNG (*.png)')
         if not p:return
         ext={ 'SVG (*.svg)':'.svg','EPS (*.eps)':'.eps','PDF (*.pdf)':'.pdf','PNG (*.png)':'.png'}[fmt];target=Path(p)
         if target.suffix.lower()!=ext:
