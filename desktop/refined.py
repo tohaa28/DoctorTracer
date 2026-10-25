@@ -100,14 +100,14 @@ class Window(wizard.WizardWindow):
     def __init__(self):
         self.adv={'complexity':5,'smoothness':6,'nodes':6,'corners':True,'palette_aa':True,'contour_aa':True,'color_threshold':1,'artifact':2,'auto_palette':True,'auto_segment':True,'auto_trace':True}
         self.default_adv=dict(self.adv)
-        self.compute_backend='gpu';self.photo_spatial=True;self.flatten_mode='preserve';self.flatten_color='#ffffff';self.palette_cache={}
+        self.compute_backend='gpu';self.photo_spatial=True;self.photo_regions=True;self.flatten_mode='preserve';self.flatten_color='#ffffff';self.palette_cache={}
         self.selected_color=0;self.skip_review=False;self.quick_dir='';self.quick_name='';self.png_scale=100;self.batch_files=[];self.recent_settings=[]
         super().__init__()
         self.canvas.owner=self
         self.canvas.layer_buttons['Сегменты'].setText('Сегменты')
         for button in self.canvas.nav.findChildren(QPushButton):button.setStyleSheet('padding:0px;');button.setFixedSize(19,19)
         for label in self.statusBar().findChildren(QLabel):
-            if label.text()=='v2.0':label.setText('v0.9 preview')
+            if label.text()=='v2.0':label.setText('v0.10 preview')
         self.auto_timer=QTimer(self);self.auto_timer.setSingleShot(True);self.auto_timer.timeout.connect(self.apply_pending)
         for key,fn in [('A',lambda:self.set_background_tool('drag') if self.page=='background' else self.set_tool('drag')),('D',lambda:self.set_background_tool('cut') if self.page=='background' else self.set_tool('adapt')),('F',lambda:self.set_tool('fill')),('X',lambda:self.set_tool('pencil')),('C',lambda:self.set_tool('color')),('Z',lambda:self.undo_background() if self.page=='background' else self.undo_edit()),('Y',lambda:self.redo_background() if self.page=='background' else self.redo_edit()),('T',lambda:self.reset_background() if self.page=='background' else self.update_segmentation())]:
             action=wizard.QAction(self);action.setShortcut(key);action.triggered.connect(fn);self.addAction(action)
@@ -164,7 +164,7 @@ class Window(wizard.WizardWindow):
         if not self.recent_settings:menu.addAction('Нет недавних настроек').setEnabled(False)
         menu.exec(self.mapToGlobal(self.right.pos()))
     def apply_settings(self,cfg):
-        self.photo_spatial=bool(cfg.get('photo_spatial',True))
+        self.photo_spatial=bool(cfg.get('photo_spatial',True));self.photo_regions=bool(cfg.get('photo_regions',True))
         if cfg.get('compute') in ('auto','cpu','gpu'):self.compute_backend=cfg['compute']
         self.category=cfg.get('category','aa');self.manual_palette=cfg.get('palette');self.color_mode='fixed' if self.manual_palette else 'flex';self.detail.setCurrentIndex(int(cfg.get('detail',2)));self.colors.setValue(int(cfg.get('colors',0)));self.speckle.setValue(int(cfg.get('speckle',2)));self.curve_tolerance=float(cfg.get('curve_tolerance',.12));self.adv.update(cfg.get('advanced_ui',{}));self.invalidate();self.render_page()
     def save_preset(self):
@@ -190,7 +190,7 @@ class Window(wizard.WizardWindow):
         self.statusBar().showMessage('Сегментация изменена. Пересчитайте результат с выбранными настройками.')
     def restore_defaults(self):
         self.adv=dict(self.default_adv);self.skip_review=False
-        self.compute_backend='gpu';self.photo_spatial=True;self.flatten_mode='preserve';self.flatten_color='#ffffff'
+        self.compute_backend='gpu';self.photo_spatial=True;self.photo_regions=True;self.flatten_mode='preserve';self.flatten_color='#ffffff'
         self.category='aa';self.color_mode='fixed';self.manual_palette=None;self.detail.setCurrentIndex(2);self.colors.setValue(0);self.speckle.setValue(2);self.denoise.setChecked(False);self.curve_tolerance=.12;self.alphamax=1.;self.remove_bg.setChecked(False);self.invalidate();self.render_page()
     def batch(self):self.go('batchfiles')
     def build_batchfiles(self):
@@ -308,7 +308,7 @@ class Window(wizard.WizardWindow):
         g=self.group('Количество Узлов');self.level_slider(g,'nodes','Меньше Узлов','Больше Узлов','smooth');g=self.group('Авто Обновление');self.check(g,'Авто Обновление Векторизации','auto_trace');self.small_button(g,'Обновить',lambda:self.begin_trace('smooth'));self.next_button.setEnabled(bool(self.svg_text) and self.export_button.isEnabled())
     def config(self):
         cfg=super().config()
-        cfg.update({'compute':self.compute_backend,'photo_spatial':self.photo_spatial,'flatten':self.flatten_mode!='preserve','flatten_color':'#ffffff' if self.flatten_mode=='white' else self.flatten_color})
+        cfg.update({'compute':self.compute_backend,'photo_spatial':self.photo_spatial,'photo_regions':self.photo_regions,'flatten':self.flatten_mode!='preserve','flatten_color':'#ffffff' if self.flatten_mode=='white' else self.flatten_color})
         if self.wizard_mode=='advanced':
             cfg['curve_tolerance']=.12*2**((6-self.adv['nodes'])/2)*2**((self.adv['smoothness']-6)/4)
             cfg['alphamax']=1. if self.adv['corners'] else 1.34
@@ -458,7 +458,7 @@ class Window(wizard.WizardWindow):
         self.flatten_mode='preserve';self.selected_color=0
         super().load(path)
     def about(self):
-        QMessageBox.information(self,'Паспорт DoctorTracer','DoctorTracer 0.9 preview\n\nЛокальная трассировка SVG / EPS / PDF / PNG.\nSVG: группы по цветам, устранение наложений геометрии.\n\nGPU ускоряет назначение цветов и экспериментальную пространственную сегментацию фото с палитрой.\nКривые и устранение наложений выполняются на CPU.\n\nНастройки находятся в меню «Дополнительные Параметры».')
+        QMessageBox.information(self,'Паспорт DoctorTracer','DoctorTracer 0.10 preview\n\nЛокальная трассировка SVG / EPS / PDF / PNG.\nSVG: группы по цветам, устранение наложений геометрии.\n\nGPU ускоряет фильтрацию фотографий, назначение цветов и пространственную сегментацию.\nОбщие границы, объединение областей и проверка геометрии выполняются на CPU.\n\nНастройки находятся в меню «Дополнительные Параметры».')
     def build_export(self):
         self.choice('Сохранение Результата','• Совет: Попробуйте перетащить изображение в нужное вам место.\n• Клавиши быстрого доступа: Ctrl-S.','save',self.export)
         g=self.group('Перетаскивание Файла');row=QHBoxLayout();fmt=QComboBox();fmt.addItems(['.svg','.eps','.pdf']);mini=QCheckBox('Минимизировать при перетаскивании');mini.setChecked(True);row.addWidget(DragFile(self,fmt,mini));right=QVBoxLayout();right.addWidget(fmt,0,Qt.AlignLeft);self.paragraph(right,'Перетащите файл в нужную директорию.');right.addWidget(mini);row.addLayout(right);g.addLayout(row)

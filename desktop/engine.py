@@ -240,6 +240,9 @@ def trace(path, cfg):
     category=cfg.get('category','aa')
     use_palette=bool(cfg.get('palette')) or bool(cfg.get('colors'))
     photo=category=='photo' or cfg.get('preset')=='Фотография'
+    if photo and (cfg.get('backend')=='shared' or (cfg.get('photo_regions') and not use_palette and cfg.get('backend','auto')=='auto')) and cfg.get('mode','spline')=='spline':
+        from photo_regions import trace as trace_regions
+        return trace_regions(path,cfg)
     if cfg.get('backend','auto')!='vtracer' and (not photo or use_palette) and cfg.get('mode')!='none':
         svg,stats=trace_graphic(path,cfg)
         stats['seconds']=round(time.monotonic()-start,2)

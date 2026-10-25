@@ -1,0 +1,323 @@
+{
+  "method": "SVG rendered at 3x source resolution, downsampled with Lanczos; RGB MAE 0..255; identical Photo/Medium/Unlimited settings",
+  "comparisons": {
+    "yoda": {
+      "255": {
+        "old_mae": 11.568452904929577,
+        "new_mae": 4.639934223395931
+      },
+      "40": {
+        "old_mae": 10.888365610328638,
+        "new_mae": 3.800543451682316
+      }
+    },
+    "lion": {
+      "255": {
+        "old_mae": 8.371368798043326,
+        "new_mae": 6.634923130677848
+      },
+      "40": {
+        "old_mae": 8.652786512928023,
+        "new_mae": 6.631094514325646
+      }
+    }
+  },
+  "other_yoda_qualities": {
+    "low": {
+      "white_mae": 5.46038915786385,
+      "reference_paths": 145
+    },
+    "high": {
+      "white_mae": 4.8814382824726135,
+      "reference_paths": 2218
+    }
+  },
+  "mode_filter_benchmark": {
+    "median_gpu_seconds": 0.005959599977359176,
+    "median_native_cpu_seconds": 0.24702030001208186,
+    "identical": true,
+    "samples": [
+      [
+        0.005849999957717955,
+        0.24702030001208186
+      ],
+      [
+        0.005537900025956333,
+        0.25768999999854714
+      ],
+      [
+        0.00601209991145879,
+        0.244435100001283
+      ],
+      [
+        0.005959599977359176,
+        0.2311290999641642
+      ],
+      [
+        0.00607170001603663,
+        0.2521925999317318
+      ]
+    ]
+  },
+  "full_photo_filter_reference": {
+    "shape": [
+      960,
+      568,
+      4
+    ],
+    "gpu_seconds": 0.006018000072799623,
+    "cpu_seconds": 86.72615440003574,
+    "identical": true,
+    "different_channels": 0
+  },
+  "geometry": {
+    "yoda_medium": {
+      "paths": 560,
+      "color_groups": 530,
+      "shared_corners": 14501,
+      "shared_boundary_seconds": 2.2534352999646217,
+      "vector_layout": "shared boundary color groups",
+      "geometry_compute": "shared grid CPU",
+      "geometry_verified": true,
+      "geometry_audit": {
+        "pairs_checked": 2673,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      },
+      "preprocess_compute": "OpenCL GPU",
+      "preprocess_seconds": 0.3120944000547752,
+      "mode_filter_compute": "OpenCL GPU",
+      "mode_filter_seconds": 0.01055779994931072,
+      "palette_cache_hit": false,
+      "compute": "OpenCL GPU",
+      "device": "NVIDIA GeForce GTX 1080",
+      "segmentation": "spatial-experimental",
+      "assignment_seconds": 0.013453899999149144,
+      "initial_regions": 3539,
+      "region_target": 535,
+      "boundary_count": 88180,
+      "hue_entropy": 1.5513568127035364,
+      "segmentation_seconds": 3.359173999982886,
+      "width": 568,
+      "height": 960,
+      "working_size": [
+        568,
+        960
+      ],
+      "colors": 530,
+      "seconds": 5.6243809999432415,
+      "backend": "shared photographic regions",
+      "palette_mode": "regional means",
+      "palette": []
+    },
+    "yoda_low": {
+      "paths": 159,
+      "color_groups": 153,
+      "shared_corners": 5477,
+      "shared_boundary_seconds": 1.0704516000114381,
+      "vector_layout": "shared boundary color groups",
+      "geometry_compute": "shared grid CPU",
+      "geometry_verified": true,
+      "geometry_audit": {
+        "pairs_checked": 647,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      },
+      "preprocess_compute": "OpenCL GPU",
+      "preprocess_seconds": 0.2771925999550149,
+      "mode_filter_compute": "OpenCL GPU",
+      "mode_filter_seconds": 0.012751400005072355,
+      "palette_cache_hit": false,
+      "compute": "OpenCL GPU",
+      "device": "NVIDIA GeForce GTX 1080",
+      "segmentation": "spatial-experimental",
+      "assignment_seconds": 0.012266600038856268,
+      "initial_regions": 2678,
+      "region_target": 154,
+      "boundary_count": 74863,
+      "hue_entropy": 1.537679049632358,
+      "segmentation_seconds": 3.194234999944456,
+      "width": 568,
+      "height": 960,
+      "working_size": [
+        568,
+        960
+      ],
+      "colors": 153,
+      "seconds": 4.270467999973334,
+      "backend": "shared photographic regions",
+      "palette_mode": "regional means",
+      "palette": []
+    },
+    "yoda_high": {
+      "paths": 2010,
+      "color_groups": 1903,
+      "shared_corners": 37815,
+      "shared_boundary_seconds": 5.343129100045189,
+      "vector_layout": "shared boundary color groups",
+      "geometry_compute": "shared grid CPU",
+      "geometry_verified": true,
+      "geometry_audit": {
+        "pairs_checked": 15888,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      },
+      "preprocess_compute": "OpenCL GPU",
+      "preprocess_seconds": 0.003464199951849878,
+      "mode_filter_compute": "OpenCL GPU",
+      "mode_filter_seconds": 0.0036726000253111124,
+      "palette_cache_hit": false,
+      "compute": "OpenCL GPU",
+      "device": "NVIDIA GeForce GTX 1080",
+      "segmentation": "spatial-experimental",
+      "assignment_seconds": 0.0070309999864548445,
+      "initial_regions": 4310,
+      "region_target": 1938,
+      "boundary_count": 102792,
+      "hue_entropy": 1.5697650869515358,
+      "segmentation_seconds": 2.9191581000341102,
+      "width": 568,
+      "height": 960,
+      "working_size": [
+        568,
+        960
+      ],
+      "colors": 1903,
+      "seconds": 8.28246160002891,
+      "backend": "shared photographic regions",
+      "palette_mode": "regional means",
+      "palette": []
+    },
+    "lion_medium": {
+      "paths": 3328,
+      "color_groups": 3150,
+      "shared_corners": 41553,
+      "shared_boundary_seconds": 6.750346199958585,
+      "vector_layout": "shared boundary color groups",
+      "geometry_compute": "shared grid CPU",
+      "geometry_verified": true,
+      "geometry_audit": {
+        "pairs_checked": 15102,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      },
+      "preprocess_compute": "OpenCL GPU",
+      "preprocess_seconds": 0.26962129992898554,
+      "mode_filter_compute": "OpenCL GPU",
+      "mode_filter_seconds": 0.0127874999307096,
+      "palette_cache_hit": false,
+      "compute": "OpenCL GPU",
+      "device": "NVIDIA GeForce GTX 1080",
+      "segmentation": "spatial-experimental",
+      "assignment_seconds": 0.014138299971818924,
+      "initial_regions": 22764,
+      "region_target": 3193,
+      "boundary_count": 192691,
+      "hue_entropy": 3.37832259521489,
+      "segmentation_seconds": 6.774971100036055,
+      "width": 800,
+      "height": 954,
+      "working_size": [
+        800,
+        954
+      ],
+      "colors": 3150,
+      "seconds": 13.555278099956922,
+      "backend": "shared photographic regions",
+      "palette_mode": "regional means",
+      "palette": []
+    }
+  },
+  "compiled_equality": {
+    "gpu": {
+      "ok": true,
+      "paths": 560,
+      "color_groups": 530,
+      "shared_corners": 14501,
+      "shared_boundary_seconds": 2.6342977000167593,
+      "vector_layout": "shared boundary color groups",
+      "geometry_compute": "shared grid CPU",
+      "geometry_verified": true,
+      "geometry_audit": {
+        "pairs_checked": 2673,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      },
+      "preprocess_compute": "OpenCL GPU",
+      "preprocess_seconds": 0.3749184999614954,
+      "mode_filter_compute": "OpenCL GPU",
+      "mode_filter_seconds": 0.010816500056535006,
+      "palette_cache_hit": false,
+      "compute": "OpenCL GPU",
+      "device": "NVIDIA GeForce GTX 1080",
+      "segmentation": "spatial-experimental",
+      "assignment_seconds": 0.012819899944588542,
+      "initial_regions": 3539,
+      "region_target": 535,
+      "boundary_count": 88180,
+      "hue_entropy": 1.5513568127035364,
+      "segmentation_seconds": 3.344536199932918,
+      "width": 568,
+      "height": 960,
+      "working_size": [
+        568,
+        960
+      ],
+      "colors": 530,
+      "seconds": 5.996477899956517,
+      "backend": "shared photographic regions",
+      "palette_mode": "regional means",
+      "palette": []
+    },
+    "cpu": {
+      "ok": true,
+      "paths": 560,
+      "color_groups": 530,
+      "shared_corners": 14501,
+      "shared_boundary_seconds": 2.1829467999050394,
+      "vector_layout": "shared boundary color groups",
+      "geometry_compute": "shared grid CPU",
+      "geometry_verified": true,
+      "geometry_audit": {
+        "pairs_checked": 2673,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      },
+      "preprocess_compute": "CPU",
+      "preprocess_fallback": null,
+      "preprocess_seconds": 0.528581399936229,
+      "mode_filter_compute": "native CPU",
+      "mode_filter_seconds": 0.246063599945046,
+      "mode_filter_fallback": null,
+      "palette_cache_hit": false,
+      "compute": "OpenCV CPU",
+      "gpu_fallback": null,
+      "segmentation": "spatial-experimental",
+      "assignment_seconds": 7.144593200064264,
+      "initial_regions": 3539,
+      "region_target": 535,
+      "boundary_count": 88180,
+      "hue_entropy": 1.5513568127035364,
+      "segmentation_seconds": 10.994041699916124,
+      "width": 568,
+      "height": 960,
+      "working_size": [
+        568,
+        960
+      ],
+      "colors": 530,
+      "seconds": 13.188843799987808,
+      "backend": "shared photographic regions",
+      "palette_mode": "regional means",
+      "palette": []
+    },
+    "identical_svg": true
+  },
+  "corel_import": {
+    "pdf_rgb_forms": 530,
+    "corel_objects_after_ungroup": 530,
+    "corel_nodes": 26533,
+    "max_nodes_per_curve": 329,
+    "version": "CorelDRAW 26"
+  }
+}

@@ -2,6 +2,7 @@
 
 DoctorTracer is an independent raster-to-vector application. It is not affiliated with Vector Magic. No Vector Magic executable, library, extracted implementation or graphic resource is included.
 
+* `core/photo_modes.c` and its CPU DLL build script: original MIT-licensed integer mode filter; license text in `desktop/LICENSE`. Its CPU and OpenCL implementations are tested for identical output.
 * `desktop/`: original application code under the MIT license in `desktop/LICENSE`.
 * The Windows combined distribution, from 0.6 onward, links the Potrace DLL and is distributed under GPL-3.0-or-later (using the later-version option of Potrace's GPL-2.0-or-later license). The original MIT-licensed components retain their MIT notices. The full GPLv3 text is included in `licenses/GPL-3.0.txt`, along with complete corresponding application, adapter and Potrace sources and a reproducible DLL build script.
 * `core/tracer.cpp`, `web/`, `scripts/build_wasm.py`, and the linked WASM distribution: GPL-2.0-or-later. The full license is `core/potrace-1.16/COPYING`; corresponding sources and build script are included. Preserve the GPL license and corresponding source when redistributing this combined WASM application.
