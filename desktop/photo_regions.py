@@ -72,9 +72,11 @@ def trace(path,cfg):
     detail=cfg.get('detail',1)
     normal_tolerance=.12*[4,2,1][detail]
     tolerance=min(1.2,max(.05,[.75,.5,.3][detail]*cfg.get('curve_tolerance',normal_tolerance)/normal_tolerance))
+    # Fixed inks need tighter boundaries: broad diffusion rounds away thin details.
+    if not unlimited:tolerance*=.5
     report(cfg,70,'Построение общих границ')
     svg,geometry=shared_regions.trace(labels,palette,original,smooth=cfg.get('shared_smoothing',True),
-        curve_tolerance=tolerance,rounding=1.5*cfg.get('alphamax',1.),passes=[10,8,5][detail],progress=cfg.get('_progress'))
+        curve_tolerance=tolerance,rounding=1.5*cfg.get('alphamax',1.),passes=([10,8,5] if unlimited else [4,2,1])[detail],progress=cfg.get('_progress'))
     return svg,{**geometry,**metrics,'width':original[0],'height':original[1],
         'working_size':[labels.shape[1],labels.shape[0]],'colors':geometry['color_groups'],
         'seconds':time.perf_counter()-started,'backend':'shared photographic regions',

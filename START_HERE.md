@@ -21,3 +21,5 @@
 не имеют отдельной восстановимой ревизии в этом репозитории.
 
 Испытательный стенд с корпусом и реальными эталонами Vector Magic: [quality/README.md](quality/README.md).
+
+Обновление алгоритма Windows 0.11 / WASM 0.13: [QUALITY_013.md](docs/QUALITY_013.md).

@@ -1,10 +1,12 @@
 # DoctorTracer
 
-[История разработки и продолжение работы](START_HERE.md) · Текущие релизы: Windows 0.10.3 / WASM 0.12.1.
+[История разработки и продолжение работы](START_HERE.md) · Текущие релизы: Windows 0.11 / WASM 0.13.
 
 Локальная векторизация изображений: Windows-приложение с пошаговым мастером и отдельная экспериментальная WASM-версия. Изображения остаются на компьютере пользователя.
 
 ## Windows
+
+Новый preview: [0.11 — общие границы фиксированной палитры](https://github.com/tohaa28/DoctorTracer/releases/tag/v0.11.0-preview). [Измерения и ограничения качества](docs/QUALITY_013.md).
 
 Portable-сборка: **Releases → v0.6.0 → DoctorTracer-0.6-Windows-x64.zip**. Распакуйте весь архив и запустите `DoctorTracer.exe`. Python для portable-сборки не нужен.
 
@@ -46,14 +48,14 @@ python desktop/app.py
 
 Проверка нового этапа: `python tests/photo_curves.py`. Пересборка DLL: Zig 0.15.2 на PATH, затем `python scripts/build_potrace_dll.py`; готовая DLL включена.
 
-## Браузерная версия — Desktop WASM 0.12 preview
+## Браузерная версия — Desktop WASM 0.13 preview
 
 [Открыть приложение](https://tohaa28.github.io/DoctorTracer/) · [Проверка браузера](https://tohaa28.github.io/DoctorTracer/diagnostics.html)
 
 Rust WASM переносит алгоритмы Windows: bilateral-фильтр, поиск цветовых мод,
 OpenCV-совместимую палитру, пространственную сегментацию, объединение соседних
-областей и общий граф сглаженных границ. Ограниченная палитра использует Potrace,
-Skia PathOps и Clipper. WebGPU ускоряет фильтры и назначение цветов; на проверенных
+областей и общий граф сглаженных границ. Фотографии с ограниченной палитрой используют тот же общий граф;
+графика AA/hard использует Potrace, Skia PathOps и Clipper. WebGPU ускоряет фильтры и назначение цветов; на проверенных
 случаях результаты совпадают с CPU побайтно. Графы и кривые строятся в WASM Worker.
 
 Размеры карточек, панели и навигации взяты из Qt-интерфейса DoctorTracer Desktop;

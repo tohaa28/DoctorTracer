@@ -44,8 +44,9 @@ def select(rows,ids):
     return result
 def config(profile):
     return {**PROFILES[profile],'compute':'cpu','mode':'spline','photo_regions':True,'photo_spatial':True,
-      'speckle':2,'artifact_strength':2,'segmentation_complexity':5,'spatial_iterations':2,
-      'spatial_strength':700,'flatten':False,'alphamax':1.,'max_size':2400}
+      'speckle':2,'artifact_strength':0,'segmentation_complexity':5,'spatial_iterations':2,
+      'curve_tolerance':.12*[4,2,1][PROFILES[profile]['detail']],
+      'spatial_strength':200 if PROFILES[profile]['category']=='photo' and not PROFILES[profile]['colors'] else 700,'flatten':False,'alphamax':1.,'max_size':2400}
 def svg_size(path):
     doc=ET.parse(path).getroot()
     if doc.get('viewBox'):return tuple(map(float,doc.get('viewBox').replace(',',' ').split()))[2:]

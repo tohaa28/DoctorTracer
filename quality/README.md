@@ -74,6 +74,9 @@ python quality/bench.py compare --run wasm-v1 --baseline desktop-v1 --name wasm-
 `--corpus <папка>` ставится перед подкомандой. Имена прогонов/отчётов уникальны:
 результат baseline не перезаписывается. CPU выбран явно для воспроизводимости;
 это тест качества алгоритма, не измерение скорости GPU в браузере.
+Профили базового мастера используют cleanup=0, spatial_strength=200 для unlimited
+и 700 для fixed-photo, допуск кривых .12×4/2/1. Соответствие Qt-мастеру проверяет
+tests/quality_bench.py; прежняя ошибка перевода описана в ../docs/QUALITY_013.md.
 Node вызывает настоящий опубликованный Rust WASM и Potrace/Skia/Clipper адаптеры.
 
 Отчёт: `build/quality/reports/<name>/index.html`, рядом report.json и assets/.

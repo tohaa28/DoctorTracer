@@ -8,6 +8,16 @@ import bench
 class QualityBench(unittest.TestCase):
     @classmethod
     def setUpClass(cls):cls.qt=bench.app()
+    def test_basic_photo_profile_matches_desktop_defaults(self):
+        from refined import Window
+        w=Window();w.category='photo';w.wizard_mode='basic';w.preset.setCurrentIndex(1);w.detail.setCurrentIndex(1)
+        for count,name,strength in [(0,'photo-medium-auto',200),(9,'photo-medium-9',700)]:
+            w.colors.setValue(count);actual=w.config();profile=bench.config(name)
+            self.assertEqual(profile['artifact_strength'],actual.get('artifact_strength',0))
+            self.assertEqual(profile['curve_tolerance'],actual['curve_tolerance'])
+            self.assertEqual(profile['spatial_strength'],actual.get('spatial_strength',strength))
+            self.assertEqual(profile['detail'],actual['detail']);self.assertEqual(profile['colors'],actual['colors'])
+        w.close()
     def test_identity_and_shift(self):
         a=np.zeros((32,32,4),np.uint8);a[8:24,8:24]=[190,25,60,255]
         same=bench.metrics(a,a);self.assertEqual(same['rgb_mae_white'],0);self.assertEqual(same['boundary_f1_1px'],1);self.assertEqual(same['alpha_iou'],1)
