@@ -1,3 +1,5 @@
+> Исторический отчёт версии 0.11. В 0.12 ядро заменено переносом десктопного алгоритма: [новый отчёт](DESKTOP_WASM_PARITY.md).
+
 # Rust WASM 0.11 preview
 
 Published browser target: https://tohaa28.github.io/DoctorTracer/ . Windows 0.10.2 is unchanged.

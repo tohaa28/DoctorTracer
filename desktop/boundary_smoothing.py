@@ -4,7 +4,9 @@ import numpy as np
 def smooth(graph,loops,stride,width,height,tolerance=.5,passes=8):
     vertices=list(graph);index={v:i for i,v in enumerate(vertices)}
     coords=np.array([(v%stride,v//stride) for v in vertices],float)
-    active=[v for v in vertices if len(graph[v])==2 and 0<v%stride<width and 0<v//stride<height]
+    # Smoothing an isolated 1-2 pixel cycle towards its centre erases holes/islands.
+    pinned={v for paths in loops.values() for loop in paths if len(loop)<=8 and all(len(graph[u])==2 for u in loop) for v in loop}
+    active=[v for v in vertices if v not in pinned and len(graph[v])==2 and 0<v%stride<width and 0<v//stride<height]
     positions=np.array([index[v] for v in active],int)
     neighbors=np.array([[index[u] for u in graph[v]] for v in active],int).reshape(-1,2)
     for _ in range(passes):coords[positions]=.5*coords[positions]+.25*coords[neighbors].sum(1)

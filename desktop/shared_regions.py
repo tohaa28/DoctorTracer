@@ -75,6 +75,12 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
         if progress:progress(72+int(14*completed/max(1,len(loops_by_color))),'Сглаживание общих границ')
         paths=[]
         for loop in color_loops:
+            # Preserve tiny isolated pixel cycles exactly. Rounding a one-pixel
+            # hole makes it partially opaque again even when vertices are pinned.
+            if len(loop)<=8 and all(len(graph[v])==2 for v in loop):
+                data=['M'+fmt(xy(loop[0]))]+['L'+fmt(xy(v)) for v in loop[1:]]+['Z']
+                paths.append(' '.join(data));loops+=1;segments+=len(loop)
+                continue
             # Keep straight grid runs as a single segment. Never remove a junction.
             points=[]
             for i,v in enumerate(loop):

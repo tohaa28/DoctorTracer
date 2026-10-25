@@ -1,104 +1,193 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 import {icon} from './icons.js';
-import {pdfBytes,svgGroups} from './exports.mjs';
+import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs';
+import {zip} from './zip.mjs';
+import {partitionPreview} from './preview.mjs';
 const $=id=>document.getElementById(id);
-const defaults=()=>({mode:'basic',category:'photo',detail:1,colors:0,speckle:3,flatten:false,polygon:false,gpu:true});
-let config=defaults(),step=0,source=null,sourceUrl='',vectorUrl='',outlineUrl='',svg='',worker=null,busy=false,name='image',elapsed=0,backend='',progress=0,stage='',loadToken=0;
-const titles=['Режим Мастера','Тип Изображения','Прозрачность','Уровень Детализации','Цвета','Обзор Результата','Сохранение Результата'];
+const defaults=()=>({mode:'basic',category:'photo',detail:2,colors:0,speckle:2,flatten:false,polygon:false,gpu:true});
+let config=defaults(),step=-1,source=null,sourceUrl='',vectorUrl='',outlineUrl='',svg='',worker=null,busy=false,name='image',elapsed=0,backend='',progress=0,stage='',loadToken=0;
+const titles=['Режим Мастера','Тип Изображения','Прозрачность','Качество Ввода','Цветовой Режим','Обзор Результата','Экспорт Результата','Выбор Палитры'];titles[-1]='Загрузка Изображения';titles[8]='Редактирование Результата';titles[9]='Удаление Фона';
+let editTool='pan',vectorUndo=[],vectorRedo=[];
+let pageHistory=[],segmentUrl='',paletteWorker,requestId=0,pendingPalettes=new Map(),paletteCache=new Map(),palettePage=0,sourceHasAlpha=false,view='bitmap',previewToken=0,panX=0,panY=0,exportDir=null;
+function go(target){if(step!==target)pageHistory.push(step);step=target;show();}
+function navImage(kind){return '<img alt="" src="'+new URL('./desktop-icons/nav-'+kind+'.png',import.meta.url).href+'">';}
 function status(text){$('status').textContent=text;}
 function card(title,description,symbol,selected,action){
  const b=document.createElement('button');b.className='card'+(selected?' selected':'');b.innerHTML='<span class="symbol">'+icon(symbol)+'</span><span class="text"><strong></strong><small></small><span class="choiceTag"></span></span>';
  b.querySelector('strong').textContent=title;b.querySelector('small').textContent=description;b.querySelector('.choiceTag').textContent=selected?'Выбор':'';b.onclick=action;return b;
 }
-function action(text,fn,selected=false){const b=document.createElement('button');b.className='action';b.textContent=text;b.setAttribute('aria-pressed',String(selected));b.onclick=fn;return b;}
+function action(text,fn,selected=false){const b=document.createElement('button');b.className='action';const kind=text.includes('Качество')?(text.includes('Высокое')?'high':text.includes('Среднее')?'medium':'low'):text.includes('Цвета Без')?'flex':text.includes('Настраиваемые')?'fixed':null;if(kind){const image=document.createElement('img');image.className='small-icon';image.src=new URL('./desktop-icons/'+kind+'.png',import.meta.url);b.append(image,document.createTextNode(text.replace(/^[↻🌈◉]\s*/,'')));}else b.textContent=text;b.setAttribute('aria-pressed',String(selected));b.onclick=fn;return b;}
 function colorsForm(parent){
  const f=document.createElement('fieldset');f.innerHTML='<legend>Настройка палитры</legend><label class="formrow">Количество цветов <input id="colors" type="number" min="2" max="128" step="1" value="'+(config.colors||16)+'"></label><p class="hint">От 2 до 128 цветов. Палитра определяется по изображению.</p>';parent.append(f);
  $('colors').onchange=()=>readConfig();
 }
 function show(){
- $('stepTitle').textContent=titles[step];const p=$('page');p.replaceChildren();$('back').disabled=busy||step===0;$('home').disabled=busy;$('next').disabled=busy||!source||(step>=5&&!svg);$('next').textContent=step===6?'Сохранить':step===5?'Вперёд ▶':'Вперёд ▶';
- const add=(title,desc,symbol,selected,fn)=>p.append(card(title,desc,symbol,selected,fn));const advance=()=>{step++;show();};
- if(busy){p.innerHTML='<div class="processing"><strong id="processingStage"></strong><progress id="progress" max="100"></progress><p id="percent"></p><button id="cancel">Отмена</button></div>';$('cancel').onclick=cancel;updateProgress();return;}
- if(step===0){
-  add('Автоматический','Подобрать параметры и построить вектор.','auto',config.mode==='auto',()=>{config.mode='auto';if(source)run();else show();});
-  add('Базовый','Ответьте на несколько вопросов об изображении.','basic',config.mode==='basic',()=>{config.mode='basic';advance();});
-  add('Расширенный','Настройте цвета, кривые и мелкие детали.','advanced',config.mode==='advanced',()=>{config.mode='advanced';step=4;show();});
+ $('stepTitle').textContent=titles[step];const p=$('page');p.replaceChildren();p.classList.toggle('review-page',step===5&&!busy);$('back').disabled=!busy&&pageHistory.length===0;$('home').disabled=busy;$('next').disabled=busy||!source||(step>=5&&!svg);$('next').innerHTML=navImage('next')+(step===6?'Сохранить':'Вперёд');$('home').innerHTML=navImage(step===-1?'reset':'home')+(step===-1?'Сброс':'В начало');$('back').innerHTML=navImage(busy?'cancel':'back')+(busy?'Отмена':'Назад');$('utility').hidden=step!==0&&step!==-1;
+ const add=(title,desc,symbol,selected,fn)=>p.append(card(title,desc,symbol,selected,fn));const advance=()=>go(step+1);
+ if(busy){p.innerHTML='<div class="processing"><img class="processing-icon" alt="" src="'+new URL('./desktop-icons/gears.png',import.meta.url).href+'"><strong id="processingStage"></strong><progress id="progress" max="100"></progress><p id="percent"></p><button id="cancel">Отмена</button></div>';$('cancel').onclick=cancel;updateProgress();return;}
+ if(step===-1){
+  add('Импорт из Папки','• Откройте изображение на компьютере.\n• Клавиши быстрого доступа: Ctrl-O.','folder',false,()=>$('file').click());
+  add('Вставить из Буфера Обмена','• Изображение из буфера обмена будет показано слева.','clipboard',false,pasteImage);
+  add('Пакетная Обработка','• Обработка нескольких изображений с одинаковыми параметрами.','batch',false,()=>batchInput.click());
+  p.append(action('▶ Последние Папки',()=>status('Для открытия файла нажмите «Импорт из Папки».')),action('▶ Последние Изображения',()=>status('Файлы остаются на устройстве. Откройте нужное изображение.')));
+ }else if(step===0){
+  add('Автоматический','• Векторизация в один клик.','auto',config.mode==='auto',()=>{config.mode='auto';if(source)run();else show();});
+  add('Базовый','• Простые вопросы с несколькими вариантами.\n• Пошаговый выбор параметров.','basic',config.mode==='basic',()=>{config.mode='basic';advance();});
+  add('Расширенный','• Тонкие настройки управления.\n• Более сложные варианты.','advanced',config.mode==='advanced',()=>{config.mode='advanced';config.colors=config.colors||9;go(7);});
   const hint=document.createElement('p');hint.className='hint';hint.textContent='Откройте изображение, затем выберите режим. Все вычисления выполняются на вашем устройстве.';p.append(hint);
  }else if(step===1){
-  for(const [value,title,desc,symbol] of [['photo','Фотоснимок','Фотографии, акварель, сложные переходы цветов.','photo'],['aa','Рисунок со Смешанными Краями','Логотипы и рисунки со сглаженными границами.','aa'],['hard','Рисунок с Чистыми Краями','Чёткие края без сглаживания.','hard']])add(title,desc,symbol,config.category===value,()=>{config.category=value;config.colors=value==='photo'?0:value==='aa'?16:8;advance();});
+  for(const [value,title,desc,symbol] of [['photo','Фотоснимок','• Захват с помощью фото- или веб-камеры.','photo'],['aa','Смешанные Края','• Сглаживание.\n• Наиболее распространённая категория.','aa'],['hard','Чистые Края','• Без сглаживания.\n• Чёткие пиксельные границы.','hard']])add(title,desc,symbol,config.category===value,()=>{config.category=value;config.colors=0;config.palette=null;go(sourceHasAlpha?2:3);});
  }else if(step===2){
-  add('Оставить Прозрачность','Сохранить прозрачные участки изображения.','alpha',!config.flatten,()=>{config.flatten=false;advance();});
-  add('Свести в Белый Цвет','Заменить прозрачность белым фоном.','white',config.flatten,()=>{config.flatten=true;advance();});
+  add('Оставить Прозрачность','• Подходит для изображений PNG.','alpha',!config.flatten,()=>{config.flatten=false;advance();});
+  add('Свести в Белый Цвет','• Если изображение было сглажено в белый цвет.','white',config.flatten,()=>{config.flatten=true;advance();});
  }else if(step===3){
-  for(const [value,title,desc] of [[2,'Высокое Качество','Сохранить больше мелких деталей.'],[1,'Среднее Качество','Обычная детализация и гладкие кривые.'],[0,'Низкое Качество','Упростить изображение и удалить мелкие области.']])add(title,desc,'quality',config.detail===value,()=>{config.detail=value;config.speckle=[8,3,1][value];advance();});
+  for(const [value,title,desc] of [[2,'Высокое Качество','• Большая резкость.\n• Очень мало артефактов сжатия и другого шума.'],[1,'Среднее Качество','• Небольшое ухудшение качества.\n• Небольшие артефакты сжатия и другой шум.'],[0,'Низкое Качество','• Размытость.\n• Много артефактов сжатия и другого шума.']])add(title,desc,['low','medium','high'][value],config.detail===value,()=>{config.detail=value;advance();});
  }else if(step===4){
-  add('Цвета Без Ограничений','Автоматические цветовые области для фотографии.','palette',config.colors===0,()=>{config.colors=0;show();});
-  add('Настраиваемые Цвета','Ограничить число цветов в результате.','palette',config.colors>0,()=>{config.colors=config.colors||16;show();});
-  if(config.colors>0)colorsForm(p);
-  const f=document.createElement('fieldset');f.innerHTML='<legend>Дополнительные Параметры</legend><label class="formrow">Мелкие области (пикс.) <input id="speckle" type="number" min="0" max="100" value="'+config.speckle+'"></label><label class="formrow">Построение <select id="curve"><option value="spline">Кривые Безье</option><option value="polygon">Многоугольники</option></select></label><label class="checkrow"><input id="gpu" type="checkbox">Использовать WebGPU, если доступен</label>';p.append(f);$('curve').value=config.polygon?'polygon':'spline';$('gpu').checked=config.gpu;
+  add('Два Цвета','• Использование только двух цветов.','two',config.colors===2,()=>{config.colors=2;config.palette=null;run();});
+  add('Настраиваемые Цвета','• Выбор цветов на ваше усмотрение.\n• Используются только указанные вами цвета.','fixed',config.colors>2,()=>{config.colors=config.colors||9;go(7);});
+  add('Цвета Без Ограничений','• Используются имеющиеся цвета.\n• Подбор градиентов.','flex',config.colors===0,()=>{config.colors=0;config.palette=null;run();});
+ }else if(step===7){
+  buildPalettes(p);
  }else if(step===5){
-  add('Рецензия Сделанного','Нажмите здесь для продолжения. Далее можно сохранить результат.','review',true,()=>{step=6;show();});
+  add('Рецензия Сделанного','• Кликните здесь для продолжения.\n• Далее можно сохранить результат.','review',true,()=>{go(6);});
   const f=document.createElement('fieldset');f.innerHTML='<legend>Улучшение Результата</legend><span class="sectionlabel">Уровень Детализации</span>';
-  for(const [d,text] of [[2,'Высокое Качество'],[1,'Среднее Качество'],[0,'Низкое Качество']])f.append(action('↻ '+text,()=>{config.detail=d;config.speckle=[8,3,1][d];run();},config.detail===d));
-  const label=document.createElement('span');label.className='sectionlabel';label.textContent='Цвета';f.append(label);
-  f.append(action('🌈 Цвета Без Ограничений',()=>{config.colors=0;run();},config.colors===0),action('◉ Настраиваемые Цвета',()=>{config.colors=config.colors||16;step=4;show();},config.colors>0));
-  if(svg){const palette=document.createElement('div');palette.className='palette';for(const {color} of svgGroups(svg).slice(0,64)){const swatch=document.createElement('span');swatch.className='swatch';swatch.style.backgroundColor=color;swatch.title=color;palette.append(swatch);}f.append(palette);}
-  f.append(action('↶ Вернуться к Настройкам',()=>{step=4;show();}));p.append(f);
-  const hint=document.createElement('p');hint.className='hint';hint.textContent=svg?elapsed.toFixed(2)+' с · '+(new Blob([svg]).size/1024).toFixed(1)+' КБ · '+backend:'';p.append(hint);
+  for(const [d,text] of [[2,'Высокое Качество'],[1,'Среднее Качество'],[0,'Низкое Качество']])f.append(action('↻ '+text,()=>{config.detail=d;run();},config.detail===d));
+  const separator=document.createElement('hr');separator.className='hr';f.append(separator);const label=document.createElement('span');label.className='sectionlabel';label.textContent='Цвета';f.append(label);
+  f.append(action('🌈 Цвета Без Ограничений',()=>{config.colors=0;config.palette=null;run();},config.colors===0),action('◉ Настраиваемые Цвета',()=>{config.colors=config.colors||9;go(7);},config.colors>0));
+  if(svg){const link=document.createElement('a');link.href='#';link.textContent='Текущая Палитра (изменить):';link.onclick=e=>{e.preventDefault();config.colors=config.colors||9;go(7);};f.append(link);const palette=document.createElement('div');palette.className='palette';for(const {color} of svgGroups(svg).slice(0,64)){const swatch=document.createElement('span');swatch.className='swatch';swatch.style.backgroundColor=color;swatch.title=color;palette.append(swatch);}f.append(palette);}
+  const hr=document.createElement('hr');hr.className='hr';const advanced=document.createElement('span');advanced.className='sectionlabel';advanced.textContent='Расширенный';f.append(hr,advanced,action('✂ Удаление Фона',()=>{editTool='cut';go(9);}),action('✎ Редактирование Результата',()=>{editTool='pan';go(8);}),action('↶ Вернуться к Настройкам',()=>go(0)));p.append(f);
+  const skip=document.createElement('label');skip.className='checkrow review-footer';const check=document.createElement('input');check.type='checkbox';check.checked=!!config.skipReview;check.onchange=()=>{config.skipReview=check.checked;};skip.append(check,document.createTextNode('Пропускать эту страницу в следующий раз'));p.append(skip);
+
+ }else if(step===8||step===9){
+  buildVectorEditor(p);
  }else{
-  add('Сохранение Результата','Выберите формат и скачайте файл на компьютер.','save',true,()=>save());
-  const f=document.createElement('fieldset');f.innerHTML='<legend>Файл</legend><label class="savefield">Имя файла<input id="saveName" maxlength="120"></label><label class="savefield">Формат<select id="format"><option value="svg">SVG — вектор с группами цветов</option><option value="pdf">PDF — группы для CorelDRAW</option><option value="png">PNG — растровое изображение</option></select></label><button id="download" class="download">Сохранить на компьютер</button><p class="hint">PDF: общая группа изображения → подгруппы по цветам → кривые. SVG сохраняет ту же структуру. PNG не содержит векторов.</p>';p.append(f);$('saveName').value=name;$('download').onclick=()=>save();
+  buildExport(p,add);
+
  }
 }
 function readConfig(){
- if(step!==4)return true;
- const c=$('colors')?Number($('colors').value):0,s=Number($('speckle').value);
- if(($('colors')&&(!Number.isInteger(c)||c<2||c>128))||!Number.isInteger(s)||s<0||s>100){status('Цвета: 2–128; мелкие области: 0–100 целых пикселей');return false;}
- config.colors=c;config.speckle=s;config.polygon=$('curve').value==='polygon';config.gpu=$('gpu').checked;return true;
+ if(step!==7)return true;
+ const count=Number($('colors').value),speckle=Number($('speckle').value);
+ if(!Number.isInteger(count)||count<2||count>64||!Number.isInteger(speckle)||speckle<0||speckle>100){status('Цвета: 2–64; минимальное количество пикселей: 0–100.');return false;}
+ if(count!==config.colors){config.colors=count;config.palette=null;}config.speckle=speckle;config.polygon=$('curve').value==='polygon';config.gpu=$('gpu').checked;return true;
 }
+
 function display(vector=false){
  const img=$('preview');img.src=vector&&vectorUrl?vectorUrl:sourceUrl;img.hidden=!source;img.style.width=source?Math.round(source.width*Number($('zoom').value)/100)+'px':'';
- $('zoomValue').textContent=$('zoom').value+'%';$('bitmap').setAttribute('aria-pressed',String(!vector));$('vector').setAttribute('aria-pressed',String(vector));$('empty').hidden=!!source;
+ $('zoomValue').textContent=$('zoom').value+'%';view=vector?'vector':'bitmap';$('bitmap').setAttribute('aria-pressed',String(!vector));$('vector').setAttribute('aria-pressed',String(vector));$('empty').hidden=!!source;
  if(vector&&svg&&$('outlines').checked){if(!outlineUrl){const doc=new DOMParser().parseFromString(svg,'image/svg+xml');for(const g of doc.querySelectorAll('g'))g.setAttribute('fill','none');for(const p of doc.querySelectorAll('path')){p.setAttribute('fill','none');p.setAttribute('stroke','#143d61');p.setAttribute('stroke-width','.5');}outlineUrl=URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(doc)],{type:'image/svg+xml'}));}img.src=outlineUrl;}
+ if(vector&&svg&&!$('outlines').checked&&svg.includes('data-shared-boundaries'))renderJointPreview();else{img.classList.remove('joint-preview');img.style.transform='translate('+panX+'px,'+panY+'px)';}
 }
-function fit(){if(!source)return;const v=$('viewport');$('zoom').value=Math.max(10,Math.min(100,Math.floor(100*Math.min((v.clientWidth-45)/source.width,(v.clientHeight-45)/source.height))));display($('vector').getAttribute('aria-pressed')==='true');}
+function fit(){if(!source)return;const v=$('viewport');panX=0;panY=0;$('zoom').value=Math.max(10,Math.min(800,Math.floor(100*Math.min((v.clientWidth-2)/source.width,(v.clientHeight-2)/source.height))));refreshView();}
 function updateProgress(){if($('progress')){$('progress').value=progress;$('processingStage').textContent=stage;$('percent').textContent=progress+'%';}status(stage+' · '+progress+'%');}
 async function run(){
- if(!source||busy||!readConfig())return;busy=true;step=5;svg='';progress=0;stage='Подготовка изображения';$('outlines').checked=false;$('vector').disabled=true;show();
+ if(!source||busy||!readConfig())return;busy=true;if(step!==5){pageHistory.push(step);step=5;}svg='';progress=0;stage='Подготовка изображения';$('outlines').checked=false;$('vector').disabled=true;show();
  const canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;const context=canvas.getContext('2d',{willReadFrequently:true});
  if(config.flatten){context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);}context.drawImage(source,0,0);const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
  worker??=new Worker(new URL('./worker.js',import.meta.url),{type:'module'});
  worker.onmessage=({data})=>{
   if(data.progress!==undefined){progress=data.progress;stage=data.stage;updateProgress();return;}
-  busy=false;if(data.error){status(data.error);show();return;}svg=data.svg;elapsed=data.seconds;backend=data.backend;
-  for(const url of [vectorUrl,outlineUrl])if(url)URL.revokeObjectURL(url);outlineUrl='';vectorUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));$('vector').disabled=false;display(true);show();status(source.width+'×'+source.height+' · '+data.colors+' цветов · '+data.paths+' кривых · '+elapsed.toFixed(2)+' с · '+backend);
+  busy=false;if(data.error){worker?.terminate();worker=null;status(data.error);step=pageHistory.pop()??0;show();return;}svg=data.svg;vectorUndo=[];vectorRedo=[];elapsed=data.seconds;backend=data.backend;panX=0;panY=0;if(data.segments)awaitSegments(data.segments);$('segments').hidden=!data.segments;
+  for(const url of [vectorUrl,outlineUrl])if(url)URL.revokeObjectURL(url);outlineUrl='';vectorUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));$('vector').disabled=false;if(config.skipReview)step=6;display(true);show();status(source.width+'×'+source.height+' · '+data.colors+' цветов · '+data.paths+' кривых · '+elapsed.toFixed(2)+' с · '+backend);
  };
  worker.onerror=event=>{cancel();status('Ошибка WASM: '+event.message);};
  worker.postMessage({pixels:pixels.buffer,width:source.width,height:source.height,...config},[pixels.buffer]);
 }
-function cancel(){worker?.terminate();worker=null;busy=false;show();if(!svg){$('outlines').checked=false;display(false);}}
-function download(bytes,type,extension,filename){const url=URL.createObjectURL(new Blob([bytes],{type}));const a=document.createElement('a');a.href=url;a.download=filename+'.'+extension;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);}
-async function save(){
- if(!svg)return;if(step!==6){step=6;show();return;}
- const filename=($('saveName').value.trim()||name).replace(/[<>:"/\\|?*]/g,'_');const format=$('format').value;
- try{if(format==='svg')download(svg,'image/svg+xml','svg',filename);else if(format==='pdf')download(pdfBytes(svg),'application/pdf','pdf',filename);else{
-  const img=new Image();img.src=vectorUrl;await img.decode();const canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;canvas.getContext('2d').drawImage(img,0,0);const blob=await new Promise(resolve=>canvas.toBlob(resolve));download(blob,'image/png','png',filename);
- }status('Сохранено: '+filename+'.'+format);}catch(e){status('Ошибка сохранения: '+e.message);}
+function cancel(){if(busy&&step===5)step=pageHistory.pop()??0;batchAbort?.();worker?.terminate();worker=null;busy=false;show();if(!svg){$('outlines').checked=false;display(false);}}
+async function download(bytes,type,extension,filename){
+ const blob=new Blob([bytes],{type});if(exportDir){const handle=await exportDir.getFileHandle(filename+'.'+extension,{create:true});const stream=await handle.createWritable();await stream.write(blob);await stream.close();return;}
+ const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename+'.'+extension;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
+async function save(){
+ if(!svg)return;if(step!==6){go(6);return;}const filename=($('saveName').value.trim()||name).replace(/[<>:"/\\|?*]/g,'_'),format=$('format').value;
+ try{if(format==='svg')await download(svg,'image/svg+xml','svg',filename);else if(format==='pdf')await download(pdfBytes(svg),'application/pdf','pdf',filename);else await download(epsText(svg),'application/postscript','eps',filename);status('Сохранено: '+filename+'.'+format);}catch(error){status('Ошибка сохранения: '+error.message);}
+}
+
 async function load(file){
  const token=++loadToken;cancel();status('Открытие изображения…');
  try{const original=await createImageBitmap(file);if(token!==loadToken){original.close();return;}const scale=Math.min(1,2400/Math.max(original.width,original.height),Math.sqrt(8e6/(original.width*original.height)));const width=Math.max(1,Math.round(original.width*scale)),height=Math.max(1,Math.round(original.height*scale));
   const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;canvas.getContext('2d').drawImage(original,0,0,width,height);original.close();const next=await createImageBitmap(canvas),blob=await new Promise(resolve=>canvas.toBlob(resolve));if(token!==loadToken){next.close();return;}
-  source?.close();source=next;for(const url of [sourceUrl,vectorUrl,outlineUrl])if(url)URL.revokeObjectURL(url);vectorUrl='';outlineUrl='';sourceUrl=URL.createObjectURL(blob);name=(file.name||'image').replace(/\.[^.]+$/,'');svg='';$('outlines').checked=false;$('vector').disabled=true;config=defaults();step=0;display();show();fit();$('filename').textContent=file.name||'Пример';status(width+'×'+height+' · '+(file.name||'Пример')+(scale<1?' · уменьшено для обработки':''));
- }catch(error){status('Не удалось открыть изображение: '+error.message);}
+  source?.close();source=next;for(const url of [sourceUrl,vectorUrl,outlineUrl])if(url)URL.revokeObjectURL(url);vectorUrl='';outlineUrl='';sourceUrl=URL.createObjectURL(blob);const rgba=canvas.getContext('2d').getImageData(0,0,width,height).data;sourceHasAlpha=rgba.some((v,i)=>i%4===3&&v<255);paletteCache.clear();config.palette=null;name=(file.name||'image').replace(/\.[^.]+$/,'');svg='';$('outlines').checked=false;$('vector').disabled=true;config=defaults();pageHistory=[];step=0;display();busy=true;progress=0;stage='Анализ изображения';show();fit();const analysis=await analyzeSource();if(token!==loadToken)return;config.category=analysis?.category||'photo';busy=false;show();$('filename').textContent=file.name||'Пример';status(width+'×'+height+' · '+(file.name||'Пример')+(scale<1?' · уменьшено для обработки':''));
+ }catch(error){busy=false;show();status('Не удалось открыть изображение: '+error.message);}
 }
 $('file').onchange=e=>{if(e.target.files[0])load(e.target.files[0]);e.target.value='';};
 $('demo').onclick=async()=>{const blob=await (await fetch(new URL('./demo.png',import.meta.url))).blob();await load(new File([blob],'Пример.png',{type:'image/png'}));};
-$('next').onclick=()=>{if(step===6)save();else if(step===5){step=6;show();}else if(config.mode==='auto'||step===4)run();else{step++;show();}};
-$('back').onclick=()=>{if(readConfig()){step=Math.max(0,step-1);show();}};$('home').onclick=()=>{step=0;show();};
-$('bitmap').onclick=()=>display(false);$('vector').onclick=()=>display(true);$('zoom').oninput=()=>display($('vector').getAttribute('aria-pressed')==='true');$('fit').onclick=fit;$('outlines').onchange=()=>{if(!svg)$('outlines').checked=false;display(!!svg);};
+$('next').onclick=()=>{if(step===6)save();else if(step===5){go(6);}else if(config.mode==='auto'||step===7)run();else if(step===8||step===9){go(5);}else if(step===4){config.colors=0;run();}else go(step===1?(sourceHasAlpha?2:3):step+1);};
+$('back').onclick=()=>{if(busy){cancel();status('Трассировка отменена');return;}if(readConfig()){step=pageHistory.pop()??(step===7?4:Math.max(0,step-1));show();}};$('home').onclick=()=>{pageHistory=[];step=source?0:-1;show();};
+$('bitmap').onclick=()=>display(false);$('vector').onclick=()=>display(true);$('zoom').oninput=()=>refreshView();$('fit').onclick=fit;$('outlines').onchange=()=>{if(!svg)$('outlines').checked=false;display(!!svg);};
 $('help').onclick=()=>$('helpDialog').showModal();$('closeHelp').onclick=()=>$('helpDialog').close();
 $('viewport').ondragover=e=>e.preventDefault();$('viewport').ondrop=e=>{e.preventDefault();if(e.dataTransfer.files[0])load(e.dataTransfer.files[0]);};
 window.addEventListener('resize',()=>{if(source)fit();});
 // Avoid exporting a result for settings that have just been edited.
-document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(e.key.toLowerCase()==='b')display(false);if(e.key.toLowerCase()==='v'&&svg)display(true);if(e.key==='Escape'&&busy){cancel();status('Трассировка отменена');}});show();
+document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key.toLowerCase()==='o'){e.preventDefault();$('file').click();return;}if(e.ctrlKey&&e.key.toLowerCase()==='s'){e.preventDefault();save();return;}if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(step===8||step===9){if(e.key.toLowerCase()==='d'){editTool='cut';show();}if(e.key.toLowerCase()==='a'){editTool='pan';show();}if(e.key.toLowerCase()==='z'&&vectorUndo.length){vectorRedo.push(svg);applyVector(vectorUndo.pop(),false);}if(e.key.toLowerCase()==='y'&&vectorRedo.length){vectorUndo.push(svg);applyVector(vectorRedo.pop(),false);}}if(e.key.toLowerCase()==='b')display(false);if(e.key.toLowerCase()==='v'&&svg)display(true);if(e.key==='Escape'&&busy){cancel();status('Трассировка отменена');}});show();
+
+async function renderJointPreview(){
+ const token=++previewToken,v=$('viewport');try{const blob=await partitionPreview(svg,source.width,source.height,{viewWidth:Math.max(1,v.clientWidth),viewHeight:Math.max(1,v.clientHeight),zoom:Number($('zoom').value)/100,panX,panY});if(token!==previewToken||view!=='vector'||$('outlines').checked)return;const url=URL.createObjectURL(blob);const img=$('preview');img.classList.add('joint-preview');img.style.transform='none';img.src=url;setTimeout(()=>URL.revokeObjectURL(url),60000);}catch(error){status('Предпросмотр: '+error.message);}
+}
+async function awaitSegments(buffer){
+ if(segmentUrl)URL.revokeObjectURL(segmentUrl);const c=document.createElement('canvas');c.width=source.width;c.height=source.height;c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(buffer),c.width,c.height),0,0);segmentUrl=URL.createObjectURL(await new Promise(r=>c.toBlob(r)));
+}
+async function requestPalette(n){
+ if(paletteCache.has(n))return paletteCache.get(n);const canvas=document.createElement('canvas');const scale=Math.min(1,500/Math.max(source.width,source.height));canvas.width=Math.max(1,Math.round(source.width*scale));canvas.height=Math.max(1,Math.round(source.height*scale));const context=canvas.getContext('2d');if(config.flatten){context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);}context.drawImage(source,0,0,canvas.width,canvas.height);const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
+ paletteService();
+ const id=++requestId,promise=new Promise(resolve=>pendingPalettes.set(id,resolve));paletteWorker.postMessage({operation:'palette',requestId:id,pixels:pixels.buffer,width:canvas.width,height:canvas.height,colors:n},[pixels.buffer]);const palette=await promise;paletteCache.set(n,palette);return palette;
+}
+function paletteSwatches(node,palette,editable=false){
+ node.replaceChildren();for(const [i,rgb] of palette.entries()){const hex='#'+rgb.map(v=>v.toString(16).padStart(2,'0')).join('');if(editable){const input=document.createElement('input');input.type='color';input.value=hex;input.className='swatch-input';input.title=hex;input.setAttribute('aria-label','Цвет '+(i+1));input.oninput=()=>{config.palette[i]=input.value.slice(1).match(/../g).map(v=>parseInt(v,16));};node.append(input);}else{const s=document.createElement('span');s.className='swatch';s.style.background=hex;s.title=hex;node.append(s);}}
+}
+function buildPalettes(parent){
+ const page=++palettePage;const f=document.createElement('fieldset');f.innerHTML='<legend>Предлагаемые Палитры</legend><div id="paletteList" class="palette-list"><p class="hint">Определение цветов…</p></div>';parent.append(f);
+ const edit=document.createElement('fieldset');edit.innerHTML='<legend>Выбор Палитры</legend><div id="editablePalette" class="palette"></div><label class="formrow">Количество Цветов: <input id="colors" type="number" min="2" max="64"></label><p class="hint">Выберите палитру сверху. Для изменения цвета нажмите на цветной образец.</p>';parent.append(edit);$('colors').value=config.colors||9;
+ const advanced=document.createElement('fieldset');advanced.innerHTML='<legend>Дополнительные Параметры</legend><label class="formrow">Минимальное Количество Пикселей: <input id="speckle" type="number" min="0" max="100"></label><label class="formrow">Построение <select id="curve"><option value="spline">Кривые Безье</option><option value="polygon">Прямые отрезки</option></select></label><label class="checkrow"><input id="gpu" type="checkbox">Использовать WebGPU, если доступен</label>';parent.append(advanced);$('speckle').value=config.speckle;$('curve').value=config.polygon?'polygon':'spline';$('gpu').checked=config.gpu;
+ const selected=async n=>{config.colors=n;$('next').disabled=true;const palette=await requestPalette(n);if(step!==7||page!==palettePage)return;config.palette=palette.map(c=>[...c]);paletteSwatches($('editablePalette'),config.palette,true);$('colors').value=n;$('next').disabled=false;for(const b of $('paletteList').querySelectorAll('button'))b.setAttribute('aria-pressed',String(Number(b.dataset.count)===n));};
+ if(config.palette?.length)paletteSwatches($('editablePalette'),config.palette,true);else selected(config.colors||9);
+ $('colors').onchange=()=>{const n=Number($('colors').value);if(Number.isInteger(n)&&n>=2&&n<=64)selected(n);};
+ (async()=>{const list=$('paletteList');list.replaceChildren();for(const n of [2,3,4,5,6,7,8,9,10,11,12]){const palette=await requestPalette(n);if(step!==7||page!==palettePage)return;const b=document.createElement('button');b.className='palette-row';b.dataset.count=n;b.setAttribute('aria-pressed',String(n===config.colors));const arrow=document.createElement('span');arrow.textContent=n===config.colors?'▶▶':'';const swatches=document.createElement('span');swatches.className='palette';paletteSwatches(swatches,palette);b.append(arrow,swatches);b.onclick=()=>selected(n);list.append(b);}})();
+}
+function buildExport(parent,add){
+ add('Сохранение Результата','• Совет: Попробуйте перетащить изображение в нужное вам место.\n• Клавиши быстрого доступа: Ctrl-S.','save',false,()=>save());
+ const drag=document.createElement('fieldset');drag.innerHTML='<legend>Перетаскивание Файла</legend><div class="formrow"><div id="dragFile" class="drag-file" draggable="true">'+icon('save')+'</div><div><select id="dragFormat"><option>.svg</option><option>.eps</option><option>.pdf</option></select><p>Перетащите файл в нужную директорию.</p></div></div><label class="checkrow"><input type="checkbox" disabled title="Размер окна управляется браузером">Минимизировать окно</label>';parent.append(drag);$('dragFile').ondragstart=e=>{const ext=$('dragFormat').value.slice(1),type=ext==='pdf'?'application/pdf':ext==='eps'?'application/postscript':'image/svg+xml',bytes=ext==='pdf'?pdfBytes(svg):ext==='eps'?epsText(svg):svg;const url=URL.createObjectURL(new Blob([bytes],{type}));e.dataTransfer.setData('DownloadURL',type+':'+name+'.'+ext+':'+url);setTimeout(()=>URL.revokeObjectURL(url),60000);};
+ const section=(title,html)=>{const button=document.createElement('button');button.className='export-toggle';button.textContent='▶ '+title;const body=document.createElement('div');body.className='export-body';body.hidden=true;body.innerHTML=html;button.onclick=()=>{body.hidden=!body.hidden;button.textContent=(body.hidden?'▶ ':'▼ ')+title;};parent.append(button,body);return body;};
+ section('Быстрое Сохранение','<div class="row"><input id="folderName" aria-label="Папка экспорта" value="Папка загрузок браузера" readonly><button id="browseFolder">Обзор ▾</button></div><div class="row"><label for="saveName">Имя:</label><input id="saveName"><select id="format" aria-label="Формат"><option value="svg">.svg</option><option value="eps">.eps</option><option value="pdf">.pdf</option></select></div><button id="download">Сохранить</button>');$('saveName').value=name;$('download').onclick=()=>save();$('browseFolder').onclick=async()=>{if(!window.showDirectoryPicker){status('Браузер сохраняет файлы в выбранную папку загрузок.');return;}try{exportDir=await window.showDirectoryPicker({mode:'readwrite'});$('folderName').value=exportDir.name;}catch(error){if(error.name!=='AbortError')status(error.message);}};
+ section('Экспорт Bitmap','<div class="row"><label>Имя:</label><input id="pngName"><select aria-label="Формат Bitmap"><option>.png</option></select></div><label class="formrow">Ширина: <input id="pngWidth" type="number" min="1" max="8192"></label><label class="formrow">Высота: <input id="pngHeight" type="number" min="1" max="8192"></label><div class="row">Масштаб: <button data-png-scale="1">x1</button><button data-png-scale="2">x2</button><button data-png-scale="4">x4</button></div><button id="pngSave">Сохранить</button>');$('pngName').value=name+'_vectorized';$('pngWidth').value=source.width;$('pngHeight').value=source.height;for(const b of parent.querySelectorAll('[data-png-scale]'))b.onclick=()=>{$('pngWidth').value=source.width*Number(b.dataset.pngScale);$('pngHeight').value=source.height*Number(b.dataset.pngScale);};$('pngSave').onclick=async()=>{const w=Number($('pngWidth').value),h=Number($('pngHeight').value);if(!Number.isInteger(w)||!Number.isInteger(h)||w<1||h<1||w>8192||h>8192||w*h>16000000){status('Размер PNG: не более 8192 px по стороне и 16 млн пикселей.');return;}const blob=await partitionPreview(svg,source.width,source.height,{viewWidth:w,viewHeight:h,zoom:w/source.width});await download(blob,'image/png','png',$('pngName').value||name);status('PNG сохранён');};
+ section('Параметры Экспорта','<p>SVG / EPS / PDF: кривые Безье и составные контуры.<br>PNG: прозрачный фон, заданный размер.<br>AI, EMF и DXF в этой версии не поддерживаются.</p>');
+ const settings=section('Сохранение Настроек','<button id="saveSettings">Сохранить Настройки...</button>');$('saveSettings').onclick=()=>download(JSON.stringify(config,null,2),'application/json','json','vector-settings');
+}
+async function pasteImage(){try{for(const item of await navigator.clipboard.read()){const type=item.types.find(t=>t.startsWith('image/'));if(type){const blob=await item.getType(type);await load(new File([blob],'clipboard.png',{type}));return;}}status('В буфере обмена нет изображения.');}catch(error){status('Вставка из буфера: '+error.message);}}
+const batchInput=document.createElement('input');batchInput.type='file';batchInput.multiple=true;batchInput.accept='image/png,image/jpeg,image/webp,image/bmp';batchInput.hidden=true;document.body.append(batchInput);batchInput.onchange=()=>runBatch(Array.from(batchInput.files));
+$('about').onclick=()=>$('helpDialog').showModal();$('more').onclick=()=>{$('computeGpu').checked=config.gpu;$('computeCpu').checked=!config.gpu;$('advancedSettings').disabled=!source;$('settingsDialog').showModal();};$('closeSettings').onclick=()=>$('settingsDialog').close();$('computeGpu').onchange=()=>{config.gpu=true;if($('gpu'))$('gpu').checked=true;};$('computeCpu').onchange=()=>{config.gpu=false;if($('gpu'))$('gpu').checked=false;};$('advancedSettings').onclick=()=>{$('settingsDialog').close();config.mode='advanced';config.colors=config.colors||9;go(7);};
+$('segments').onclick=()=>{if(!segmentUrl)return;view='segments';previewToken++;$('preview').classList.remove('joint-preview');$('preview').src=segmentUrl;$('preview').style.transform='translate('+panX+'px,'+panY+'px)';$('bitmap').setAttribute('aria-pressed','false');$('vector').setAttribute('aria-pressed','false');};
+for(const b of document.querySelectorAll('[data-pan]'))b.onclick=()=>{if(b.dataset.pan==='fit'){fit();return;}const [x,y]=b.dataset.pan.split(',').map(Number);panX+=x;panY+=y;refreshView();};
+let panStart;const viewport=$('viewport');viewport.onpointerdown=e=>{if(!source||e.target.closest('button'))return;if((step===8||step===9)&&editTool==='cut'){removeVectorAt(e.clientX,e.clientY);return;}panStart=[e.clientX,e.clientY,panX,panY];viewport.setPointerCapture(e.pointerId);};viewport.onpointermove=e=>{if(!panStart)return;panX=panStart[2]+e.clientX-panStart[0];panY=panStart[3]+e.clientY-panStart[1];refreshView();};viewport.onpointerup=()=>{panStart=null;};
+
+let batchAbort=null;
+async function runBatch(files){
+ if(!files.length||busy)return;const options=structuredClone(config),result=[];busy=true;step=5;progress=0;stage='Пакетная Обработка';show();const batchWorker=new Worker(new URL('./worker.js',import.meta.url),{type:'module'});let aborted=false,rejectJob;
+ batchAbort=()=>{aborted=true;batchWorker.terminate();rejectJob?.(Error('Трассировка отменена'));};
+ try{for(const [index,file] of files.entries()){if(aborted)break;const image=await createImageBitmap(file),scale=Math.min(1,2400/Math.max(image.width,image.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(image.width*scale));c.height=Math.max(1,Math.round(image.height*scale));const ctx=c.getContext('2d');if(options.flatten){ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);}ctx.drawImage(image,0,0,c.width,c.height);image.close();const pixels=ctx.getImageData(0,0,c.width,c.height).data;
+ const traced=await new Promise((resolve,reject)=>{rejectJob=reject;batchWorker.onerror=e=>reject(Error(e.message));batchWorker.onmessage=({data})=>{if(data.progress!==undefined){progress=Math.floor((index+data.progress/100)/files.length*100);stage=(index+1)+' / '+files.length+' · '+data.stage;updateProgress();}else if(data.error)reject(Error(data.error));else resolve(data.svg);};batchWorker.postMessage({pixels:pixels.buffer,width:c.width,height:c.height,...options},[pixels.buffer]);});
+ const base=String(index+1).padStart(3,'0')+'-'+file.name.replace(/\.[^.]+$/,'');result.push({name:base+'.svg',data:traced},{name:base+'.pdf',data:pdfBytes(traced)});}
+ if(!aborted){await download(zip(result),'application/zip','zip','DoctorTracer-batch');status('Пакетная обработка завершена: '+files.length+' файлов');}
+ }catch(error){status(error.message);}finally{batchWorker.terminate();batchAbort=null;busy=false;step=source?0:-1;show();}
+}
+
+function expandedDocument(){const doc=new DOMParser().parseFromString(svg,'image/svg+xml');for(const p of Array.from(doc.querySelectorAll('path'))){const pieces=connectedPaths(p.getAttribute('d'));if(pieces.length>1){for(const d of pieces){const copy=p.cloneNode(true);copy.setAttribute('d',d);p.before(copy);}p.remove();}}return doc;}
+function applyVector(value,remember=true){if(remember){vectorUndo.push(svg);vectorUndo=vectorUndo.slice(-20);vectorRedo=[];}svg=value;if(vectorUrl)URL.revokeObjectURL(vectorUrl);if(outlineUrl)URL.revokeObjectURL(outlineUrl);outlineUrl='';vectorUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));display(true);show();status('Результат обновлён');}
+function removeVectorAt(clientX,clientY){
+ const r=$('viewport').getBoundingClientRect(),zoom=Number($('zoom').value)/100;const x=(clientX-r.left-(r.width-source.width*zoom)/2-panX)/zoom,y=(clientY-r.top-(r.height-source.height*zoom)/2-panY)/zoom,doc=expandedDocument();const ctx=document.createElement('canvas').getContext('2d');for(const p of Array.from(doc.querySelectorAll('path')).reverse()){const t=/translate\(([-\d.eE]+)[, ]+([-\d.eE]+)\)/.exec(p.getAttribute('transform')||'');if(ctx.isPointInPath(new Path2D(p.getAttribute('d')),x-Number(t?.[1]??0),y-Number(t?.[2]??0),'nonzero')){p.remove();for(const g of Array.from(doc.querySelectorAll('g[fill]')))if(!g.querySelector('path'))g.remove();applyVector(new XMLSerializer().serializeToString(doc));return;}}
+ status('В этой точке нет векторного объекта.');
+}
+function buildVectorEditor(parent){
+ display(true);const tools=document.createElement('fieldset');tools.innerHTML='<legend>'+(step===9?'Инструмент Удаления Фона':'Инструменты')+'</legend><p class="hint">Выберите «Удаление» и нажмите на отдельную область изображения. Контур и принадлежащие ему отверстия удаляются вместе.</p>';tools.append(action('Перемещение (A)',()=>{editTool='pan';show();},editTool==='pan'),action('Удаление Области (D)',()=>{editTool='cut';show();},editTool==='cut'),action('Отменить (Z)',()=>{if(vectorUndo.length){vectorRedo.push(svg);applyVector(vectorUndo.pop(),false);}}),action('Повторить (Y)',()=>{if(vectorRedo.length){vectorUndo.push(svg);applyVector(vectorRedo.pop(),false);}}));parent.append(tools);
+ if(step===8){const colors=document.createElement('fieldset');colors.innerHTML='<legend>Изменение Цветов</legend><p class="hint">Изменение образца заменяет этот цвет во всех соответствующих кривых.</p>';const palette=document.createElement('div');palette.className='palette';for(const group of svgGroups(svg).slice(0,128)){const input=document.createElement('input');input.type='color';input.value=group.color;input.className='swatch-input';input.title=group.color;input.onchange=()=>{const doc=new DOMParser().parseFromString(svg,'image/svg+xml');for(const g of doc.querySelectorAll('g[fill]'))if(g.getAttribute('fill').toLowerCase()===group.color.toLowerCase()){g.setAttribute('fill',input.value);g.setAttribute('id','color-'+input.value.slice(1));for(const p of g.querySelectorAll('path'))p.setAttribute('fill',input.value);}const combined=new Map();for(const g of doc.querySelectorAll('g[fill]')){const color=g.getAttribute('fill');if(combined.has(color)){for(const p of Array.from(g.children))combined.get(color).append(p);g.remove();}else combined.set(color,g);}applyVector(new XMLSerializer().serializeToString(doc));};palette.append(input);}colors.append(palette);parent.append(colors);}
+ parent.append(action('Обзор Результата',()=>go(5)),action('Сохранить Результат',()=>go(6)));
+}
+
+function paletteService(){
+ if(!paletteWorker){paletteWorker=new Worker(new URL('./worker.js',import.meta.url),{type:'module'});paletteWorker.onmessage=({data})=>{if(data.requestId!==undefined&&(data.palette||data.analysis||data.error)){const resolve=pendingPalettes.get(data.requestId);pendingPalettes.delete(data.requestId);resolve?.(data.palette||data.analysis||null);}};}return paletteWorker;
+}
+async function analyzeSource(){
+ const c=document.createElement('canvas'),scale=Math.min(1,900/Math.max(source.width,source.height));c.width=Math.max(1,Math.round(source.width*scale));c.height=Math.max(1,Math.round(source.height*scale));const ctx=c.getContext('2d');ctx.drawImage(source,0,0,c.width,c.height);const pixels=ctx.getImageData(0,0,c.width,c.height).data,id=++requestId,promise=new Promise(resolve=>pendingPalettes.set(id,resolve));paletteService().postMessage({operation:'analyze',requestId:id,pixels:pixels.buffer,width:c.width,height:c.height},[pixels.buffer]);return promise;
+}
+
+function refreshView(){if(view==='segments'){$('segments').click();const zoom=Number($('zoom').value)/100;$('preview').style.width=source.width*zoom+'px';$('preview').style.height=source.height*zoom+'px';}else display(view==='vector');}

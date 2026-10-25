@@ -5,7 +5,7 @@ for(let y=2;y<46;y++)for(let x=2;x<62;x++)pixels.set(x<32?[210,30,80,255]:[20,16
 // Tiny interior alpha hole, not visible to a scanline transparency heuristic.
 pixels.fill(0,4*(12*w+12),4*(12*w+12)+4);
 const options={colors:2,detail:2,speckle:0,category:'hard'};
-const a=runtime.trace(pixels,w,h,options);assert(progress.every((v,i)=>i===0||v>=progress[i-1]));assert.equal(a,runtime.trace(pixels,w,h,options));assert.equal(svgGroups(a).length,2);assert.match(a,/<g id="image">/);assert.match(a,/C/);assert((a.match(/M/g)||[]).length>=3,'one-pixel hole contour');assert(!a.includes('<image'));assert(!a.includes('NaN'));assert.equal(progress.at(-1),100);assert(progress.includes(62));
+const a=runtime.trace(pixels,w,h,options);assert(progress.every((v,i)=>i===0||v>=progress[i-1]));assert.equal(a,runtime.trace(pixels,w,h,options));assert.equal(svgGroups(a).length,2);assert.match(a,/<g id="image">/);assert.match(a,/C/);assert((a.match(/M/g)||[]).length>=3,'one-pixel hole contour');assert(!a.includes('<image'));assert(!a.includes('NaN'));assert.equal(progress.at(-1),100);assert(progress.includes(60));
 const polygon=runtime.trace(pixels,w,h,{...options,polygon:true});assert(!/\\bC[-\\d ]/.test(polygon));assert.match(polygon,/L/);
 assert.match(runtime.trace(new Uint8Array([30,90,200,255]),1,1,{...options,speckle:0}),/<path /,'visible singleton pixel');
 const empty=runtime.trace(new Uint8Array(12*10*4),12,10,options);assert(!empty.includes('<path'));
