@@ -1,3 +1,5 @@
+> Исторические проверки версий до 0.10.2: PDF содержал составные кривые по цветам, но не вложенные группы CorelDRAW. Исправление и новая проверка: [COREL_GROUPS.md](COREL_GROUPS.md).
+
 # Windows 0.10 preview — photographic regions
 
 The new pipeline is enabled for photographs with unlimited colours in the

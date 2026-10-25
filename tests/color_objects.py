@@ -1,4 +1,4 @@
-"""Merged tile boundaries, one PDF object per color, large preview paths."""
+"""Merged tile boundaries, one PDF group per color, large preview paths."""
 import sys,re,zlib,xml.etree.ElementTree as ET
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'desktop'))
@@ -24,4 +24,4 @@ paths=' '.join(f'M{x} {y}L{x+1} {y}L{x+1} {y+1}L{x} {y+1}Z' for y in range(0,128
 large=f'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="128" viewBox="0 0 256 128" data-color-objects="merged"><path fill="#ff0000" d="{paths}"/></svg>'
 im.fill(Qt.transparent);p=QPainter(im);QSvgRenderer(QByteArray(large.encode())).render(p,QRectF(0,0,256,128));p.end()
 assert np.count_nonzero(np.frombuffer(im.bits(),np.uint8).reshape(128,256,4)[:,:,3])==8192
-print('PASS: tile cuts merged, one compound PDF color object, pure vector PDF, large color preview')
+print('PASS: tile cuts merged, one PDF color group, pure vector PDF, large color preview')

@@ -1,4 +1,4 @@
-"""Merge partition boundaries and export one editable PDF object per color."""
+"""Merge partition boundaries and export editable PDF groups per color."""
 import re,zlib
 import xml.etree.ElementTree as ET
 import pyclipper
@@ -30,11 +30,35 @@ def merge_colors(svg,preserve_curves=False):
     out.set('data-color-objects','merged')
     return ET.tostring(out,encoding='unicode'),count
 
+def connected_paths(data):
+    """Split disconnected outers, retaining original coordinate strings and holes."""
+    chunks=re.findall(r'M[^M]*',data)
+    if len(chunks)<2:return [data]
+    from vector_partition import parse
+    paths=[parse(chunk) for chunk in chunks]
+    outer_winding=max(paths,key=lambda p:abs(p.area)).clockwise
+    outers=[i for i,p in enumerate(paths) if p.clockwise==outer_winding]
+    holes=[i for i,p in enumerate(paths) if p.clockwise!=outer_winding]
+    grouped={i:[chunks[i]] for i in outers}
+    for hole in holes:
+        points=[pts[-1] for verb,pts in paths[hole].segments if pts]
+        parents=[i for i in outers if abs(paths[i].area)>=abs(paths[hole].area) and all(paths[i].bounds[j]<=paths[hole].bounds[j]+1e-6 for j in (0,1)) and all(paths[i].bounds[j]>=paths[hole].bounds[j]-1e-6 for j in (2,3)) and any(paths[i].contains(point) for point in points)]
+        if not parents:return [data]  # Preserve ambiguous touching contours intact.
+        parent=min(parents,key=lambda i:abs(paths[i].area))
+        grouped[parent].append(chunks[hole])
+    return [' '.join(grouped[i]) for i in outers]
+
+
 def pdf_bytes(svg):
     root=ET.fromstring(svg);w=float(root.get('width'));h=float(root.get('height'))
     x,y,vw,vh=map(float,root.get('viewBox',f'0 0 {w} {h}').split())
     groups={}
-    for el in root.iter('{'+NS+'}path'):groups.setdefault(el.get('fill'),[]).append(el.get('d'))
+    def collect(el,fill='#000000'):
+        fill=el.get('fill',fill).lower()
+        if el.tag=='{'+NS+'}path' and fill!='none' and el.get('d'):
+            groups.setdefault(fill,[]).extend(connected_paths(el.get('d')))
+        for child in el:collect(child,fill)
+    collect(root)
     objects=[b'',b''];resources=[];page=[]
     def stream(data,attributes=''):
         packed=zlib.compress(data.encode('ascii'))
@@ -49,8 +73,8 @@ def pdf_bytes(svg):
                 n,op={'M':(2,'m'),'L':(2,'l'),'C':(6,'c')}[cmd]
                 content.append(' '.join(tokens[i:i+n])+' '+op);i+=n
                 if cmd=='M':cmd='L'
-        content.append('f')
-        objects.append(stream('\n'.join(content),f'/Type /XObject /Subtype /Form /FormType 1 /BBox [{x} {y} {x+vw} {y+vh}] /Resources << >>'))
+            content.append('f')
+        objects.append(stream('\n'.join(content),f'/Type /XObject /Subtype /Form /FormType 1 /Group << /S /Transparency /CS /DeviceRGB /I true /K false >> /BBox [{x} {y} {x+vw} {y+vh}] /Resources << >>'))
         obj=len(objects);resources.append(f'/Color{index} {obj} 0 R');page.append(f'/Color{index} Do')
     objects.append(stream(f'q\n{w/vw} 0 0 {-h/vh} {-x*w/vw} {h+y*h/vh} cm\n'+'\n'.join(page)+'\nQ'))
     contents=len(objects)
