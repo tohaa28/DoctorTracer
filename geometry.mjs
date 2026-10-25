@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Desktop's independent Clipper intersection audit, with shared-boundary fallback.
-import ClipperLib from './vendor/clipper.mjs?v=0.12.0.1';
-import {svgGroups} from './exports.mjs?v=0.12.0.1';
-import {contours} from './paths.mjs?v=0.12.0.1';
+import ClipperLib from './vendor/clipper.mjs?v=0.12.1';
+import {svgGroups} from './exports.mjs?v=0.12.1';
+import {contours} from './paths.mjs?v=0.12.1';
 const SCALE=1e7;
 const bounds=paths=>{let l=Infinity,t=Infinity,r=-Infinity,b=-Infinity;for(const path of paths)for(const p of path){l=Math.min(l,p.X);r=Math.max(r,p.X);t=Math.min(t,p.Y);b=Math.max(b,p.Y);}return[l,t,r,b];};
 const cells=b=>{const keys=[];const span=128*SCALE;for(let y=Math.floor(b[1]/span);y<=Math.floor(b[3]/span);y++)for(let x=Math.floor(b[0]/span);x<=Math.floor(b[2]/span);x++)keys.push(x+','+y);return keys;};
@@ -18,7 +18,7 @@ export function audit(svg){
 
 let native;
 export async function auditNative(svg,{wasmBinary}={}){
- if(!native){const {default:init}=await import('./vendor/audit.mjs?v=0.12.0.1');native=await init(wasmBinary?{wasmBinary}:{locateFile:()=>new URL('./vendor/audit.wasm?v=0.12.0.1',import.meta.url).href});}
+ if(!native){const {default:init}=await import('./vendor/audit.mjs?v=0.12.1');native=await init(wasmBinary?{wasmBinary}:{locateFile:()=>new URL('./vendor/audit.wasm?v=0.12.1',import.meta.url).href});}
  native._audit_start();let maxArea=0;
  for(const group of svgGroups(svg)){
   const paths=group.paths.flatMap(p=>contours(p.d,p.x,p.y));if(!paths.length)continue;
@@ -28,7 +28,7 @@ export async function auditNative(svg,{wasmBinary}={}){
 }
 
 export async function partitionNative(shapes,w,h,{wasmBinary}={}){
- if(!native){const {default:init}=await import('./vendor/audit.mjs?v=0.12.0.1');native=await init(wasmBinary?{wasmBinary}:{locateFile:()=>new URL('./vendor/audit.wasm?v=0.12.0.1',import.meta.url).href});}native._partition_start(w,h);const groups=new Map();
+ if(!native){const {default:init}=await import('./vendor/audit.mjs?v=0.12.1');native=await init(wasmBinary?{wasmBinary}:{locateFile:()=>new URL('./vendor/audit.wasm?v=0.12.1',import.meta.url).href});}native._partition_start(w,h);const groups=new Map();
  for(const item of [...shapes].reverse()){
   const paths=contours(item.d);if(!paths.length)continue;let size=0;for(const p of paths)size+=1+p.length*2;const bytes=new Float64Array(size);let i=0;for(const p of paths){bytes[i++]=p.length;for(const point of p){bytes[i++]=point.X;bytes[i++]=point.Y;}}
   const ptr=native._malloc(bytes.byteLength);if(!ptr)throw Error('Недостаточно памяти');let data;try{native.HEAPF64.set(bytes,ptr/8);const result=native._partition_add(ptr,bytes.length);if(!result)throw Error('Clipper partition failed');data=native.UTF8ToString(result);}finally{native._free(ptr);}if(data){if(!groups.has(item.color))groups.set(item.color,[]);groups.get(item.color).push(data);}
