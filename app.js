@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import {icon} from './icons.js?v=0.12.0';
-import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs?v=0.12.0';
-import {zip} from './zip.mjs?v=0.12.0';
-import {partitionPreview} from './preview.mjs?v=0.12.0';
+import {icon} from './icons.js?v=0.12.0.1';
+import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs?v=0.12.0.1';
+import {zip} from './zip.mjs?v=0.12.0.1';
+import {partitionPreview} from './preview.mjs?v=0.12.0.1';
 const $=id=>document.getElementById(id);
 const defaults=()=>({mode:'basic',category:'photo',detail:2,colors:0,speckle:2,flatten:false,polygon:false,gpu:true});
 let config=defaults(),step=-1,source=null,sourceUrl='',vectorUrl='',outlineUrl='',svg='',worker=null,busy=false,name='image',elapsed=0,backend='',progress=0,stage='',loadToken=0;
@@ -16,7 +16,7 @@ function card(title,description,symbol,selected,action){
  const b=document.createElement('button');b.className='card'+(selected?' selected':'');b.innerHTML='<span class="symbol">'+icon(symbol)+'</span><span class="text"><strong></strong><small></small><span class="choiceTag"></span></span>';
  b.querySelector('strong').textContent=title;b.querySelector('small').textContent=description;b.querySelector('.choiceTag').textContent=selected?'Выбор':'';b.onclick=action;return b;
 }
-function action(text,fn,selected=false){const b=document.createElement('button');b.className='action';const kind=text.includes('Качество')?(text.includes('Высокое')?'high':text.includes('Среднее')?'medium':'low'):text.includes('Цвета Без')?'flex':text.includes('Настраиваемые')?'fixed':null;if(kind){const image=document.createElement('img');image.className='small-icon';image.src=new URL('./desktop-icons/'+kind+'.png',import.meta.url);b.append(image,document.createTextNode(text.replace(/^[↻🌈◉]\s*/,'')));}else b.textContent=text;b.setAttribute('aria-pressed',String(selected));b.onclick=fn;return b;}
+function action(text,fn,selected=false){const b=document.createElement('button');b.className='action';const kind=text.includes('Качество')?(text.includes('Высокое')?'high':text.includes('Среднее')?'medium':'low'):text.includes('Цвета Без')?'flex':text.includes('Настраиваемые')?'fixed':null;if(kind){const image=document.createElement('img');image.className='small-icon';image.src=new URL('./desktop-icons/'+kind+'.png',import.meta.url);b.append(image,document.createTextNode(text.replace(/^[↻🌈◉]\s*/u,'')));}else b.textContent=text;b.setAttribute('aria-pressed',String(selected));b.onclick=fn;return b;}
 function colorsForm(parent){
  const f=document.createElement('fieldset');f.innerHTML='<legend>Настройка палитры</legend><label class="formrow">Количество цветов <input id="colors" type="number" min="2" max="128" step="1" value="'+(config.colors||16)+'"></label><p class="hint">От 2 до 128 цветов. Палитра определяется по изображению.</p>';parent.append(f);
  $('colors').onchange=()=>readConfig();
@@ -84,7 +84,7 @@ async function run(){
  if(!source||busy||!readConfig())return;busy=true;if(step!==5){pageHistory.push(step);step=5;}svg='';progress=0;stage='Подготовка изображения';$('outlines').checked=false;$('vector').disabled=true;show();
  const canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;const context=canvas.getContext('2d',{willReadFrequently:true});
  if(config.flatten){context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);}context.drawImage(source,0,0);const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
- worker??=new Worker(new URL('./worker.js?v=0.12.0',import.meta.url),{type:'module'});
+ worker??=new Worker(new URL('./worker.js?v=0.12.0.1',import.meta.url),{type:'module'});
  worker.onmessage=({data})=>{
   if(data.progress!==undefined){progress=data.progress;stage=data.stage;updateProgress();return;}
   busy=false;if(data.error){worker?.terminate();worker=null;status(data.error);step=pageHistory.pop()??0;show();return;}svg=data.svg;vectorUndo=[];vectorRedo=[];elapsed=data.seconds;backend=data.backend;panX=0;panY=0;if(data.segments)awaitSegments(data.segments);$('segments').hidden=!data.segments;
@@ -162,7 +162,7 @@ let panStart;const viewport=$('viewport');viewport.onpointerdown=e=>{if(!source|
 
 let batchAbort=null;
 async function runBatch(files){
- if(!files.length||busy)return;const options=structuredClone(config),result=[];busy=true;step=5;progress=0;stage='Пакетная Обработка';show();const batchWorker=new Worker(new URL('./worker.js?v=0.12.0',import.meta.url),{type:'module'});let aborted=false,rejectJob;
+ if(!files.length||busy)return;const options=structuredClone(config),result=[];busy=true;step=5;progress=0;stage='Пакетная Обработка';show();const batchWorker=new Worker(new URL('./worker.js?v=0.12.0.1',import.meta.url),{type:'module'});let aborted=false,rejectJob;
  batchAbort=()=>{aborted=true;batchWorker.terminate();rejectJob?.(Error('Трассировка отменена'));};
  try{for(const [index,file] of files.entries()){if(aborted)break;const image=await createImageBitmap(file),scale=Math.min(1,2400/Math.max(image.width,image.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(image.width*scale));c.height=Math.max(1,Math.round(image.height*scale));const ctx=c.getContext('2d');if(options.flatten){ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);}ctx.drawImage(image,0,0,c.width,c.height);image.close();const pixels=ctx.getImageData(0,0,c.width,c.height).data;
  const traced=await new Promise((resolve,reject)=>{rejectJob=reject;batchWorker.onerror=e=>reject(Error(e.message));batchWorker.onmessage=({data})=>{if(data.progress!==undefined){progress=Math.floor((index+data.progress/100)/files.length*100);stage=(index+1)+' / '+files.length+' · '+data.stage;updateProgress();}else if(data.error)reject(Error(data.error));else resolve(data.svg);};batchWorker.postMessage({pixels:pixels.buffer,width:c.width,height:c.height,...options},[pixels.buffer]);});
@@ -184,7 +184,7 @@ function buildVectorEditor(parent){
 }
 
 function paletteService(){
- if(!paletteWorker){paletteWorker=new Worker(new URL('./worker.js?v=0.12.0',import.meta.url),{type:'module'});paletteWorker.onmessage=({data})=>{if(data.requestId!==undefined&&(data.palette||data.analysis||data.error)){const resolve=pendingPalettes.get(data.requestId);pendingPalettes.delete(data.requestId);resolve?.(data.palette||data.analysis||null);}};}return paletteWorker;
+ if(!paletteWorker){paletteWorker=new Worker(new URL('./worker.js?v=0.12.0.1',import.meta.url),{type:'module'});paletteWorker.onmessage=({data})=>{if(data.requestId!==undefined&&(data.palette||data.analysis||data.error)){const resolve=pendingPalettes.get(data.requestId);pendingPalettes.delete(data.requestId);resolve?.(data.palette||data.analysis||null);}};}return paletteWorker;
 }
 async function analyzeSource(){
  const c=document.createElement('canvas'),scale=Math.min(1,900/Math.max(source.width,source.height));c.width=Math.max(1,Math.round(source.width*scale));c.height=Math.max(1,Math.round(source.height*scale));const ctx=c.getContext('2d');ctx.drawImage(source,0,0,c.width,c.height);const pixels=ctx.getImageData(0,0,c.width,c.height).data,id=++requestId,promise=new Promise(resolve=>pendingPalettes.set(id,resolve));paletteService().postMessage({operation:'analyze',requestId:id,pixels:pixels.buffer,width:c.width,height:c.height},[pixels.buffer]);return promise;
