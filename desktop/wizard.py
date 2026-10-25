@@ -265,7 +265,7 @@ class WizardWindow(ServiceWindow):
         self.manual_palette=['#%02x%02x%02x'%tuple(c) for c in inks[:64]];self.color_mode='fixed'
         cfg=self.config();cfg['colors']=0;cfg['remove_bg']=False;self.trace_return='review';self.history.append('edit');self.page='processing';self.render_page();self.start_job(str(path),cfg)
     def build_processing(self):
-        label=QLabel();label.setPixmap(icon('gears').scaled(200,180,Qt.KeepAspectRatio,Qt.SmoothTransformation));label.setAlignment(Qt.AlignCenter);self.page_layout.addWidget(label);self.page_layout.addSpacing(20);self.page_layout.addWidget(QLabel('Обработка Изображения...'));progress=QProgressBar();progress.setRange(0,0);self.page_layout.addWidget(progress)
+        label=QLabel();label.setPixmap(icon('gears').scaled(200,180,Qt.KeepAspectRatio,Qt.SmoothTransformation));label.setAlignment(Qt.AlignCenter);self.page_layout.addWidget(label);self.page_layout.addSpacing(20);self.processing_label=QLabel('Обработка изображения: 0%');self.processing_label.setWordWrap(True);self.page_layout.addWidget(self.processing_label);self.processing_progress=QProgressBar();self.processing_progress.setRange(0,100);self.processing_progress.setValue(0);self.processing_progress.setFormat('%p%');self.page_layout.addWidget(self.processing_progress)
     def begin_trace(self,target='review'):
         if self.process or not self.file:return
         if isinstance(target,bool):target='review'

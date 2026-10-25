@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt, QSize, QSizeF, QRectF, QByteArray, QTimer, QMimeD
 from PySide6.QtGui import QPainter, QImage, QColor, QDrag, QPdfWriter, QPageSize, QIcon, QPixmap
 from PySide6.QtWidgets import (QApplication,QWidget,QVBoxLayout,QHBoxLayout,QLabel,
     QPushButton,QCheckBox,QRadioButton,QButtonGroup,QSpinBox,QSlider,QLineEdit,
-    QComboBox,QFileDialog,QMessageBox,QMenu,QFrame,QListWidget,QListWidgetItem)
+    QComboBox,QFileDialog,QMessageBox,QMenu,QFrame,QListWidget,QListWidgetItem,QSizePolicy)
 from vector_render import QSvgRenderer
 import wizard
 from engine import to_eps
@@ -107,7 +107,7 @@ class Window(wizard.WizardWindow):
         self.canvas.layer_buttons['Сегменты'].setText('Сегменты')
         for button in self.canvas.nav.findChildren(QPushButton):button.setStyleSheet('padding:0px;');button.setFixedSize(19,19)
         for label in self.statusBar().findChildren(QLabel):
-            if label.text()=='v2.0':label.setText('v0.10 preview')
+            if label.text()=='v2.0':label.setText('v0.10.1 preview')
         self.auto_timer=QTimer(self);self.auto_timer.setSingleShot(True);self.auto_timer.timeout.connect(self.apply_pending)
         for key,fn in [('A',lambda:self.set_background_tool('drag') if self.page=='background' else self.set_tool('drag')),('D',lambda:self.set_background_tool('cut') if self.page=='background' else self.set_tool('adapt')),('F',lambda:self.set_tool('fill')),('X',lambda:self.set_tool('pencil')),('C',lambda:self.set_tool('color')),('Z',lambda:self.undo_background() if self.page=='background' else self.undo_edit()),('Y',lambda:self.redo_background() if self.page=='background' else self.redo_edit()),('T',lambda:self.reset_background() if self.page=='background' else self.update_segmentation())]:
             action=wizard.QAction(self);action.setShortcut(key);action.triggered.connect(fn);self.addAction(action)
@@ -340,7 +340,7 @@ class Window(wizard.WizardWindow):
         super().begin_trace(target)
     def start_job(self,path,config):
         if self.process:return
-        self.cancelled=False;self.active_config=dict(config)
+        self.cancelled=False;self.trace_name=Path(path).name;self.active_config=dict(config)
         self.job_out=Path(self.temp.name)/'result.svg';self.result_file=Path(self.temp.name)/'result.json'
         self.job_out.unlink(missing_ok=True);self.result_file.unlink(missing_ok=True)
         job_path=Path(self.temp.name)/'job.json';job_path.write_text(json.dumps({'input':path,'output':str(self.job_out),'result':str(self.result_file),'config':config}),encoding='utf-8')
@@ -355,15 +355,28 @@ class Window(wizard.WizardWindow):
         self.process=worker
         self.run_button.setEnabled(True);self.export_button.setEnabled(False)
         for control in self.settings_widgets:control.setEnabled(False)
-        self.progress.setRange(0,0);self.progress.show();self.statusBar().showMessage('Обработка: '+Path(path).name)
-        worker.write((json.dumps({'job':str(job_path)},ensure_ascii=False)+'\n').encode('utf-8'))
+        self.progress.setRange(0,100);self.progress.setValue(0);self.progress.show();self.update_trace_progress(0,'Начало обработки')
+        worker.write((json.dumps({'job':str(job_path),'progress':True},ensure_ascii=False)+'\n').encode('utf-8'))
     def worker_response(self):
         worker=self.resident_worker
         while worker and worker.canReadLine():
             line=bytes(worker.readLine()).decode('utf-8',errors='replace')
-            try:code=int(json.loads(line)['exit_code'])
+            try:
+                message=json.loads(line)
+                if 'progress' in message:
+                    if self.process is worker:self.update_trace_progress(message['progress'],message.get('stage','Обработка'))
+                    continue
+                code=int(message['exit_code'])
             except (ValueError,KeyError,TypeError):continue
             if self.process is worker:self.job_finished(code,QProcess.NormalExit)
+    def update_trace_progress(self,value,stage):
+        value=max(getattr(self,'trace_percent',0),min(100,int(value))) if value else 0
+        self.trace_percent=value
+        self.progress.setValue(value)
+        if self.page=='processing' and hasattr(self,'processing_progress'):
+            self.processing_progress.setValue(value)
+            self.processing_label.setText(f'{stage}: {value}%')
+        self.statusBar().showMessage(f'Обработка: {value}% · {stage} · {self.trace_name}')
     def worker_exit(self,worker,code,status):
         if self.process is worker:self.job_finished(code if code else -1,status)
         if getattr(self,'resident_worker',None) is worker:self.resident_worker=None
@@ -458,20 +471,20 @@ class Window(wizard.WizardWindow):
         self.flatten_mode='preserve';self.selected_color=0
         super().load(path)
     def about(self):
-        QMessageBox.information(self,'Паспорт DoctorTracer','DoctorTracer 0.10 preview\n\nЛокальная трассировка SVG / EPS / PDF / PNG.\nSVG: группы по цветам, устранение наложений геометрии.\n\nGPU ускоряет фильтрацию фотографий, назначение цветов и пространственную сегментацию.\nОбщие границы, объединение областей и проверка геометрии выполняются на CPU.\n\nНастройки находятся в меню «Дополнительные Параметры».')
+        QMessageBox.information(self,'Паспорт DoctorTracer','DoctorTracer 0.10.1 preview\n\nЛокальная трассировка SVG / EPS / PDF / PNG.\nSVG: группы по цветам, устранение наложений геометрии.\n\nGPU ускоряет фильтрацию фотографий, назначение цветов и пространственную сегментацию.\nОбщие границы, объединение областей и проверка геометрии выполняются на CPU.\n\nНастройки находятся в меню «Дополнительные Параметры».')
     def build_export(self):
         self.choice('Сохранение Результата','• Совет: Попробуйте перетащить изображение в нужное вам место.\n• Клавиши быстрого доступа: Ctrl-S.','save',self.export)
-        g=self.group('Перетаскивание Файла');row=QHBoxLayout();fmt=QComboBox();fmt.addItems(['.svg','.eps','.pdf']);mini=QCheckBox('Минимизировать при перетаскивании');mini.setChecked(True);row.addWidget(DragFile(self,fmt,mini));right=QVBoxLayout();right.addWidget(fmt,0,Qt.AlignLeft);self.paragraph(right,'Перетащите файл в нужную директорию.');right.addWidget(mini);row.addLayout(right);g.addLayout(row)
+        g=self.group('Перетаскивание Файла');row=QHBoxLayout();fmt=QComboBox();fmt.addItems(['.svg','.eps','.pdf']);mini=QCheckBox('Минимизировать окно');mini.setChecked(True);row.addWidget(DragFile(self,fmt,mini));right=QVBoxLayout();right.addWidget(fmt,0,Qt.AlignLeft);self.paragraph(right,'Перетащите файл в нужную директорию.');row.addLayout(right);g.addLayout(row);g.addWidget(mini)
         q=self.collapsible('Быстрое Сохранение');self.export_fields(q,False)
         q=self.collapsible('Экспорт Bitmap');self.export_fields(q,True)
         q=self.collapsible('Параметры Экспорта');self.paragraph(q,'SVG / EPS / PDF: кривые Безье и составные контуры.\nPNG: прозрачный фон, заданный размер.\nAI, EMF и DXF в этой версии не поддерживаются.')
         q=self.collapsible('Сохранение Настроек');self.small_button(q,'Сохранить Настройки...',self.save_preset)
     def export_fields(self,g,bitmap):
-        folder=QLineEdit(self.quick_dir or (str(Path(self.file).parent) if self.file else ''));row=QHBoxLayout();row.addWidget(folder);browse=QPushButton('Обзор ▾');row.addWidget(browse);g.addLayout(row)
+        folder=QLineEdit(self.quick_dir or (str(Path(self.file).parent) if self.file else ''));folder.setMinimumWidth(0);folder.setSizePolicy(QSizePolicy.Ignored,QSizePolicy.Fixed);row=QHBoxLayout();row.addWidget(folder);browse=QPushButton('Обзор ▾');row.addWidget(browse);g.addLayout(row)
         def choose():
             p=QFileDialog.getExistingDirectory(self,'Папка экспорта',folder.text())
             if p:folder.setText(p)
-        browse.clicked.connect(choose);row=QHBoxLayout();row.addWidget(QLabel('Имя:'));name=QLineEdit((self.quick_name or Path(self.file).stem)+('_vectorized' if bitmap else ''));row.addWidget(name);fmt=QComboBox();fmt.addItems(['.png'] if bitmap else ['.svg','.eps','.pdf']);row.addWidget(fmt);g.addLayout(row)
+        browse.clicked.connect(choose);row=QHBoxLayout();row.addWidget(QLabel('Имя:'));name=QLineEdit((self.quick_name or Path(self.file).stem)+('_vectorized' if bitmap else ''));name.setMinimumWidth(0);name.setSizePolicy(QSizePolicy.Ignored,QSizePolicy.Fixed);row.addWidget(name);fmt=QComboBox();fmt.addItems(['.png'] if bitmap else ['.svg','.eps','.pdf']);row.addWidget(fmt);g.addLayout(row)
         width=height=None
         if bitmap:
             width=QSpinBox();height=QSpinBox()

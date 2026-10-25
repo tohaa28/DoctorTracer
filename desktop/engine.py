@@ -14,6 +14,8 @@ import vtracer
 import cv2
 from geometry import absolute_path
 
+from trace_progress import report
+
 NS='http://www.w3.org/2000/svg'
 
 
@@ -163,7 +165,7 @@ def native_trace(mask,cfg,scale=1.):
 
 def trace_graphic(path,cfg):
     aa=cfg.get('category','aa')=='aa'
-    metrics={};stage=time.perf_counter()
+    report(cfg,8,'Подготовка изображения');metrics={};stage=time.perf_counter()
     source=load_source(path,{**cfg,'_metrics':metrics})
     # Transparent illustrations need a smooth silhouette independently of their
     # interior color regions. A solid underlayer also prevents pale seams.
@@ -172,7 +174,7 @@ def trace_graphic(path,cfg):
     a,labels,palette,original=segment(path,{**cfg,'supersample':supersample,'_metrics':metrics,'_source':source})
     metrics['shape_strategy']='silhouette + interior layers' if layered else 'independent masks'
     metrics['segmentation_seconds']=time.perf_counter()-stage;stage=time.perf_counter()
-    h,w=labels.shape
+    report(cfg,30,'Построение контуров');h,w=labels.shape
     root=ET.Element('{'+NS+'}svg',{'width':str(original[0]),'height':str(original[1]),'viewBox':f'0 0 {w} {h}','version':'1.1'})
     # Trace actual segmentation masks; smooth/optimize curves independently of palette discovery.
     counts=np.bincount(labels[labels!=255],minlength=len(palette))
@@ -186,11 +188,13 @@ def trace_graphic(path,cfg):
         if cfg.get('contour_blur',0)>0:mask=cv2.GaussianBlur(mask.astype(np.float32),(0,0),cfg['contour_blur']*cfg.get('supersample',2 if aa else 1))>=.5
         return i,native_trace(mask,cfg)
     with ThreadPoolExecutor(max_workers=min(4,len(order) or 1)) as pool:
-        for i,paths in pool.map(trace_ink,order):
+        for completed,(i,paths) in enumerate(pool.map(trace_ink,order),1):
+            report(cfg,30+int(35*completed/max(1,len(order))),'Построение контуров')
             for data in paths:ET.SubElement(root,'{'+NS+'}path',{'d':data,'fill':'#%02x%02x%02x'%tuple(palette[i]),'fill-rule':'nonzero'})
     metrics['curves_seconds']=time.perf_counter()-stage
     ET.register_namespace('',NS)
     from vector_partition import partition
+    report(cfg,75,'Объединение и проверка геометрии')
     svg,layout=partition(ET.tostring(root,encoding='unicode',xml_declaration=True))
     return svg,{
         'colors':layout['color_groups'],'width':original[0],'height':original[1],**layout,
@@ -236,6 +240,7 @@ def prepare(path, cfg):
 
 
 def trace(path, cfg):
+    report(cfg,3,'Подготовка изображения')
     start = time.monotonic()
     category=cfg.get('category','aa')
     use_palette=bool(cfg.get('palette')) or bool(cfg.get('colors'))
@@ -262,6 +267,7 @@ def trace(path, cfg):
     buf = io.BytesIO()
     im.save(buf, format='PNG')
     detail = cfg.get('detail', 2)
+    report(cfg,25,'Построение цветовых областей')
     svg = vtracer.convert_raw_image_to_svg(
         buf.getvalue(), img_format='png', colormode='color', hierarchical='stacked',
         mode=cfg.get('mode', 'spline'), filter_speckle=(cfg.get('photo_speckle',[12,6,4][detail])+max(0,cfg.get('speckle',2)-2) if photo and not use_palette else cfg.get('speckle',4)),
@@ -269,6 +275,7 @@ def trace(path, cfg):
         layer_difference=8 if cfg.get('colors') else [32, 24, 16][detail],
         corner_threshold=cfg.get('corner', 60), length_threshold=[6., 4., 3.][detail],
         max_iterations=10, splice_threshold=45, path_precision=3)
+    report(cfg,65,'Сглаживание контуров')
     refit_seconds=0.
     if photo and not use_palette and cfg.get('mode','spline')=='spline' and cfg.get('photo_curve_refit',True):
         from photo_curves import refit_curves
@@ -283,6 +290,7 @@ def trace(path, cfg):
     ET.register_namespace('', 'http://www.w3.org/2000/svg')
     svg = ET.tostring(root, encoding='unicode', xml_declaration=True)
     from vector_partition import partition
+    report(cfg,80,'Проверка геометрии')
     svg,layout=partition(svg)
     return svg, {**layout,'seconds': round(time.monotonic()-start, 2),
                  'width': original[0], 'height': original[1], 'working_size': list(im.size),
@@ -332,12 +340,23 @@ def to_eps(svg):
     return '\n'.join(lines + ['showpage','%%EOF',''])
 
 
-def worker(job_path):
+def worker(job_path,progress=False):
     job = json.loads(Path(job_path).read_text(encoding='utf-8'))
     try:
+        if progress:
+            last=[-1,None]
+            def emit(value,stage):
+                value=max(last[0],min(100,int(value)))
+                if (value,stage)==tuple(last):return
+                last[:]=[value,stage]
+                print(json.dumps({'progress':value,'stage':stage},ensure_ascii=True),flush=True)
+            job['config']['_progress']=emit
+        report(job['config'],0,'Начало обработки')
         svg, stats = trace(job['input'], job['config'])
+        report(job['config'],98,'Подготовка результата')
         Path(job['output']).write_text(svg, encoding='utf-8')
         Path(job['result']).write_text(json.dumps({'ok': True, **stats}), encoding='utf-8')
+        report(job['config'],100,'Готово')
         return 0
     except BaseException as exc:
         Path(job['result']).write_text(json.dumps({'ok': False, 'error': str(exc)}), encoding='utf-8')
@@ -347,8 +366,8 @@ def worker_server():
     """One job at a time; preserve the OpenCL context between settings changes."""
     for line in sys.stdin.buffer:
         try:
-            path=json.loads(line.decode('utf-8'))['job']
-            code=worker(path)
+            request=json.loads(line.decode('utf-8'));path=request['job']
+            code=worker(path,progress=bool(request.get('progress')))
         except Exception:code=1
         print(json.dumps({'exit_code':code}),flush=True)
     return 0

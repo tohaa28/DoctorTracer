@@ -6,6 +6,7 @@ import numpy as np
 import cv2
 import gpu_meanshift
 import shared_regions
+from trace_progress import report
 
 _palettes=OrderedDict()
 
@@ -27,6 +28,7 @@ def trace(path,cfg):
     started=time.perf_counter();metrics={};unlimited=not(cfg.get('palette') or cfg.get('colors'))
     options={**cfg,'quality':2,'photo_spatial':True,'_metrics':metrics}
     if unlimited:options['colors']=64
+    report(cfg,8,'Фильтрация изображения')
     source,original=load_source(path,options)
     if unlimited:
         detail=cfg.get('detail',1)
@@ -34,15 +36,18 @@ def trace(path,cfg):
             radius=[7,5,3][detail],color_range=[30,20,15][detail],iterations=5)
         metrics.update(filtered)
         options.setdefault('spatial_strength',200);options.setdefault('spatial_iterations',2)
+        report(cfg,18,'Определение палитры')
         palette,hit=automatic_palette(source,options['colors'])
         options['palette']=['#%02x%02x%02x'%rgb for rgb in palette]
         metrics['palette_cache_hit']=hit
+    report(cfg,28,'Сегментация изображения')
     a,labels,palette,original=segment(path,{**options,'_source':(source,original)})
     if unlimited:
         # A region retains its own mean colour. A global ink table alone would
         # erase gradual shading in photos even when the shape remains intact.
         regions=np.full(labels.shape,-1,np.int32);inks=[]
         for color in range(len(palette)):
+            report(cfg,35+int(20*color/max(1,len(palette))),'Выделение цветовых областей')
             count,components=cv2.connectedComponents((labels==color).astype(np.uint8),connectivity=4)
             counts=np.bincount(components.ravel(),minlength=count)
             sums=np.stack([np.bincount(components.ravel(),weights=a[:,:,j].ravel(),minlength=count) for j in range(3)],axis=1)
@@ -61,13 +66,15 @@ def trace(path,cfg):
         target=max(128,round(diversity*boundary_count**2/labels.size/[40,16,6][cfg.get('detail',1)]))
         if cfg.get('photo_region_area'):target=max(16,round(labels.size/cfg['photo_region_area']))
         metrics.update(initial_regions=len(inks),region_target=target,boundary_count=boundary_count,hue_entropy=hue_entropy)
+        report(cfg,60,'Объединение областей')
         labels,palette=merge(regions,inks,target)
     metrics['segmentation_seconds']=time.perf_counter()-started
     detail=cfg.get('detail',1)
     normal_tolerance=.12*[4,2,1][detail]
     tolerance=min(1.2,max(.05,[.75,.5,.3][detail]*cfg.get('curve_tolerance',normal_tolerance)/normal_tolerance))
+    report(cfg,70,'Построение общих границ')
     svg,geometry=shared_regions.trace(labels,palette,original,smooth=cfg.get('shared_smoothing',True),
-        curve_tolerance=tolerance,rounding=1.5*cfg.get('alphamax',1.),passes=[10,8,5][detail])
+        curve_tolerance=tolerance,rounding=1.5*cfg.get('alphamax',1.),passes=[10,8,5][detail],progress=cfg.get('_progress'))
     return svg,{**geometry,**metrics,'width':original[0],'height':original[1],
         'working_size':[labels.shape[1],labels.shape[0]],'colors':geometry['color_groups'],
         'seconds':time.perf_counter()-started,'backend':'shared photographic regions',

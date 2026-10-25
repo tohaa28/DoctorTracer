@@ -11,7 +11,7 @@ import numpy as np
 
 NS='http://www.w3.org/2000/svg'
 
-def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,passes=8):
+def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,passes=8,progress=None):
     started=time.perf_counter();h,w=labels.shape;stride=w+1
     # Duplicate RGB entries are one editable object, including their boundaries.
     unique=[];lookup={};remap=np.full(len(palette),-1,np.int32)
@@ -71,7 +71,8 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
         a,b=xy(a),xy(b);return ((a[0]+b[0])/2,(a[1]+b[1])/2)
     root=ET.Element('{'+NS+'}svg',{'width':str(original[0]),'height':str(original[1]),'viewBox':f'0 0 {w} {h}','version':'1.1','data-color-objects':'merged','data-shared-boundaries':'true'})
     loops=segments=0;pieces=[]
-    for color,color_loops in sorted(loops_by_color.items()):
+    for completed,(color,color_loops) in enumerate(sorted(loops_by_color.items())):
+        if progress:progress(72+int(14*completed/max(1,len(loops_by_color))),'Сглаживание общих границ')
         paths=[]
         for loop in color_loops:
             # Keep straight grid runs as a single segment. Never remove a junction.
@@ -103,6 +104,7 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
             data=' '.join(paths)
             ET.SubElement(g,'{'+NS+'}path',{'d':data,'fill':fill,'fill-rule':'nonzero'})
             pieces.append((fill,data))
+    if progress:progress(90,'Проверка пересечений')
     report={}
     if smooth:
         from vector_partition import audit_pieces
