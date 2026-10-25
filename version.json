@@ -1,6 +1,5 @@
 {
-  "version": "0.11.0-preview",
-  "source_commit": "884e01744223175b25ac7853cdfb49184c24d985",
-  "wasm_sha256": "dc8a93103ce7f4a8c78bc866ca40087cdb3fe91c3ae309e6b49fd53318b203c1",
-  "runtime": "Rust WASM"
+  "version": "0.12.0-wasm-preview",
+  "sourceCommit": "5e398f900e5d227c1451c371826d46e45470c036",
+  "wasmSha256": "012a3b98bf7b9309ffc46ca962b48fdaabf8b2a0bd4fe789ccd757c437ba2a8a"
 }
