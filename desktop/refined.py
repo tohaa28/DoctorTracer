@@ -329,7 +329,7 @@ class Window(wizard.WizardWindow):
         super().job_finished(code,status)
         if self.result_file.exists() and not self.process:
             try:
-                stats=json.loads(self.result_file.read_text(encoding='utf-8'));compute=stats.get('compute','CPU');self.statusBar().showMessage(f"Готово за {stats.get('seconds','?')} с · {compute}"+(f" · {stats['device']}" if stats.get('device') else ''))
+                stats=json.loads(self.result_file.read_text(encoding='utf-8'));compute=stats.get('compute','CPU');self.statusBar().showMessage(f"Готово за {float(stats.get('seconds',0)):.2f} с · {compute}"+(f" · {stats['device']}" if stats.get('device') else ''))
             except (ValueError,OSError):pass
         if not self.process and self.page!='processing' and self.svg_text:
             self.background_original=self.svg_text;self.removed_shapes=set();self.background_undo=[];self.background_redo=[]

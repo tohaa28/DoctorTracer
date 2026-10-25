@@ -69,7 +69,7 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
     def fmt(p):return f'{p[0]:.4f} {p[1]:.4f}'
     def middle(a,b):
         a,b=xy(a),xy(b);return ((a[0]+b[0])/2,(a[1]+b[1])/2)
-    root=ET.Element('{'+NS+'}svg',{'width':str(original[0]),'height':str(original[1]),'viewBox':f'0 0 {w} {h}','version':'1.1','data-color-objects':'merged'})
+    root=ET.Element('{'+NS+'}svg',{'width':str(original[0]),'height':str(original[1]),'viewBox':f'0 0 {w} {h}','version':'1.1','data-color-objects':'merged','data-shared-boundaries':'true'})
     loops=segments=0;pieces=[]
     for color,color_loops in sorted(loops_by_color.items()):
         paths=[]

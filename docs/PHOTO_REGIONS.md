@@ -25,22 +25,37 @@ The tolerance is 0.0001 square source pixels, not a promise of exact arithmetic.
 SVG contains one compound path per RGB, inside one colour group. PDF retains
 the existing one-Form/one-compound-path-per-RGB export for CorelDRAW.
 
+## Preview
+
+Shared regions are rasterized jointly before reducing sample coverage. Drawing
+each colour with independent source-over antialiasing made touching half-covered
+pixels only 75% opaque, producing pale seams despite matching geometry. The
+new preview/PNG renderer avoids that compositing artifact, bounds temporary
+buffers to the visible viewport and caches the latest view. SVG/PDF remain
+vector files; third-party viewer antialiasing can still show hairlines.
+
+The processing page now uses original gear illustrations, elapsed time is
+formatted to two decimals, and unlimited-colour review hides fixed-palette
+swatches to match the original interface.
+
 ## Comparison with the installed Vector Magic
 
 Actual SVG references were exported from Vector Magic Desktop Edition 1.15.
 Photo / Medium / Unlimited was used in both applications. Rendering was at
-three times source resolution, then reduced with Lanczos. RGB MAE is measured
+three times source resolution, then reduced with Lanczos. Each release uses
+its own preview renderer; MAE therefore includes rendering differences as well
+as segmentation differences. RGB MAE is measured
 on the 0–255 channel scale. It does **not** measure identical vector topology.
 
 | Control image | Background | 0.9 MAE | 0.10 MAE |
 |---|---:|---:|---:|
-| Green figurine, 568×960 | white | 11.568 | 4.640 |
-| Green figurine, 568×960 | RGB 40 | 10.888 | 3.801 |
-| Watercolour lion, 800×954 | white | 8.371 | 6.635 |
-| Watercolour lion, 800×954 | RGB 40 | 8.653 | 6.631 |
+| Green figurine, 568×960 | white | 11.568 | 4.458 |
+| Green figurine, 568×960 | RGB 40 | 10.888 | 3.787 |
+| Watercolour lion, 800×954 | white | 8.371 | 6.697 |
+| Watercolour lion, 800×954 | RGB 40 | 8.653 | 6.670 |
 
 The figurine was additionally checked at Low and High with separately exported
-original references: white-background MAE 5.460 and 4.881 respectively.
+original references: white-background MAE 5.364 and 4.773 respectively.
 A nine-colour High reference was also compared with the existing fixed-palette
 engine using the exact exported RGB palette; that engine remains in use.
 
@@ -87,6 +102,7 @@ fallback DLL is included; rebuild with Zig 0.15.2 on PATH:
 python scripts/build_photo_modes.py
 python tests/gpu_meanshift.py
 python tests/shared_regions.py
+python tests/shared_render.py
 python tests/region_merge.py
 python tests/photo_regions.py
 python tests/spatial_ui.py

@@ -209,10 +209,13 @@ class WizardWindow(ServiceWindow):
     def build_review(self):
         self.choice('Рецензия Сделанного','• Кликните здесь для продолжения.\n• Далее можно сохранить результат.','review',lambda:self.go('export'),True);improve=self.group('Улучшение Результата');improve.addWidget(QLabel('Уровень Детализации'))
         for n,name in [(2,'Высокое Качество'),(1,'Среднее Качество'),(0,'Низкое Качество')]:self.small_button(improve,'↪ '+name,lambda checked=False,j=n:self.retrace_detail(j),self.detail.currentIndex()==n)
-        self.line(improve);improve.addWidget(QLabel('Цвета'));self.small_button(improve,'🌈 Цвета Без Ограничений',lambda:self.choose_color('flex'),self.color_mode=='flex');self.small_button(improve,'🎨 Настраиваемые Цвета',lambda:self.go('palette'),self.color_mode=='fixed');improve.addWidget(QLabel('Текущая Палитра (изменить):'));row=QWidget();sw=QHBoxLayout(row);sw.setContentsMargins(0,0,0,0);sw.setSpacing(2)
-        for color in list(dict.fromkeys(re.findall(r'fill="(#[0-9A-Fa-f]{6})"',self.svg_text or '')))[:12]:
-            b=QPushButton();b.setFixedSize(19,20);b.setStyleSheet(f'background:{color};border:1px solid black;');b.clicked.connect(lambda checked,c=color:self.edit_result_color(c));sw.addWidget(b)
-        sw.addStretch();improve.addWidget(row);self.line(improve);improve.addWidget(QLabel('Расширенный'));self.small_button(improve,'✂ Удаление Фона',lambda:self.go('background'));self.small_button(improve,'✎ Редактирование Результата',self.open_editor);self.small_button(improve,'↩ Вернуться к Настройкам',lambda:self.go('mode'));self.small_button(improve,'◧ Сравнить Bitmap / Вектор',self.compare_view)
+        self.line(improve);improve.addWidget(QLabel('Цвета'));self.small_button(improve,'🌈 Цвета Без Ограничений',lambda:self.choose_color('flex'),self.color_mode=='flex');self.small_button(improve,'🎨 Настраиваемые Цвета',lambda:self.go('palette'),self.color_mode=='fixed');
+        if self.color_mode=='fixed':
+            improve.addWidget(QLabel('Текущая Палитра (изменить):'));row=QWidget();sw=QHBoxLayout(row);sw.setContentsMargins(0,0,0,0);sw.setSpacing(2)
+            for color in list(dict.fromkeys(re.findall(r'fill="(#[0-9A-Fa-f]{6})"',self.svg_text or '')))[:12]:
+                b=QPushButton();b.setFixedSize(19,20);b.setStyleSheet(f'background:{color};border:1px solid black;');b.clicked.connect(lambda checked,c=color:self.edit_result_color(c));sw.addWidget(b)
+            sw.addStretch();improve.addWidget(row);
+        self.line(improve);improve.addWidget(QLabel('Расширенный'));self.small_button(improve,'✂ Удаление Фона',lambda:self.go('background'));self.small_button(improve,'✎ Редактирование Результата',self.open_editor);self.small_button(improve,'↩ Вернуться к Настройкам',lambda:self.go('mode'));self.small_button(improve,'◧ Сравнить Bitmap / Вектор',self.compare_view)
     def line(self,lay):f=QFrame();f.setFrameShape(QFrame.HLine);lay.addWidget(f)
     def retrace_detail(self,n):self.detail.setCurrentIndex(n);self.denoise.setChecked(n==0);self.begin_trace()
     def compare_view(self):self.canvas.mode='Сравнение' if self.canvas.mode!='Сравнение' else 'Вектор';self.canvas.update()

@@ -1,6 +1,7 @@
 """Consistent original vector illustrations for tracing wizard choices."""
 from PySide6.QtCore import Qt,QRectF,QPointF
 from PySide6.QtGui import QPixmap,QPainter,QPen,QColor,QPainterPath,QPolygonF,QFont,QLinearGradient
+from math import sin,cos,pi
 
 def icon(kind):
     im=QPixmap(100,90);im.fill(Qt.white);p=QPainter(im);p.setRenderHint(QPainter.Antialiasing)
@@ -14,7 +15,16 @@ def icon(kind):
     elif kind=='clipboard':
         p.drawRoundedRect(QRectF(22,15,58,63),5,5);p.setBrush(Qt.white);p.drawRoundedRect(QRectF(35,10,31,14),3,3)
         for y in [37,49,61]:line((35,y),(65,y))
-    elif kind in ('basic','advanced','gears'):
+    elif kind=='gears':
+        for x,y,r in [(35,51,27),(72,27,18)]:
+            points=[]
+            for i in range(48):
+                radius=r if i%4 in (1,2) else r*.80
+                angle=2*pi*i/48
+                points.append(QPointF(x+radius*cos(angle),y+radius*sin(angle)))
+            p.setBrush(blue);p.drawPolygon(QPolygonF(points))
+            p.setBrush(Qt.white);p.drawEllipse(QRectF(x-r*.3,y-r*.3,r*.6,r*.6))
+    elif kind in ('basic','advanced'):
         for x,y in [(25,32),(50,58),(75,40)]:
             line((x,15),(x,76));p.drawRoundedRect(QRectF(x-8,y-6,16,12),3,3)
         if kind=='advanced':p.setPen(QPen(green,3));p.drawEllipse(QRectF(65,5,21,21));line((75,10),(75,21));line((70,16),(80,16))
