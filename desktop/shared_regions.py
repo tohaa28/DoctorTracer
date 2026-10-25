@@ -118,4 +118,3 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
     ET.register_namespace('',NS)
     return ET.tostring(root,encoding='unicode'),{'paths':loops,'color_groups':len(root),'shared_corners':segments,'shared_boundary_seconds':time.perf_counter()-started,'vector_layout':'shared boundary color groups','geometry_compute':'shared grid CPU',
         'geometry_verified':bool(smooth),'geometry_audit':report}
-

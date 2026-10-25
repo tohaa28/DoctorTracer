@@ -91,4 +91,3 @@ def apply(a,backend='gpu',radius=5,color_range=20,iterations=5):
     try:result=native_cpu(a,radius,color_range,iterations);implementation='native CPU'
     except OSError:result=cpu(a,radius,color_range,iterations);implementation='NumPy reference CPU'
     return result,{'mode_filter_compute':implementation,'mode_filter_seconds':time.perf_counter()-started,'mode_filter_fallback':fallback}
-

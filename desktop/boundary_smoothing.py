@@ -47,5 +47,3 @@ def smooth(graph,loops,stride,width,height,tolerance=.5,passes=8):
             if sum(v in keep for v in loop)<3:
                 keep.update(loop[i*len(loop)//4] for i in range(4))
     return coordinates,keep
-
-
