@@ -1,0 +1,28 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>DoctorTracer browser verification</title><h1>Rust WASM / WebGPU verification</h1><pre id="result">Running…</pre><script type="module">
+import createTracer from '../web/rust-tracer.mjs';import {gpuFilter} from '../web/gpu.js';import {pdfBytes} from '../web/exports.mjs';
+const result=document.querySelector('#result');const check=(ok,msg)=>{if(!ok)throw Error(msg);};
+try{
+ const runtime=await createTracer();let tests=0,gpuCases=0;
+ for(const [w,h] of [[1,1],[19,17],[64,48],[129,73]])for(const detail of [0,1,2]){
+  const p=new Uint8Array(w*h*4);for(let i=0;i<p.length;i++)p[i]=(i*7919+(i>>4)*37)%256;
+  const cpu=runtime.filter(p,w,h,detail);const gpu=await gpuFilter(p,w,h,detail);
+  if(gpu){check(cpu.length===gpu.length&&cpu.every((v,i)=>v===gpu[i]),'GPU differs from CPU '+w+'x'+h+' detail '+detail);gpuCases++;}
+  const a=runtime.trace(p,w,h,{colors:4,detail,speckle:0});
+  const b=runtime.trace(cpu,w,h,{colors:4,detail,speckle:0,prefiltered:true});check(a===b,'CPU prefilter differs');
+  if(gpu)check(a===runtime.trace(gpu,w,h,{colors:4,detail,speckle:0,prefiltered:true}),'GPU trace differs');tests++;
+ }
+ const w=64,h=48,p=new Uint8Array(w*h*4);for(let y=2;y<46;y++)for(let x=2;x<62;x++)p.set(x<32?[210,30,80,255]:[20,160,210,255],4*(y*w+x));p.fill(0,4*(12*w+12),4*(12*w+12)+4);
+ const svg=runtime.trace(p,w,h,{colors:2,detail:2,speckle:0,category:'hard'});
+ const img=new Image();const url=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));img.src=url;await img.decode();const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d');ctx.drawImage(img,0,0);const a=ctx.getImageData(0,0,w,h).data;check(a[4*(12*w+12)+3]===0,'one-pixel alpha hole lost');check(a[4*(10*w+10)+3]===255,'visible region lost');URL.revokeObjectURL(url);
+ const pdf=pdfBytes(svg);check(new TextDecoder().decode(pdf).includes('/S /Transparency'),'PDF groups missing');
+ const layouts=[];
+ const wait=async predicate=>{const deadline=performance.now()+30000;while(!predicate()){if(performance.now()>deadline)throw Error('UI timeout');await new Promise(r=>setTimeout(r,25));}};
+ for(const [width,height] of [[390,844],[640,640],[820,640],[1280,720]]){
+  const frame=document.createElement('iframe');frame.style.cssText='position:absolute;left:-10000px;top:0;border:0;width:'+width+'px;height:'+height+'px';frame.src='../web/';document.body.append(frame);await new Promise(r=>frame.onload=r);const d=frame.contentDocument;
+  const click=title=>{const b=[...d.querySelectorAll('.card')].find(b=>b.querySelector('strong').textContent===title);check(!!b,'Missing card '+title);b.click();};
+  const layout=()=>{check(d.documentElement.scrollWidth<=width+1,'Horizontal page overflow '+width);const aside=d.querySelector('aside').getBoundingClientRect();for(const e of d.querySelectorAll('aside button,aside input,aside select')){const r=e.getBoundingClientRect();check(r.left>=aside.left-1&&r.right<=aside.right+1,'Sidebar overflow '+width+' '+e.textContent);} };
+  layout();d.querySelector('#demo').click();await wait(()=>!d.querySelector('#preview').hidden);click('Базовый');layout();click('Рисунок со Смешанными Краями');layout();click('Оставить Прозрачность');layout();click('Среднее Качество');layout();d.querySelector('#colors').value='9';d.querySelector('#gpu').checked=false;d.querySelector('#next').click();await wait(()=>!d.querySelector('#vector').disabled);layout();click('Рецензия Сделанного');layout();check(d.querySelector('#format').options.length===3,'Export formats');layouts.push({width,height,ok:true});frame.remove();
+ }
+ result.textContent=JSON.stringify({ok:true,cases:tests,gpuCases,onePixelHole:true,pdfGroups:true,wasm:true,layouts},null,2);
+}catch(error){result.textContent=JSON.stringify({ok:false,error:String(error),stack:error.stack},null,2);}
+</script></html>

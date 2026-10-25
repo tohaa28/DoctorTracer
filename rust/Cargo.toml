@@ -1,0 +1,18 @@
+[package]
+name = "doctortracer-wasm"
+version = "0.11.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+visioncortex = "=0.8.8"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

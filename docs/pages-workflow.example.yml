@@ -1,0 +1,37 @@
+name: Rust WASM Pages
+on:
+  push:
+    branches: [spatial-photo-preview]
+    paths: ['rust/**', 'web/**', 'scripts/build_wasm.py', 'tests/rust_wasm.mjs', '.github/workflows/pages.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install Rust WASM target
+        run: rustup toolchain install 1.99.1 --profile minimal --target wasm32-unknown-unknown
+      - name: Build Rust and static site
+        run: python scripts/build_wasm.py --toolchain 1.99.1
+      - name: Verify WASM and PDF export
+        run: node tests/rust_wasm.mjs
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: build/site
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
