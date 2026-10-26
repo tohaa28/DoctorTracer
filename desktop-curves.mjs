@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Same Potrace 1.16 masks and Skia PathOps visibility subtraction as desktop.
-import initMask from './vendor/mask.mjs?v=0.14.0';import initPaths from './vendor/pathkit.mjs?v=0.14.0';
-import {gpuAssign} from './gpu.js?v=0.14.0';
-import {normalizeWinding} from './paths.mjs?v=0.14.0';
-import {partitionNative,auditNative} from './geometry.mjs?v=0.14.0';
+import initMask from './vendor/mask.mjs?v=0.15.0';import initPaths from './vendor/pathkit.mjs?v=0.15.0';
+import {gpuAssign} from './gpu.js?v=0.15.0';
+import {normalizeWinding} from './paths.mjs?v=0.15.0';
+import {partitionNative,auditNative} from './geometry.mjs?v=0.15.0';
 let maskRuntime,pathRuntime;
 async function binary(url){return new Uint8Array(await(await fetch(url)).arrayBuffer());}
 export async function curveRuntime({maskBinary,pathBinary}={}){
- maskRuntime??=await initMask(maskBinary?{wasmBinary:maskBinary}:{locateFile:()=>new URL('./vendor/mask.wasm?v=0.14.0',import.meta.url).href});
- pathRuntime??=await initPaths(pathBinary?{wasmBinary:pathBinary}:{locateFile:()=>new URL('./vendor/pathkit.wasm?v=0.14.0',import.meta.url).href});
+ maskRuntime??=await initMask(maskBinary?{wasmBinary:maskBinary}:{locateFile:()=>new URL('./vendor/mask.wasm?v=0.15.0',import.meta.url).href});
+ pathRuntime??=await initPaths(pathBinary?{wasmBinary:pathBinary}:{locateFile:()=>new URL('./vendor/pathkit.wasm?v=0.15.0',import.meta.url).href});
  return{mask:maskRuntime,paths:pathRuntime};
 }
 function data(path){let out='',current=[0,0];for(const command of path.toCmds()){const[verb,...p]=command;if(verb===0){out+='M'+p.join(' ')+' ';current=p;}else if(verb===1){out+='L'+p.join(' ')+' ';current=p;}else if(verb===2){const[cx,cy,x,y]=p;const c1=[current[0]+2/3*(cx-current[0]),current[1]+2/3*(cy-current[1])],c2=[x+2/3*(cx-x),y+2/3*(cy-y)];out+='C'+[...c1,...c2,x,y].join(' ')+' ';current=[x,y];}else if(verb===4){out+='C'+p.join(' ')+' ';current=p.slice(-2);}else if(verb===5)out+='Z ';else throw Error('Unsupported Skia path verb');}return out;}
@@ -18,7 +18,7 @@ export async function traceFixed(runtime,pixels,w,h,config,progress=()=>{}){
  if(!config.prefiltered&&(photo||config.detail===0))a=runtime.stage(a,w,h,{kind:0});
  const raw=config.palette?.length?config.palette:runtime.stage(a,w,h,{kind:2,colors:config.colors,extra:photo?1:0});const palette=Array.isArray(raw)?raw.map(c=>typeof c==='string'?c.slice(1).match(/../g).map(v=>parseInt(v,16)):c):Array.from({length:raw.length/3},(_,i)=>Array.from(raw.slice(i*3,i*3+3)));
  const layered=aa&&a.some((v,i)=>i%4===3&&v<128),scale=aa&&!layered&&w*h<=2000000&&w<=2048&&h<=2048?2:1;const working=scale===2?runtime.stage(a,w,h,{kind:6}):a,ww=w*scale,hh=h*scale;
- let labels=config.gpu&&photo?await gpuAssign(working,ww,hh,palette,700):null;labels??=runtime.stage(working,ww,hh,{kind:3,palette,extra:photo?700:aa?(65536|((3*scale)<<17)):0});labels=runtime.stage(labels,ww,hh,{kind:4,colors:palette.length,extra:(photo?Math.max(8,config.speckle):Math.max(1,config.speckle))|((config.artifact_strength??0)<<16)});
+ let labels=config.gpu&&photo?await gpuAssign(working,ww,hh,palette,700):null;labels??=runtime.stage(working,ww,hh,{kind:3,palette,extra:photo?700:aa?(65536|((3*scale)<<17)):0});labels=runtime.stage(labels,ww,hh,{kind:4,palette,colors:palette.length,extra:(photo?Math.max(8,config.speckle):Math.max(1,config.speckle))|((config.artifact_strength??0)<<16)});
  const counts=new Uint32Array(palette.length);for(const label of labels)if(label!==255)counts[label]++;const order=Array.from(counts.keys()).filter(k=>counts[k]).sort((a,b)=>counts[b]-counts[a]||a-b);const shapes=[];
  for(const [done,k] of order.entries()){progress(35+Math.floor(35*done/Math.max(1,order.length)),'Построение контуров');const silhouette=layered&&done===0,bitmap=silhouette?Uint8Array.from(runtime.stage(a,w,h,{kind:6}),v=>v):Uint8Array.from(labels,v=>v===k?1:0);const maskBytes=silhouette?Uint8Array.from({length:w*h*4},(_,i)=>bitmap[4*i+3]>=128?1:0):bitmap;let d=traceMask(mask,maskBytes,silhouette?w*2:ww,silhouette?h*2:hh,(config.curveTolerance??.12)*[4,2,1][config.detail],config.polygon?0:config.alphamax??1);if(d&&(scale>1||silhouette)){const fitted=pk.FromSVGString(d);const factor=silhouette?.5:1/scale;fitted.transform(factor,0,0,0,factor,0,0,0,1);d=data(fitted);fitted.delete();}if(d)shapes.push({color:'#'+palette[k].map(v=>v.toString(16).padStart(2,'0')).join(''),d});}
  let groups=new Map();const originalShapes=[...shapes],covered=pk.NewPath();
