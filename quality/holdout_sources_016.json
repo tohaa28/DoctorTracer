@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "selection": "Locked before tuning 0.16; download/evaluate only after algorithm freeze. Six new inputs, all four profiles, report all results.",
+  "sources": [
+    {
+      "id": "holdout-camera",
+      "repo": "scikit-image/scikit-image",
+      "revision": "e8a42ba85aaf5fd9322ef9ca51bc21063b22fcae",
+      "path": "skimage/data/camera.png",
+      "license": "CC0-1.0",
+      "author": "Lav Varshney",
+      "category": "photo",
+      "license_url": "https://scikit-image.org/docs/0.25.x/api/skimage.data.html#skimage.data.camera",
+      "source_url": "https://github.com/scikit-image/scikit-image/blob/e8a42ba85aaf5fd9322ef9ca51bc21063b22fcae/skimage/data/camera.png"
+    },
+    {
+      "id": "holdout-hubble",
+      "repo": "scikit-image/scikit-image",
+      "revision": "e8a42ba85aaf5fd9322ef9ca51bc21063b22fcae",
+      "path": "skimage/data/hubble_deep_field.jpg",
+      "license": "Public domain",
+      "author": "NASA",
+      "category": "photo",
+      "license_url": "https://scikit-image.org/docs/0.25.x/api/skimage.data.html#skimage.data.hubble_deep_field",
+      "source_url": "https://github.com/scikit-image/scikit-image/blob/e8a42ba85aaf5fd9322ef9ca51bc21063b22fcae/skimage/data/hubble_deep_field.jpg"
+    },
+    {
+      "id": "holdout-fish",
+      "repo": "hfg-gmuend/openmoji",
+      "revision": "aeb8bb3a59e2de39c754ac79180c8131c906acea",
+      "path": "color/svg/1F41F.svg",
+      "license": "CC-BY-SA-4.0",
+      "author": "OpenMoji contributors",
+      "category": "illustration",
+      "license_url": "https://github.com/hfg-gmuend/openmoji/blob/aeb8bb3a59e2de39c754ac79180c8131c906acea/LICENSE.txt",
+      "source_url": "https://github.com/hfg-gmuend/openmoji/blob/aeb8bb3a59e2de39c754ac79180c8131c906acea/color/svg/1F41F.svg"
+    },
+    {
+      "id": "holdout-frog",
+      "repo": "hfg-gmuend/openmoji",
+      "revision": "aeb8bb3a59e2de39c754ac79180c8131c906acea",
+      "path": "color/svg/1F438.svg",
+      "license": "CC-BY-SA-4.0",
+      "author": "OpenMoji contributors",
+      "category": "illustration",
+      "license_url": "https://github.com/hfg-gmuend/openmoji/blob/aeb8bb3a59e2de39c754ac79180c8131c906acea/LICENSE.txt",
+      "source_url": "https://github.com/hfg-gmuend/openmoji/blob/aeb8bb3a59e2de39c754ac79180c8131c906acea/color/svg/1F438.svg"
+    },
+    {
+      "id": "holdout-twemoji-fox",
+      "repo": "twitter/twemoji",
+      "revision": "bad3bceeafc901ace42a3dfe0421db6388daafb9",
+      "path": "assets/svg/1f98a.svg",
+      "license": "CC-BY-4.0",
+      "author": "Twitter and Twemoji contributors",
+      "category": "illustration",
+      "license_url": "https://github.com/twitter/twemoji/blob/bad3bceeafc901ace42a3dfe0421db6388daafb9/LICENSE-GRAPHICS",
+      "source_url": "https://github.com/twitter/twemoji/blob/bad3bceeafc901ace42a3dfe0421db6388daafb9/assets/svg/1f98a.svg"
+    },
+    {
+      "id": "holdout-twemoji-butterfly",
+      "repo": "twitter/twemoji",
+      "revision": "bad3bceeafc901ace42a3dfe0421db6388daafb9",
+      "path": "assets/svg/1f98b.svg",
+      "license": "CC-BY-4.0",
+      "author": "Twitter and Twemoji contributors",
+      "category": "illustration",
+      "license_url": "https://github.com/twitter/twemoji/blob/bad3bceeafc901ace42a3dfe0421db6388daafb9/LICENSE-GRAPHICS",
+      "source_url": "https://github.com/twitter/twemoji/blob/bad3bceeafc901ace42a3dfe0421db6388daafb9/assets/svg/1f98b.svg"
+    }
+  ]
+}
