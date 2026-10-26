@@ -1,5 +1,31 @@
 # Стенд качества DoctorTracer
 
+## Новый внешний набор v2 (26.10.2026)
+
+12 новых входов из интернета, фиксированные коммиты, хеши и лицензии; 48 реальных эталонов VM 1.15, по 48 трассировок Windows/WASM. [Методика и результаты](../docs/PUBLIC_BENCHMARK_V2.md). Старый корпус ниже остаётся отдельным экспериментом.
+
+```powershell
+python quality/public_corpus.py
+python quality/bench.py --corpus build/quality-public-v2 queue
+python quality/bench.py --corpus build/quality-public-v2 run --name desktop-public-v2 --engine desktop --profiles photo-medium-auto,photo-high-auto,photo-medium-9,graphic-medium-9 --compute cpu
+python quality/bench.py --corpus build/quality-public-v2 run --name wasm-public-v2 --engine wasm --profiles photo-medium-auto,photo-high-auto,photo-medium-9,graphic-medium-9 --compute cpu
+```
+
+До сравнения получить SVG в установленной VM для всех входов и каждого из четырёх профилей. В пакетном режиме явно выбрать тип (фото / рисунок со смешиванием), Medium/High и свободную палитру либо лимит 9. Сохранить прозрачность. Перед обработкой снять настройки, после неё сохранить реальные SVG и импортировать каждый профиль:
+
+```powershell
+python quality/bench.py --corpus build/quality-public-v2 import-batch --directory build/quality-public-v2/vm-raw/photo-medium-9 --profile photo-medium-9 --evidence build/quality-public-v2/vm-raw/photo-medium-9/settings.png --version 1.15 --verified --notes "Настройки проверены в интерфейсе VM"
+python quality/bench.py --corpus build/quality-public-v2 compare --run desktop-public-v2 --name desktop-public-v2 --require-complete
+python quality/bench.py --corpus build/quality-public-v2 compare --run wasm-public-v2 --name wasm-public-v2 --require-complete
+python quality/palette_diagnostic.py --corpus build/quality-public-v2
+python quality/public_report.py --corpus build/quality-public-v2
+```
+
+`--verified` допустим только после проверки реальной программы. Повторить import-batch для остальных трёх профилей с соответствующими путями/снимками. Не подменять эталоны результатами DoctorTracer. Существующие прогоны/отчёты не перезаписывать: новое имя для нового эксперимента. Объединённый public_report ожидает имена из примера; для новой серии использовать отдельный каталог корпуса. Все новые метрики применяются к schema 2, старые schema 1 сохраняют прежнюю семантику.
+
+Прозрачность занимает слот лимита. Кандидат получает предложение палитры из своего мастера; одинаковый лимит с VM не означает одинаковые RGB. Отдельный palette_diagnostic использует RGB из эталона и **не включается** в независимую оценку. 20 комбинаций соответствуют типу входа, 28 — стрессовые. Фильтры и шторка работают в HTML без сервера; известные SVG дополнительно сравниваются при ×4. Стенд не доказывает равенство качества по одному MAE/F1. Контролируемого тайминга VM нет; CPU-серия не заменяет прежние GPU-тесты.
+
+
 Локальный корпус, подтверждённые SVG Vector Magic, версии результатов Desktop/WASM,
 HTML-отчёт и контроль регрессий. Все данные по умолчанию в игнорируемом `build/quality`.
 Стенд не меняет алгоритм приложения и не требует отправки изображений на сервер.
