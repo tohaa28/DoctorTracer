@@ -11,7 +11,7 @@ import numpy as np
 
 NS='http://www.w3.org/2000/svg'
 
-def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,passes=8,progress=None,compute='cpu'):
+def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,passes=8,progress=None,compute='cpu',source=None):
     acceleration={}
     started=time.perf_counter();h,w=labels.shape;stride=w+1
     # Duplicate RGB entries are one editable object, including their boundaries.
@@ -66,6 +66,11 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
     if smooth:
         from boundary_smoothing import smooth as smooth_graph
         coordinates,keep=smooth_graph(graph,loops_by_color,stride,w,h,curve_tolerance,passes,backend=compute,metrics=acceleration)
+    fitted_radii={}
+    if smooth and source is not None:
+        from edge_fit import fit
+        coordinates,fitted_radii,moved=fit(coordinates,graph,loops_by_color,keep,labels,palette,source,rounding,compute,acceleration)
+        acceleration.update(edge_fit_vertices=moved,edge_fit='bounded coverage',curve_refit_vertices=len(fitted_radii))
     curve_values=None;curve_offsets={}
     if smooth and compute!='cpu' and coordinates:
         try:
@@ -105,10 +110,10 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
             if len(points)<3:continue
             data=['M'+fmt(middle(points[-1],points[0]))]
             for i,v in enumerate(points):
-                if curve_values is None:
+                if curve_values is None or v in fitted_radii:
                     before=middle(points[i-1],v);after=middle(v,points[(i+1)%len(points)]);corner=xy(v)
                     def near(p):
-                        delta=(p[0]-corner[0],p[1]-corner[1]);length=max(abs(delta[0]),abs(delta[1]));f=min(1,(rounding if smooth and 0<corner[0]<w and 0<corner[1]<h else .5)/length) if length else 0
+                        delta=(p[0]-corner[0],p[1]-corner[1]);length=max(abs(delta[0]),abs(delta[1]));f=min(1,(fitted_radii.get(v,rounding) if smooth and 0<corner[0]<w and 0<corner[1]<h else .5)/length) if length else 0
                         return (corner[0]+delta[0]*f,corner[1]+delta[1]*f)
                     enter,leave=near(before),near(after);c1=tuple((enter[j]+2*corner[j])/3 for j in (0,1));c2=tuple((leave[j]+2*corner[j])/3 for j in (0,1))
                 else:enter,c1,c2,leave,corner=curve_values[curve_offsets[id(loop)]+i]

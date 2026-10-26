@@ -1,5 +1,7 @@
 # DoctorTracer — начать здесь
 
+Обновление качества 26.10.2026: Windows **0.13.0-preview** / WASM **0.15.0-wasm-preview**. [Изменения и ограничения](docs/QUALITY_015.md), [числа](docs/QUALITY_015_RESULTS.json). Ограниченная палитра фото: MAE 10.084→8.015; Chelsea ухудшается. Подбор смеси/общих границ и локальный refit; это не глобальная оптимизация и не равенство VM. Pages: https://tohaa28.github.io/DoctorTracer/?v=0.15.0 .
+
 Испытания 26.10.2026: [внешний стенд v2](docs/PUBLIC_BENCHMARK_V2.md), 12 новых входов / 48 эталонов VM / 96 результатов. Главная проблема — подбор ограниченной палитры; oracle-опыт 10.08→1.85 не является исправлением алгоритма. Один стрессовый тест переносимости WASM не прошёл. [Исследование алгоритма VM](docs/VECTOR_MAGIC_ALGORITHM_RESEARCH.md). Версии приложений не менялись.
 
 Обновление GPU 26.10.2026: Windows **0.12.0-preview**, WASM **0.14.0-wasm-preview**. [Перенос операций, замеры и проверки](docs/GPU_CONTOURS_014.md). Pages: https://tohaa28.github.io/DoctorTracer/?v=0.14.0 .

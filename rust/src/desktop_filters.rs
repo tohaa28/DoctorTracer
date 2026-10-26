@@ -39,3 +39,15 @@ pub fn resize2(a:&[u8],w:usize,h:usize)->Vec<u8>{
  for c in 0..4{let h0=a[4*(y0*w+x0)+c] as u32*(4-wx)+a[4*(y0*w+x1)+c] as u32*wx;let h1=a[4*(y1*w+x0)+c] as u32*(4-wx)+a[4*(y1*w+x1)+c] as u32*wx;out[4*(y*w*2+x)+c]=(((h0*(4-wy)/4)+(h1*wy/4)+2)/4) as u8;}
  }}out
 }
+
+// Topology-aware small region cleanup: preserve contrast and elongated marks.
+pub fn clean_aware(labels:&mut[u8],w:usize,h:usize,palette:&[[u8;3]],min_area:usize,artifact:usize){
+ if artifact>0{clean(labels,w,h,palette.len(),0,artifact);}if min_area<=1{return;}
+ let original=labels.to_vec();let mut seen=vec![false;labels.len()];
+ for start in 0..labels.len(){if seen[start]||original[start]==255{continue;}let color=original[start];let mut queue=vec![start];seen[start]=true;let(mut x0,mut x1,mut y0,mut y1)=(start%w,start%w,start/w,start/w);let mut head=0;
+  while head<queue.len(){let i=queue[head];head+=1;let x=i%w;let y=i/w;x0=x0.min(x);x1=x1.max(x);y0=y0.min(y);y1=y1.max(y);for yy in y.saturating_sub(1)..=(y+1).min(h-1){for xx in x.saturating_sub(1)..=(x+1).min(w-1){let j=yy*w+xx;if !seen[j]&&original[j]==color{seen[j]=true;queue.push(j);}}}}
+  let bw=x1-x0+1;let bh=y1-y0+1;if queue.len()>=min_area||(bw.min(bh)<=2&&bw.max(bh)>=3){continue;}
+  let mut neighbors=std::collections::BTreeSet::new();for &i in &queue{let x=i%w;let y=i/w;for yy in y.saturating_sub(1)..=(y+1).min(h-1){for xx in x.saturating_sub(1)..=(x+1).min(w-1){let j=yy*w+xx;if original[j]!=255&&original[j]!=color{neighbors.insert(j);}}}}
+  let mut votes=vec![0usize;palette.len()];for j in neighbors{votes[original[j] as usize]+=1;}let mut target=0;for j in 1..votes.len(){if votes[j]>votes[target]{target=j;}}if votes[target]==0{continue;}let distance=(0..3).map(|j|(palette[color as usize][j] as i32-palette[target][j] as i32).pow(2)).sum::<i32>();if distance>1225{continue;}for i in queue{labels[i]=target as u8;}
+ }
+}

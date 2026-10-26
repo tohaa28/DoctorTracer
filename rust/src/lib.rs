@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Desktop photographic algorithm port. Pixels remain in a dedicated Web Worker.
-mod desktop_filters;mod desktop_palette;mod desktop_regions;mod desktop_shared;
+mod edge_fit;mod desktop_filters;mod desktop_palette;mod desktop_regions;mod desktop_shared;
 use std::cell::RefCell;
 thread_local!{static RESULT:RefCell<Vec<u8>>=const{RefCell::new(Vec::new())};static PALETTE:RefCell<Vec<[u8;3]>>=const{RefCell::new(Vec::new())};static STATS:RefCell<Vec<u8>>=const{RefCell::new(Vec::new())};static SEGMENT:RefCell<Vec<u8>>=const{RefCell::new(Vec::new())};static LAST:RefCell<Option<(Vec<i32>,Vec<[u8;3]>,usize,usize,usize)>>=const{RefCell::new(None)};}
 #[cfg(target_arch="wasm32")]#[link(wasm_import_module="env")]extern "C"{fn progress(value:u32,stage:u32);}
@@ -16,7 +16,7 @@ fn valid(w:usize,h:usize)->bool{w>0&&h>0&&w<=4096&&h<=4096&&w.checked_mul(h).unw
 #[no_mangle]pub unsafe extern "C" fn filter_rgba(p:*const u8,w:usize,h:usize,_detail:usize)->*const u8{if p.is_null()||!valid(w,h){return std::ptr::null();}store(desktop_filters::bilateral(std::slice::from_raw_parts(p,w*h*4),w,h))}
 #[no_mangle]pub unsafe extern "C" fn desktop_stage(p:*const u8,w:usize,h:usize,colors:usize,detail:usize,kind:usize,extra:usize)->*const u8{
  if p.is_null()||!valid(w,h)||detail>2||colors>128{return std::ptr::null();}let a=std::slice::from_raw_parts(p,w*h*4);
- let output=match kind{0=>desktop_filters::bilateral(a,w,h),1=>desktop_filters::modes(a,w,h,detail),2=>desktop_palette::find(a,w,h,colors,extra!=0).into_iter().flatten().collect(),3=>{let pal=PALETTE.with(|r|r.borrow().clone());if pal.is_empty(){return std::ptr::null();}desktop_filters::segment(a,w,h,&pal,(extra&65535) as i32,extra&65536!=0,if extra>>17==0{3}else{extra>>17})},4=>{let mut labels=a[..w*h].to_vec();desktop_filters::clean(&mut labels,w,h,colors,extra&65535,extra>>16);labels},6=>desktop_filters::resize2(a,w,h),_=>return std::ptr::null()};store(output)
+ let output=match kind{0=>desktop_filters::bilateral(a,w,h),1=>desktop_filters::modes(a,w,h,detail),2=>desktop_palette::find(a,w,h,colors,extra!=0).into_iter().flatten().collect(),3=>{let pal=PALETTE.with(|r|r.borrow().clone());if pal.is_empty(){return std::ptr::null();}desktop_filters::segment(a,w,h,&pal,(extra&65535) as i32,extra&65536!=0,if extra>>17==0{3}else{extra>>17})},4=>{let mut labels=a[..w*h].to_vec();let pal=PALETTE.with(|r|r.borrow().clone());if pal.len()==colors{desktop_filters::clean_aware(&mut labels,w,h,&pal,extra&65535,extra>>16);}else{desktop_filters::clean(&mut labels,w,h,colors,extra&65535,extra>>16);}labels},6=>desktop_filters::resize2(a,w,h),_=>return std::ptr::null()};store(output)
 }
 #[no_mangle]pub unsafe extern "C" fn shared_svg(p:*const i32,w:usize,h:usize,detail:usize,flags:usize)->*const u8{if p.is_null()||!valid(w,h)||detail>2{return std::ptr::null();}let pal=PALETTE.with(|r|r.borrow().clone());let labels=std::slice::from_raw_parts(p,w*h);if labels.iter().any(|&v|v>=pal.len() as i32){return std::ptr::null();}store(desktop_shared::trace(labels,&pal,w,h,detail,flags&1!=0,flags&2!=0,flags&4!=0).into_bytes())}
 #[no_mangle]pub extern "C" fn segment_preview()->*const u8{store(SEGMENT.with(|r|r.borrow().clone()))}
@@ -30,13 +30,15 @@ fn valid(w:usize,h:usize)->bool{w>0&&h>0&&w<=4096&&h<=4096&&w.checked_mul(h).unw
  store(finish(a,labels,palette,w,h,unlimited,detail,speckle,flags).into_bytes())
 }
 
+thread_local!{static EDGE_SOURCE:std::cell::RefCell<Vec<u8>>=std::cell::RefCell::new(Vec::new());}
 fn finish(a:Vec<u8>,mut labels:Vec<u8>,palette:Vec<[u8;3]>,w:usize,h:usize,unlimited:bool,detail:usize,speckle:usize,flags:usize)->String{
  let photo=flags&12==0;
- desktop_filters::clean(&mut labels,w,h,palette.len(),if photo{speckle.max(8)}else{speckle.max(1)},(flags>>8)&3);
+ if unlimited{desktop_filters::clean(&mut labels,w,h,palette.len(),speckle.max(8),(flags>>8)&3);}else{desktop_filters::clean_aware(&mut labels,w,h,&palette,if photo{speckle.max(8)}else{speckle.max(1)},(flags>>8)&3);}
  SEGMENT.with(|r|{let mut rgba=vec![0u8;w*h*4];for(i,&label)in labels.iter().enumerate(){if label!=255{rgba[4*i..4*i+3].copy_from_slice(&palette[label as usize]);rgba[4*i+3]=255;}}*r.borrow_mut()=rgba;});
  report(40,4);let(mut regions,mut inks)=if unlimited{desktop_regions::components(&labels,&a,w,h,palette.len())}else{(labels.iter().map(|&v|if v==255{-1}else{v as i32}).collect(),palette.clone())};
  let initial=inks.len();let target=if unlimited{desktop_regions::target(&labels,&a,w,h,detail)}else{inks.len()};report(60,4);if unlimited{desktop_regions::merge(&mut regions,&mut inks,w,h,target);}
- report(70,5);let svg=if flags&128!=0{String::new()}else{desktop_shared::trace(&regions,&inks,w,h,detail,flags&32==0,flags&1!=0,!unlimited)};
+ EDGE_SOURCE.with(|r|*r.borrow_mut()=a.clone());
+ report(70,5);let svg=if flags&128!=0{String::new()}else{desktop_shared::trace_quality(&regions,&inks,w,h,detail,flags&32==0,flags&1!=0,!unlimited,None,Some(&a))};
  LAST.with(|r|*r.borrow_mut()=Some((regions,inks.clone(),w,h,detail)));
  let palette_json=palette.iter().map(|p|format!("[{}, {}, {}]",p[0],p[1],p[2])).collect::<Vec<_>>().join(",");let stats=format!("{{\"algorithm\":\"desktop-shared\",\"initial_regions\":{initial},\"region_target\":{target},\"regions\":{},\"palette\":[{palette_json}]}}",inks.len());STATS.with(|r|*r.borrow_mut()=stats.into_bytes());report(100,6);svg
 }
@@ -56,6 +58,6 @@ fn finish(a:Vec<u8>,mut labels:Vec<u8>,palette:Vec<[u8;3]>,w:usize,h:usize,unlim
   let fixed=flags&4!=0;let expected=if fixed{[4,2,1][*detail]}else{[10,8,5][*detail]};
   if !p.is_null()&&(passes!=expected||length!=2*(w+1)*(h+1)){return std::ptr::null();}
   let external=if p.is_null(){None}else{Some((std::slice::from_raw_parts(p,2*(w+1)*(h+1)),1u32<<(2*passes)))};
-  store(desktop_shared::trace_external(labels,palette,*w,*h,*detail,flags&1!=0,flags&2!=0,fixed,external).into_bytes())
+  EDGE_SOURCE.with(|source|{let source=source.borrow();store(desktop_shared::trace_quality(labels,palette,*w,*h,*detail,flags&1!=0,flags&2!=0,fixed,external,if source.len()==w*h*4{Some(&source)}else{None}).into_bytes())})
  }else{std::ptr::null()})
 }

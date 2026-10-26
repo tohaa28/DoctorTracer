@@ -50,7 +50,7 @@ def load_source(path,cfg):
     return a,original
 
 
-def find_palette(a, count=0, photo=False, merge_distance=24):
+def _legacy_palette(a, count=0, photo=False, merge_distance=24, attempts=3):
     rgb=a[:,:,:3];opaque=a[:,:,3]>127
     if not np.any(opaque):return [[255,255,255]]
     if count==1:return [np.median(rgb[opaque],axis=0).astype(int).tolist()]
@@ -78,9 +78,16 @@ def find_palette(a, count=0, photo=False, merge_distance=24):
     pixels=rgb[opaque][::max(1,int(opaque.sum())//60000)].astype('float32')
     cv2.setRNGSeed(27)
     target=min(target,len(np.unique(pixels,axis=0)))
-    _,labels,centers=cv2.kmeans(pixels,target,None,(cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER,35,.2),3,cv2.KMEANS_PP_CENTERS)
+    _,labels,centers=cv2.kmeans(pixels,target,None,(cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER,35,.2),attempts,cv2.KMEANS_PP_CENTERS)
     # Use medians of clusters to retain original flat colors despite JPEG ringing.
     return [np.median(pixels[labels[:,0]==i],axis=0).astype(int).tolist() for i in range(target) if np.any(labels[:,0]==i)]
+
+
+def find_palette(a, count=0, photo=False, merge_distance=24):
+    if 1 < count <= 24:
+        from adaptive_palette import discover
+        return discover(a, count, _legacy_palette)
+    return _legacy_palette(a, count, photo, merge_distance)
 
 
 def analyze_image(path,cfg=None):
@@ -128,14 +135,16 @@ def segment(path,cfg):
         change=(labels!=255)&(median!=255)&(neighbors>= (6 if cfg['artifact_strength']==1 else 4))
         labels[change]=median[change]
     if min_area:
-        # Reassign isolated specks from neighboring regions, preserving thin strokes.
-        median=cv2.medianBlur(labels,3)
-        for i in range(len(palette)):
-            n,components,stats,_=cv2.connectedComponentsWithStats((labels==i).astype('uint8'),8)
-            bad=np.where(stats[:,cv2.CC_STAT_AREA]<min_area)[0]
-            bad=bad[bad!=0]
-            if len(bad):
-                small=np.isin(components,bad);labels[small]=median[small]
+        if cfg.get('_unlimited'):
+            median=cv2.medianBlur(labels,3)
+            for i in range(len(palette)):
+                n,components,stats,_=cv2.connectedComponentsWithStats((labels==i).astype('uint8'),8)
+                bad=np.where(stats[:,cv2.CC_STAT_AREA]<min_area)[0];bad=bad[bad!=0]
+                if len(bad):
+                    small=np.isin(components,bad);labels[small]=median[small]
+        else:
+            from region_cleanup import clean
+            labels=clean(labels,palette,min_area)
     return a,labels,palette,original
 
 

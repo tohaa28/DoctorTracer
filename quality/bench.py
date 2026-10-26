@@ -308,7 +308,15 @@ def compare(args,folder):
                 if baseline:
                     prev=next((p for p in baseline['rows'] if p['image']==c['image'] and p['profile']==c['profile'] and p['status']=='ok'),None)
                     if prev:
-                        if prev['source_sha256']!=c['source_sha256'] or prev['config']!=c['config']:raise ValueError('Baseline settings differ: '+key)
+                        previous_config=dict(prev['config']);current_config=dict(c['config'])
+                        if getattr(args,'proposal_comparison',False):
+                            if data.get('palette_policy')!='ui-total-slots-v2':raise ValueError('Proposal comparison requires a wizard-proposal corpus')
+                            for settings in [previous_config,current_config]:
+                                settings.pop('compute',None)
+                                if settings.get('colors'):settings.pop('palette',None)
+                            row['baseline_comparison_policy']='same UI limit; generated proposals may differ; CPU/GPU backend may differ'
+                            row['baseline_config']=prev['config']
+                        if prev['source_sha256']!=c['source_sha256'] or previous_config!=current_config:raise ValueError('Baseline settings differ: '+key)
                         if digest(baseline_dir/prev['file'])!=prev['svg_sha256']:raise ValueError('Baseline changed: '+key)
                         old_image=render(baseline_dir/prev['file'],image['width'],image['height']);old=metrics(reference,old_image)
                         Image.fromarray(old_image).save(out/'assets'/(key+'-baseline.png'))
@@ -319,7 +327,7 @@ def compare(args,folder):
     errors=[r['image']+'--'+r['profile']for r in results if r['status']!='ok']
     baseline_missing=[r['image']+'--'+r['profile']for r in results if 'baseline_metrics'not in r] if baseline else []
     summary={'cases':len(results),'verified_reference_cases':len(verified),'missing_or_unverified':len(results)-len(verified),'regressions':regressions,'errors':errors,
-      'baseline_missing':baseline_missing,
+      'baseline_missing':baseline_missing,'proposal_comparison':getattr(args,'proposal_comparison',False),
       'coverage_complete':bool(results) and len(verified)==len(results),'baseline':args.baseline,'run':args.run,'generated':now(),
       'regression_thresholds':{'white_mae_increase':args.regression_mae,'alpha_iou_decrease':args.regression_iou,'boundary_f1_decrease':args.regression_boundary},
       'notice':'Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.'}
@@ -374,7 +382,7 @@ def main():
     a=sub.add_parser('reference');a.add_argument('--id',required=True);a.add_argument('--profile',choices=PROFILES,required=True);a.add_argument('--svg',required=True);a.add_argument('--evidence',required=True);a.add_argument('--version',required=True);a.add_argument('--wizard',choices=['basic','batch'],default='basic');a.add_argument('--verified',action='store_true');a.add_argument('--notes',default='')
     a=sub.add_parser('import-batch');a.add_argument('--directory',required=True);a.add_argument('--ids');a.add_argument('--profile',choices=PROFILES,required=True);a.add_argument('--evidence',required=True);a.add_argument('--version',required=True);a.add_argument('--wizard',choices=['basic','batch'],default='batch');a.add_argument('--verified',action='store_true');a.add_argument('--notes',default='')
     a=sub.add_parser('run');a.add_argument('--name',required=True);a.add_argument('--engine',choices=['desktop','wasm'],default='desktop');a.add_argument('--profiles',default='photo-medium-auto');a.add_argument('--ids');a.add_argument('--compute',choices=['cpu','gpu','auto'],default='cpu')
-    a=sub.add_parser('compare');a.add_argument('--run',required=True);a.add_argument('--baseline');a.add_argument('--name',required=True);a.add_argument('--regression-mae',type=float,default=.1);a.add_argument('--regression-iou',type=float,default=.001);a.add_argument('--regression-boundary',type=float,default=.01);a.add_argument('--require-complete',action='store_true')
+    a=sub.add_parser('compare');a.add_argument('--run',required=True);a.add_argument('--baseline');a.add_argument('--name',required=True);a.add_argument('--regression-mae',type=float,default=.1);a.add_argument('--regression-iou',type=float,default=.001);a.add_argument('--regression-boundary',type=float,default=.01);a.add_argument('--require-complete',action='store_true');a.add_argument('--proposal-comparison',action='store_true')
     args=p.parse_args();folder=args.corpus.resolve();folder.mkdir(parents=True,exist_ok=True)
     {'init':init,'add-image':add_image,'queue':queue,'reference':register,'import-batch':import_batch,'run':run,'compare':compare}[args.command](args,folder)
 

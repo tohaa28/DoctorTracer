@@ -5,7 +5,8 @@
 struct Rng(u64);impl Rng{fn next(&mut self)->u32{self.0=(self.0 as u32 as u64)*4164903690+(self.0>>32);self.0 as u32}fn double(&mut self)->f64{let a=self.next() as u64;((a<<32)|self.next() as u64) as f64*5.421010862427522e-20}}
 fn d(a:&[f32;3],b:&[f32;3])->f32{let x=a[0]-b[0];let y=a[1]-b[1];let z=a[2]-b[2];(x*x+y*y)+z*z}
 fn med(mut v:Vec<u8>)->u8{v.sort_unstable();let n=v.len();if n%2==1{v[n/2]}else{((v[n/2-1] as u16+v[n/2] as u16)/2) as u8}}
-pub fn find(a:&[u8],w:usize,h:usize,count:usize,photo:bool)->Vec<[u8;3]>{
+fn legacy(a:&[u8],w:usize,h:usize,count:usize,photo:bool)->Vec<[u8;3]>{legacy_attempts(a,w,h,count,photo,3)}
+fn legacy_attempts(a:&[u8],w:usize,h:usize,count:usize,photo:bool,attempts:usize)->Vec<[u8;3]>{
  let all:Vec<[u8;3]>=a.chunks_exact(4).filter(|p|p[3]>=128).map(|p|[p[0],p[1],p[2]]).collect();if all.is_empty(){return vec![[255;3]];}
  if count==1{return vec![std::array::from_fn(|c|med(all.iter().map(|p|p[c]).collect()))];}
  if !photo&&count==0{
@@ -16,7 +17,7 @@ pub fn find(a:&[u8],w:usize,h:usize,count:usize,photo:bool)->Vec<[u8;3]>{
  }
  let pixels:Vec<[f32;3]>=all.iter().step_by((all.len()/60000).max(1)).map(|p|p.map(|v|v as f32)).collect();
  let unique:std::collections::BTreeSet<_>=pixels.iter().map(|p|p.map(|v|v as u8)).collect();let k=count.max(2).min(64).min(unique.len());let n=pixels.len();let mut rng=Rng(27);let mut best=f64::MAX;let mut best_labels=vec![0usize;n];
- for _ in 0..3{
+ for _ in 0..attempts{
   let first=rng.next() as usize%n;let mut centers=vec![pixels[first]];let mut dist:Vec<f32>=pixels.iter().map(|p|d(p,&pixels[first])).collect();let mut total: f64=dist.iter().map(|&v|v as f64).sum();
   while centers.len()<k{let mut best_sum=f64::MAX;let mut best_center=0;let mut best_dist=Vec::new();for _ in 0..3{let mut p=rng.double()*total;let mut ci=0;while ci<n-1{p-=dist[ci] as f64;if p<=0.{break;}ci+=1;}let next:Vec<f32>=pixels.iter().zip(&dist).map(|(p,&old)|old.min(d(p,&pixels[ci]))).collect();let mut s=0f64;let mut i=0;while i+7<n{let mut sum=next[i];for v in &next[i+1..i+8]{sum+=v;}s+=sum as f64;i+=8;}for &v in &next[i..]{s+=v as f64;}if s<best_sum{best_sum=s;best_center=ci;best_dist=next;}}centers.push(pixels[best_center]);dist=best_dist;total=best_sum;}
   let mut labels=vec![0usize;n];let mut iteration=0;
@@ -30,4 +31,30 @@ pub fn find(a:&[u8],w:usize,h:usize,count:usize,photo:bool)->Vec<[u8;3]>{
  }
  let mut buckets=vec![Vec::<[u8;3]>::new();k];for(i,p)in pixels.iter().enumerate(){buckets[best_labels[i]].push(p.map(|v|v as u8));}
  buckets.into_iter().filter(|b|!b.is_empty()).map(|b|std::array::from_fn(|c|med(b.iter().map(|p|p[c]).collect()))).collect()
+}
+
+// Fixed limits are maxima, not a request to quantize antialias mixtures into inks.
+pub fn find(a:&[u8],w:usize,h:usize,count:usize,photo:bool)->Vec<[u8;3]>{
+ if count<=1||count>24{return legacy(a,w,h,count,photo);}
+ let interior=legacy(a,w,h,0,false);
+ let all:Vec<_>=a.chunks_exact(4).filter(|p|p[3]>=128).collect();
+ if all.is_empty(){return vec![[255;3]];}
+ if interior.len()<=count{
+  let sample:Vec<_>=all.iter().step_by((all.len()/60000).max(1)).collect();
+  let good=sample.iter().filter(|p|interior.iter().any(|c|(0..3).map(|j|(p[j] as i32-c[j] as i32).pow(2)).sum::<i32>()<=576)).count();
+  if good as f64/sample.len() as f64>=0.96{return interior;}
+  if good as f64/sample.len() as f64>=0.75{
+   let explained=sample.iter().filter(|p|{
+    if interior.iter().any(|c|(0..3).map(|j|(p[j] as i32-c[j] as i32).pow(2)).sum::<i32>()<=576){return true;}
+    for i in 0..interior.len(){for j in i+1..interior.len(){let left=interior[i].map(|v|v as f64);let d=std::array::from_fn::<_,3,_>(|k|interior[j][k] as f64-left[k]);let den=d.iter().map(|v|v*v).sum::<f64>();if den==0.{continue;}let t=((0..3).map(|k|(p[k] as f64-left[k])*d[k]).sum::<f64>()/den).clamp(0.,1.);let error=(0..3).map(|k|(p[k] as f64-left[k]-t*d[k]).powi(2)).sum::<f64>();if error<=64.{return true;}}}false
+   }).count();if explained as f64/sample.len() as f64>=0.995{return interior;}
+  }
+ }
+ let mut counts=vec![0u32;32768];let mut sums=vec![[0u64;3];32768];
+ for p in all.iter().step_by((all.len()/60000).max(1)){
+  let k=(p[0] as usize/8)*1024+(p[1] as usize/8)*32+p[2] as usize/8;counts[k]+=1;for j in 0..3{sums[k][j]+=p[j] as u64;}
+ }
+ let weights:Vec<f64>=counts.iter().map(|&n|(n as f64).powf(0.75)).collect();let total:f64=weights.iter().sum();let mut sampled=Vec::new();
+ for k in 0..32768{if counts[k]==0{continue;}let n=(weights[k]*60000./total).round().max(1.) as usize;let c=std::array::from_fn::<_,3,_>(|j|((sums[k][j] as f64/counts[k] as f64).round()) as u8);for _ in 0..n{sampled.extend_from_slice(&[c[0],c[1],c[2],255]);}}
+ legacy_attempts(&sampled,sampled.len()/4,1,count,true,5)
 }

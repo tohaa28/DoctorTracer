@@ -25,9 +25,14 @@ def smooth(graph,loops,stride,width,height,tolerance=.5,passes=8,backend='cpu',m
             if error[k]>tolerance**2:
                 split=left+k+1;selected.add(split);stack.extend([(left,split),(split,right)])
         keep.update(chain[i] for i in selected)
+    def ordered(v):
+        def direction(u):
+            d=u-v
+            return 0 if d==1 else 1 if d==stride else 2 if d==-1 else 3
+        return sorted(graph[v],key=direction)
     for start in vertices:
         if len(graph[start])==2:continue
-        for nxt in graph[start]:
+        for nxt in ordered(start):
             if (start,nxt) in seen:continue
             chain=[start];a,b=start,nxt
             while True:
@@ -36,7 +41,7 @@ def smooth(graph,loops,stride,width,height,tolerance=.5,passes=8,backend='cpu',m
                 a,b=b,next(v for v in graph[b] if v!=a)
             chains.append(chain)
     for start in vertices:
-        for nxt in graph[start]:
+        for nxt in ordered(start):
             if (start,nxt) in seen:continue
             chain=[start];a,b=start,nxt
             while b!=start:
