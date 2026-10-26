@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import createTracer from './rust-tracer.mjs?v=0.13.0';
-import {gpuPrepare,gpuAssign} from './gpu.js?v=0.13.0';
-import {auditNative} from './geometry.mjs?v=0.13.0';
-import {traceFixed} from './desktop-curves.mjs?v=0.13.0';
+import createTracer from './rust-tracer.mjs?v=0.13.1';
+import {gpuPrepare,gpuAssign} from './gpu.js?v=0.13.1';
+import {auditNative} from './geometry.mjs?v=0.13.1';
+import {traceFixed} from './desktop-curves.mjs?v=0.13.1';
 let runtime,loading,lastProgress=0;
 function emitProgress(progress,stage){lastProgress=Math.max(lastProgress,progress);self.postMessage({progress:lastProgress,stage});}
 const stages=['','Подготовка изображения','Определение палитры','Сегментация','Объединение областей','Построение кривых','Готово'];

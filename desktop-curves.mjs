@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Same Potrace 1.16 masks and Skia PathOps visibility subtraction as desktop.
-import initMask from './vendor/mask.mjs?v=0.13.0';import initPaths from './vendor/pathkit.mjs?v=0.13.0';
-import {gpuAssign} from './gpu.js?v=0.13.0';
-import {normalizeWinding} from './paths.mjs?v=0.13.0';
-import {partitionNative,auditNative} from './geometry.mjs?v=0.13.0';
+import initMask from './vendor/mask.mjs?v=0.13.1';import initPaths from './vendor/pathkit.mjs?v=0.13.1';
+import {gpuAssign} from './gpu.js?v=0.13.1';
+import {normalizeWinding} from './paths.mjs?v=0.13.1';
+import {partitionNative,auditNative} from './geometry.mjs?v=0.13.1';
 let maskRuntime,pathRuntime;
 async function binary(url){return new Uint8Array(await(await fetch(url)).arrayBuffer());}
 export async function curveRuntime({maskBinary,pathBinary}={}){
- maskRuntime??=await initMask(maskBinary?{wasmBinary:maskBinary}:{locateFile:()=>new URL('./vendor/mask.wasm?v=0.13.0',import.meta.url).href});
- pathRuntime??=await initPaths(pathBinary?{wasmBinary:pathBinary}:{locateFile:()=>new URL('./vendor/pathkit.wasm?v=0.13.0',import.meta.url).href});
+ maskRuntime??=await initMask(maskBinary?{wasmBinary:maskBinary}:{locateFile:()=>new URL('./vendor/mask.wasm?v=0.13.1',import.meta.url).href});
+ pathRuntime??=await initPaths(pathBinary?{wasmBinary:pathBinary}:{locateFile:()=>new URL('./vendor/pathkit.wasm?v=0.13.1',import.meta.url).href});
  return{mask:maskRuntime,paths:pathRuntime};
 }
 function data(path){let out='',current=[0,0];for(const command of path.toCmds()){const[verb,...p]=command;if(verb===0){out+='M'+p.join(' ')+' ';current=p;}else if(verb===1){out+='L'+p.join(' ')+' ';current=p;}else if(verb===2){const[cx,cy,x,y]=p;const c1=[current[0]+2/3*(cx-current[0]),current[1]+2/3*(cy-current[1])],c2=[x+2/3*(cx-x),y+2/3*(cy-y)];out+='C'+[...c1,...c2,x,y].join(' ')+' ';current=[x,y];}else if(verb===4){out+='C'+p.join(' ')+' ';current=p.slice(-2);}else if(verb===5)out+='Z ';else throw Error('Unsupported Skia path verb');}return out;}
