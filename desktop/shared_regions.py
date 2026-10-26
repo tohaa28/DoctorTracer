@@ -11,7 +11,8 @@ import numpy as np
 
 NS='http://www.w3.org/2000/svg'
 
-def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,passes=8,progress=None):
+def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,passes=8,progress=None,compute='cpu'):
+    acceleration={}
     started=time.perf_counter();h,w=labels.shape;stride=w+1
     # Duplicate RGB entries are one editable object, including their boundaries.
     unique=[];lookup={};remap=np.full(len(palette),-1,np.int32)
@@ -64,7 +65,22 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
     keep=None
     if smooth:
         from boundary_smoothing import smooth as smooth_graph
-        coordinates,keep=smooth_graph(graph,loops_by_color,stride,w,h,curve_tolerance,passes)
+        coordinates,keep=smooth_graph(graph,loops_by_color,stride,w,h,curve_tolerance,passes,backend=compute,metrics=acceleration)
+    curve_values=None;curve_offsets={}
+    if smooth and compute!='cpu' and coordinates:
+        try:
+            import gpu_contours
+            vertices=list(coordinates);indices={v:i for i,v in enumerate(vertices)};triples=[]
+            for color_loops in loops_by_color.values():
+                for loop in color_loops:
+                    if len(loop)<=8 and all(len(graph[v])==2 for v in loop):continue
+                    selected=[v for v in loop if v in keep]
+                    if len(selected)<3:continue
+                    curve_offsets[id(loop)]=len(triples)
+                    triples.extend((indices[selected[i-1]],indices[v],indices[selected[(i+1)%len(selected)]],0) for i,v in enumerate(selected))
+            curve_started=time.perf_counter();curve_values=gpu_contours.curves([coordinates[v] for v in vertices],triples,rounding,w,h).tolist()
+            acceleration.update(curve_compute='OpenCL GPU FP64',curve_arithmetic_seconds=time.perf_counter()-curve_started)
+        except Exception as exc:acceleration.update(curve_compute='CPU',curve_gpu_fallback=str(exc))
     def xy(v):return coordinates[v]
     def fmt(p):return f'{p[0]:.4f} {p[1]:.4f}'
     def middle(a,b):
@@ -72,7 +88,7 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
     root=ET.Element('{'+NS+'}svg',{'width':str(original[0]),'height':str(original[1]),'viewBox':f'0 0 {w} {h}','version':'1.1','data-color-objects':'merged','data-shared-boundaries':'true'})
     loops=segments=0;pieces=[]
     for completed,(color,color_loops) in enumerate(sorted(loops_by_color.items())):
-        if progress:progress(72+int(14*completed/max(1,len(loops_by_color))),'Сглаживание общих границ')
+        if progress:progress(72+int(14*completed/max(1,len(loops_by_color))),'РЎРіР»Р°Р¶РёРІР°РЅРёРµ РѕР±С‰РёС… РіСЂР°РЅРёС†')
         paths=[]
         for loop in color_loops:
             # Preserve tiny isolated pixel cycles exactly. Rounding a one-pixel
@@ -89,16 +105,16 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
             if len(points)<3:continue
             data=['M'+fmt(middle(points[-1],points[0]))]
             for i,v in enumerate(points):
-                before=middle(points[i-1],v);after=middle(v,points[(i+1)%len(points)]);corner=xy(v)
-                # Limit corner rounding by adjacent half-edges; long runs stay straight.
-                def near(p):
-                    delta=(p[0]-corner[0],p[1]-corner[1]);length=max(abs(delta[0]),abs(delta[1]));f=min(1,(rounding if smooth and 0<corner[0]<w and 0<corner[1]<h else .5)/length) if length else 0
-                    return (corner[0]+delta[0]*f,corner[1]+delta[1]*f)
-                enter,leave=near(before),near(after)
+                if curve_values is None:
+                    before=middle(points[i-1],v);after=middle(v,points[(i+1)%len(points)]);corner=xy(v)
+                    def near(p):
+                        delta=(p[0]-corner[0],p[1]-corner[1]);length=max(abs(delta[0]),abs(delta[1]));f=min(1,(rounding if smooth and 0<corner[0]<w and 0<corner[1]<h else .5)/length) if length else 0
+                        return (corner[0]+delta[0]*f,corner[1]+delta[1]*f)
+                    enter,leave=near(before),near(after);c1=tuple((enter[j]+2*corner[j])/3 for j in (0,1));c2=tuple((leave[j]+2*corner[j])/3 for j in (0,1))
+                else:enter,c1,c2,leave,corner=curve_values[curve_offsets[id(loop)]+i]
                 if i==0:data[0]='M'+fmt(enter if len(graph[v])==2 else corner)
                 if len(graph[v])==2:
                     data.append('L'+fmt(enter))
-                    c1=tuple((enter[j]+2*corner[j])/3 for j in (0,1));c2=tuple((leave[j]+2*corner[j])/3 for j in (0,1))
                     data.append('C'+fmt(c1)+' '+fmt(c2)+' '+fmt(leave))
                 else:data.append('L'+fmt(corner))
                 segments+=1
@@ -110,7 +126,7 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
             data=' '.join(paths)
             ET.SubElement(g,'{'+NS+'}path',{'d':data,'fill':fill,'fill-rule':'nonzero'})
             pieces.append((fill,data))
-    if progress:progress(90,'Проверка пересечений')
+    if progress:progress(90,'РџСЂРѕРІРµСЂРєР° РїРµСЂРµСЃРµС‡РµРЅРёР№')
     report={}
     if smooth:
         from vector_partition import audit_pieces
@@ -119,10 +135,10 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
             fallback,stats=trace(labels,palette,original,smooth=False)
             document=ET.fromstring(fallback)
             audit_pieces([(p.get('fill'),p.get('d')) for p in document.iter('{'+NS+'}path')],report)
-            stats['geometry_verified']=True;stats['geometry_audit']=report
+            stats.update(acceleration);stats['geometry_verified']=True;stats['geometry_audit']=report
             stats['shared_boundary_seconds']=time.perf_counter()-started
             stats['smoothing_fallback']=True;stats['smoothing_fallback_reason']=str(exc)
             return fallback,stats
     ET.register_namespace('',NS)
-    return ET.tostring(root,encoding='unicode'),{'paths':loops,'color_groups':len(root),'shared_corners':segments,'shared_boundary_seconds':time.perf_counter()-started,'vector_layout':'shared boundary color groups','geometry_compute':'shared grid CPU',
+    return ET.tostring(root,encoding='unicode'),{**acceleration,'paths':loops,'color_groups':len(root),'shared_corners':segments,'shared_boundary_seconds':time.perf_counter()-started,'vector_layout':'shared boundary color groups','geometry_compute':'shared grid CPU',
         'geometry_verified':bool(smooth),'geometry_audit':report}

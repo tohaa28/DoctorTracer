@@ -1,5 +1,7 @@
 # Продолжение разработки
 
+Текущее обновление: Windows 0.12.0 / WASM 0.14.0 — GPU-контуры. Прочесть [GPU_CONTOURS_014.md](GPU_CONTOURS_014.md) и [результаты](GPU_CONTOURS_014_RESULTS.json). OpenCL FP64 ускоряет сглаживание, RDP и Безье; WebGPU exact integer включён для крупных свободных фото. Аудит остаётся независимым CPU.
+
 Обновление 26.10.2026: палитры исправлены в Windows **0.11.1-preview** и WASM **0.13.1-wasm-preview**. [Описание и проверки](PALETTE_FIX_0131.md). Прозрачность занимает слот в интерфейсе, но исключена из RGB-палитры ядра. Pages: https://tohaa28.github.io/DoctorTracer/?v=0.13.1 . Ниже сохранён предыдущий снимок контекста.
 
 Состояние на 25.10.2026. Сначала прочесть ../START_HERE.md и PROJECT_HISTORY.md.

@@ -36,7 +36,7 @@ fn finish(a:Vec<u8>,mut labels:Vec<u8>,palette:Vec<[u8;3]>,w:usize,h:usize,unlim
  SEGMENT.with(|r|{let mut rgba=vec![0u8;w*h*4];for(i,&label)in labels.iter().enumerate(){if label!=255{rgba[4*i..4*i+3].copy_from_slice(&palette[label as usize]);rgba[4*i+3]=255;}}*r.borrow_mut()=rgba;});
  report(40,4);let(mut regions,mut inks)=if unlimited{desktop_regions::components(&labels,&a,w,h,palette.len())}else{(labels.iter().map(|&v|if v==255{-1}else{v as i32}).collect(),palette.clone())};
  let initial=inks.len();let target=if unlimited{desktop_regions::target(&labels,&a,w,h,detail)}else{inks.len()};report(60,4);if unlimited{desktop_regions::merge(&mut regions,&mut inks,w,h,target);}
- report(70,5);let svg=desktop_shared::trace(&regions,&inks,w,h,detail,flags&32==0,flags&1!=0,!unlimited);
+ report(70,5);let svg=if flags&128!=0{String::new()}else{desktop_shared::trace(&regions,&inks,w,h,detail,flags&32==0,flags&1!=0,!unlimited)};
  LAST.with(|r|*r.borrow_mut()=Some((regions,inks.clone(),w,h,detail)));
  let palette_json=palette.iter().map(|p|format!("[{}, {}, {}]",p[0],p[1],p[2])).collect::<Vec<_>>().join(",");let stats=format!("{{\"algorithm\":\"desktop-shared\",\"initial_regions\":{initial},\"region_target\":{target},\"regions\":{},\"palette\":[{palette_json}]}}",inks.len());STATS.with(|r|*r.borrow_mut()=stats.into_bytes());report(100,6);svg
 }
@@ -47,4 +47,15 @@ fn finish(a:Vec<u8>,mut labels:Vec<u8>,palette:Vec<[u8;3]>,w:usize,h:usize,unlim
 
 #[no_mangle]pub unsafe extern "C" fn analyze_rgba(p:*const u8,w:usize,h:usize)->*const u8{
  if p.is_null()||!valid(w,h){return std::ptr::null();}let a=std::slice::from_raw_parts(p,w*h*4);let palette=desktop_palette::find(a,w,h,0,false);let visible:Vec<_>=a.chunks_exact(4).filter(|p|p[3]>=128).collect();let samples:Vec<_>=if visible.is_empty(){vec![&a[..4]]}else{visible.iter().step_by((visible.len()/30000).max(1)).copied().collect()};let matches=samples.iter().filter(|p|palette.iter().any(|color|(0..3).map(|c|(p[c] as i32-color[c] as i32).pow(2)).sum::<i32>()<1225)).count();let coverage=matches as f64/samples.len() as f64;let category=if coverage<0.8||palette.len()>18{"photo"}else{"aa"};let list=palette.iter().map(|p|format!("[{}, {}, {}]",p[0],p[1],p[2])).collect::<Vec<_>>().join(",");store(format!("{{\"category\":\"{category}\",\"coverage\":{coverage},\"palette\":[{list}]}}").into_bytes())
+}
+
+// Deferred shared geometry lets WebGPU compute the same dyadic vertex coordinates.
+#[no_mangle]pub extern "C" fn shared_input()->*const u8{LAST.with(|r|if let Some((labels,palette,_,_,_))=&*r.borrow(){store(labels.iter().flat_map(|&v|{let value=if v<0{-1}else{let p=palette[v as usize];p[0] as i32|((p[1] as i32)<<8)|((p[2] as i32)<<16)};value.to_le_bytes()}).collect())}else{std::ptr::null()})}
+#[no_mangle]pub unsafe extern "C" fn shared_finish(p:*const u32,length:usize,passes:usize,flags:usize)->*const u8{
+ LAST.with(|r|if let Some((labels,palette,w,h,detail))=&*r.borrow(){
+  let fixed=flags&4!=0;let expected=if fixed{[4,2,1][*detail]}else{[10,8,5][*detail]};
+  if !p.is_null()&&(passes!=expected||length!=2*(w+1)*(h+1)){return std::ptr::null();}
+  let external=if p.is_null(){None}else{Some((std::slice::from_raw_parts(p,2*(w+1)*(h+1)),1u32<<(2*passes)))};
+  store(desktop_shared::trace_external(labels,palette,*w,*h,*detail,flags&1!=0,flags&2!=0,fixed,external).into_bytes())
+ }else{std::ptr::null()})
 }

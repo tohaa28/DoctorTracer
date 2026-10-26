@@ -1,5 +1,7 @@
 # DoctorTracer — начать здесь
 
+Обновление GPU 26.10.2026: Windows **0.12.0-preview**, WASM **0.14.0-wasm-preview**. [Перенос операций, замеры и проверки](docs/GPU_CONTOURS_014.md). Pages: https://tohaa28.github.io/DoctorTracer/?v=0.14.0 .
+
 Обновление 26.10.2026: палитры исправлены в Windows **0.11.1-preview** и WASM **0.13.1-wasm-preview**. [Описание и проверки](docs/PALETTE_FIX_0131.md). Прозрачность занимает слот в интерфейсе, но исключена из RGB-палитры ядра. Pages: https://tohaa28.github.io/DoctorTracer/?v=0.13.1 . Ниже сохранён предыдущий снимок контекста.
 
 Снимок контекста: 25 октября 2026, Europe/Moscow.

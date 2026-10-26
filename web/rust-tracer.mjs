@@ -10,13 +10,15 @@ export default async function createTracer({wasmBinary,onProgress=()=>{}}={}){
   stage(pixels,width,height,{colors=0,detail=1,kind=0,extra=0,palette:inks=[]}={}){palette(inks);const bytes=new Uint8Array(Math.max(pixels.byteLength,width*height*4));bytes.set(new Uint8Array(pixels.buffer,pixels.byteOffset,pixels.byteLength));const p=input(bytes);try{return output(api.desktop_stage(p,width,height,colors,detail,kind,extra));}finally{api.dealloc(p,bytes.length);}},
   filter(pixels,w,h,detail){return this.stage(pixels,w,h,{kind:0,detail});},
   shared(labels,inks,w,h,detail=1,smooth=true){palette(inks);const p=input(labels);try{return output(api.shared_svg(p,w,h,detail,smooth?1:0),true);}finally{api.dealloc(p,labels.byteLength);}},
+  sharedInput(){return new Int32Array(output(api.shared_input()).buffer);},
+  sharedFinish(coordinates,passes,{unlimited=true,smooth=true,polygon=false}={}){const p=coordinates?input(coordinates):0;try{return output(api.shared_finish(p,coordinates?.length??0,passes,(smooth?1:0)|(polygon?2:0)|(unlimited?0:4)),true);}finally{if(p)api.dealloc(p,coordinates.byteLength);}},
   segments(){return output(api.segment_preview());},
   fallback(){return output(api.shared_fallback(),true);},
   stats(){return JSON.parse(decode.decode(new Uint8Array(api.memory.buffer,api.stats_ptr(),api.stats_len()))||'{}');},
-  finish(pixels,labels,width,height,{palette:inks,detail=1,speckle=2,unlimited=true,smooth=true,artifact_strength=0}={}){palette(inks);const p=input(pixels),l=input(labels);try{return output(api.trace_labels(p,l,width,height,detail,speckle,(smooth?0:32)|(Math.min(2,Math.max(0,artifact_strength))<<8),unlimited?1:0),true);}finally{api.dealloc(p,pixels.length);api.dealloc(l,labels.length);}},
-  trace(pixels,width,height,{colors=0,detail=1,speckle=2,polygon=false,prefiltered=false,category='photo',palette:inks=[],smooth=true,artifact_strength=0}={}){
+  finish(pixels,labels,width,height,{palette:inks,detail=1,speckle=2,unlimited=true,smooth=true,artifact_strength=0,deferShared=false}={}){palette(inks);const p=input(pixels),l=input(labels);try{return output(api.trace_labels(p,l,width,height,detail,speckle,(deferShared?128:0)|(smooth?0:32)|(Math.min(2,Math.max(0,artifact_strength))<<8),unlimited?1:0),true);}finally{api.dealloc(p,pixels.length);api.dealloc(l,labels.length);}},
+  trace(pixels,width,height,{colors=0,detail=1,speckle=2,polygon=false,prefiltered=false,category='photo',palette:inks=[],smooth=true,artifact_strength=0,deferShared=false}={}){
    if(pixels.length!==width*height*4)throw Error('Некорректный размер изображения');palette(inks);const p=input(pixels);
-   try{return output(api.trace_rgba(p,width,height,colors,detail,speckle,(polygon?1:0)|(prefiltered?2:0)|(category==='hard'?4:category==='aa'?8:0)|(!smooth?32:0)|(Math.min(2,Math.max(0,artifact_strength))<<8)),true);}finally{api.dealloc(p,pixels.length);}
+   try{return output(api.trace_rgba(p,width,height,colors,detail,speckle,(polygon?1:0)|(prefiltered?2:0)|(category==='hard'?4:category==='aa'?8:0)|(!smooth?32:0)|(deferShared?128:0)|(Math.min(2,Math.max(0,artifact_strength))<<8)),true);}finally{api.dealloc(p,pixels.length);}
   }
  };
 }

@@ -76,7 +76,7 @@ def trace(path,cfg):
     if not unlimited:tolerance*=.5
     report(cfg,70,'Построение общих границ')
     svg,geometry=shared_regions.trace(labels,palette,original,smooth=cfg.get('shared_smoothing',True),
-        curve_tolerance=tolerance,rounding=1.5*cfg.get('alphamax',1.),passes=([10,8,5] if unlimited else [4,2,1])[detail],progress=cfg.get('_progress'))
+        curve_tolerance=tolerance,rounding=1.5*cfg.get('alphamax',1.),passes=([10,8,5] if unlimited else [4,2,1])[detail],progress=cfg.get('_progress'),compute=cfg.get('compute','gpu'))
     return svg,{**geometry,**metrics,'width':original[0],'height':original[1],
         'working_size':[labels.shape[1],labels.shape[0]],'colors':geometry['color_groups'],
         'seconds':time.perf_counter()-started,'backend':'shared photographic regions',
