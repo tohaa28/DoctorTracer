@@ -53,6 +53,7 @@ def load_source(path,cfg):
 def find_palette(a, count=0, photo=False, merge_distance=24):
     rgb=a[:,:,:3];opaque=a[:,:,3]>127
     if not np.any(opaque):return [[255,255,255]]
+    if count==1:return [np.median(rgb[opaque],axis=0).astype(int).tolist()]
     # Flat interior pixels are evidence for real ink colors; edge mixtures are not.
     maxc=cv2.dilate(rgb,np.ones((3,3),np.uint8)).astype('int16')
     minc=cv2.erode(rgb,np.ones((3,3),np.uint8)).astype('int16')

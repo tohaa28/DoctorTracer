@@ -2,13 +2,15 @@
 import {icon} from './icons.js';
 import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs';
 import {zip} from './zip.mjs';
+import {opaqueCount,paletteKey,paintPalette,transparentSwatch,latestSelection} from './palette-ui.mjs';
 import {partitionPreview} from './preview.mjs';
 const $=id=>document.getElementById(id);
+const hasTransparentSlot=()=>sourceHasAlpha&&!config.flatten;
 const defaults=()=>({mode:'basic',category:'photo',detail:2,colors:0,speckle:2,flatten:false,polygon:false,gpu:true});
 let config=defaults(),step=-1,source=null,sourceUrl='',vectorUrl='',outlineUrl='',svg='',worker=null,busy=false,name='image',elapsed=0,backend='',progress=0,stage='',loadToken=0;
 const titles=['Режим Мастера','Тип Изображения','Прозрачность','Качество Ввода','Цветовой Режим','Обзор Результата','Экспорт Результата','Выбор Палитры'];titles[-1]='Загрузка Изображения';titles[8]='Редактирование Результата';titles[9]='Удаление Фона';
 let editTool='pan',vectorUndo=[],vectorRedo=[];
-let pageHistory=[],segmentUrl='',paletteWorker,requestId=0,pendingPalettes=new Map(),paletteCache=new Map(),palettePage=0,sourceHasAlpha=false,view='bitmap',previewToken=0,panX=0,panY=0,exportDir=null;
+let pageHistory=[],segmentUrl='',paletteWorker,requestId=0,pendingPalettes=new Map(),paletteCache=new Map(),palettePage=0,recommendedPaletteCount=9,sourceHasAlpha=false,view='bitmap',previewToken=0,panX=0,panY=0,exportDir=null;
 function go(target){if(step!==target)pageHistory.push(step);step=target;show();}
 function navImage(kind){return '<img alt="" src="'+new URL('./desktop-icons/nav-'+kind+'.png',import.meta.url).href+'">';}
 function status(text){$('status').textContent=text;}
@@ -33,18 +35,18 @@ function show(){
  }else if(step===0){
   add('Автоматический','• Векторизация в один клик.','auto',config.mode==='auto',()=>{config.mode='auto';if(source)run();else show();});
   add('Базовый','• Простые вопросы с несколькими вариантами.\n• Пошаговый выбор параметров.','basic',config.mode==='basic',()=>{config.mode='basic';advance();});
-  add('Расширенный','• Тонкие настройки управления.\n• Более сложные варианты.','advanced',config.mode==='advanced',()=>{config.mode='advanced';config.colors=config.colors||9;go(7);});
+  add('Расширенный','• Тонкие настройки управления.\n• Более сложные варианты.','advanced',config.mode==='advanced',()=>{config.mode='advanced';config.colors=config.colors||recommendedPaletteCount;go(7);});
   const hint=document.createElement('p');hint.className='hint';hint.textContent='Откройте изображение, затем выберите режим. Все вычисления выполняются на вашем устройстве.';p.append(hint);
  }else if(step===1){
   for(const [value,title,desc,symbol] of [['photo','Фотоснимок','• Захват с помощью фото- или веб-камеры.','photo'],['aa','Смешанные Края','• Сглаживание.\n• Наиболее распространённая категория.','aa'],['hard','Чистые Края','• Без сглаживания.\n• Чёткие пиксельные границы.','hard']])add(title,desc,symbol,config.category===value,()=>{config.category=value;config.colors=0;config.palette=null;go(sourceHasAlpha?2:3);});
  }else if(step===2){
-  add('Оставить Прозрачность','• Подходит для изображений PNG.','alpha',!config.flatten,()=>{config.flatten=false;advance();});
-  add('Свести в Белый Цвет','• Если изображение было сглажено в белый цвет.','white',config.flatten,()=>{config.flatten=true;advance();});
+  add('Оставить Прозрачность','• Подходит для изображений PNG.','alpha',!config.flatten,()=>{if(config.flatten)config.palette=null;config.flatten=false;advance();});
+  add('Свести в Белый Цвет','• Если изображение было сглажено в белый цвет.','white',config.flatten,()=>{if(!config.flatten)config.palette=null;config.flatten=true;advance();});
  }else if(step===3){
   for(const [value,title,desc] of [[2,'Высокое Качество','• Большая резкость.\n• Очень мало артефактов сжатия и другого шума.'],[1,'Среднее Качество','• Небольшое ухудшение качества.\n• Небольшие артефакты сжатия и другой шум.'],[0,'Низкое Качество','• Размытость.\n• Много артефактов сжатия и другого шума.']])add(title,desc,['low','medium','high'][value],config.detail===value,()=>{config.detail=value;advance();});
  }else if(step===4){
   add('Два Цвета','• Использование только двух цветов.','two',config.colors===2,()=>{config.colors=2;config.palette=null;run();});
-  add('Настраиваемые Цвета','• Выбор цветов на ваше усмотрение.\n• Используются только указанные вами цвета.','fixed',config.colors>2,()=>{config.colors=config.colors||9;go(7);});
+  add('Настраиваемые Цвета','• Выбор цветов на ваше усмотрение.\n• Используются только указанные вами цвета.','fixed',config.colors>2,()=>{config.colors=config.colors||recommendedPaletteCount;go(7);});
   add('Цвета Без Ограничений','• Используются имеющиеся цвета.\n• Подбор градиентов.','flex',config.colors===0,()=>{config.colors=0;config.palette=null;run();});
  }else if(step===7){
   buildPalettes(p);
@@ -53,8 +55,8 @@ function show(){
   const f=document.createElement('fieldset');f.innerHTML='<legend>Улучшение Результата</legend><span class="sectionlabel">Уровень Детализации</span>';
   for(const [d,text] of [[2,'Высокое Качество'],[1,'Среднее Качество'],[0,'Низкое Качество']])f.append(action('↻ '+text,()=>{config.detail=d;run();},config.detail===d));
   const separator=document.createElement('hr');separator.className='hr';f.append(separator);const label=document.createElement('span');label.className='sectionlabel';label.textContent='Цвета';f.append(label);
-  f.append(action('🌈 Цвета Без Ограничений',()=>{config.colors=0;config.palette=null;run();},config.colors===0),action('◉ Настраиваемые Цвета',()=>{config.colors=config.colors||9;go(7);},config.colors>0));
-  if(svg){const link=document.createElement('a');link.href='#';link.textContent='Текущая Палитра (изменить):';link.onclick=e=>{e.preventDefault();config.colors=config.colors||9;go(7);};f.append(link);const palette=document.createElement('div');palette.className='palette';for(const {color} of svgGroups(svg).slice(0,64)){const swatch=document.createElement('span');swatch.className='swatch';swatch.style.backgroundColor=color;swatch.title=color;palette.append(swatch);}f.append(palette);}
+  f.append(action('🌈 Цвета Без Ограничений',()=>{config.colors=0;config.palette=null;run();},config.colors===0),action('◉ Настраиваемые Цвета',()=>{config.colors=config.colors||recommendedPaletteCount;go(7);},config.colors>0));
+  if(svg){const link=document.createElement('a');link.href='#';link.textContent='Текущая Палитра (изменить):';link.onclick=e=>{e.preventDefault();config.colors=config.colors||recommendedPaletteCount;go(7);};f.append(link);const palette=document.createElement('div');palette.className='palette';if(hasTransparentSlot())palette.append(transparentSwatch());for(const {color} of svgGroups(svg).slice(0,64)){const swatch=document.createElement('span');swatch.className='swatch';swatch.style.backgroundColor=color;swatch.title=color;palette.append(swatch);}f.append(palette);}
   const hr=document.createElement('hr');hr.className='hr';const advanced=document.createElement('span');advanced.className='sectionlabel';advanced.textContent='Расширенный';f.append(hr,advanced,action('✂ Удаление Фона',()=>{editTool='cut';go(9);}),action('✎ Редактирование Результата',()=>{editTool='pan';go(8);}),action('↶ Вернуться к Настройкам',()=>go(0)));p.append(f);
   const skip=document.createElement('label');skip.className='checkrow review-footer';const check=document.createElement('input');check.type='checkbox';check.checked=!!config.skipReview;check.onchange=()=>{config.skipReview=check.checked;};skip.append(check,document.createTextNode('Пропускать эту страницу в следующий раз'));p.append(skip);
 
@@ -82,13 +84,14 @@ function fit(){if(!source)return;const v=$('viewport');panX=0;panY=0;$('zoom').v
 function updateProgress(){if($('progress')){$('progress').value=progress;$('processingStage').textContent=stage;$('percent').textContent=progress+'%';}status(stage+' · '+progress+'%');}
 async function run(){
  if(!source||busy||!readConfig())return;busy=true;if(step!==5){pageHistory.push(step);step=5;}svg='';progress=0;stage='Подготовка изображения';$('outlines').checked=false;$('vector').disabled=true;show();
+ if(config.colors>0&&!config.palette?.length&&hasTransparentSlot()){try{const generation=loadToken,palette=await requestPalette(config.colors);if(generation!==loadToken||!busy)return;config.palette=palette;}catch(error){busy=false;step=pageHistory.pop()??4;show();status(error.message);return;}}
  const canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;const context=canvas.getContext('2d',{willReadFrequently:true});
  if(config.flatten){context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);}context.drawImage(source,0,0);const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
  worker??=new Worker(new URL('./worker.js',import.meta.url),{type:'module'});
  worker.onmessage=({data})=>{
   if(data.progress!==undefined){progress=data.progress;stage=data.stage;updateProgress();return;}
   busy=false;if(data.error){worker?.terminate();worker=null;status(data.error);step=pageHistory.pop()??0;show();return;}svg=data.svg;vectorUndo=[];vectorRedo=[];elapsed=data.seconds;backend=data.backend;panX=0;panY=0;if(data.segments)awaitSegments(data.segments);$('segments').hidden=!data.segments;
-  for(const url of [vectorUrl,outlineUrl])if(url)URL.revokeObjectURL(url);outlineUrl='';vectorUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));$('vector').disabled=false;if(config.skipReview)step=6;display(true);show();status(source.width+'×'+source.height+' · '+data.colors+' цветов · '+data.paths+' кривых · '+elapsed.toFixed(2)+' с · '+backend);
+  for(const url of [vectorUrl,outlineUrl])if(url)URL.revokeObjectURL(url);outlineUrl='';vectorUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));$('vector').disabled=false;if(config.skipReview)step=6;display(true);show();status(source.width+'×'+source.height+' · '+(data.colors+Number(hasTransparentSlot()))+' цветов · '+data.paths+' кривых · '+elapsed.toFixed(2)+' с · '+backend);
  };
  worker.onerror=event=>{cancel();status('Ошибка WASM: '+event.message);};
  worker.postMessage({pixels:pixels.buffer,width:source.width,height:source.height,...config},[pixels.buffer]);
@@ -107,7 +110,7 @@ async function load(file){
  const token=++loadToken;cancel();status('Открытие изображения…');
  try{const original=await createImageBitmap(file);if(token!==loadToken){original.close();return;}const scale=Math.min(1,2400/Math.max(original.width,original.height),Math.sqrt(8e6/(original.width*original.height)));const width=Math.max(1,Math.round(original.width*scale)),height=Math.max(1,Math.round(original.height*scale));
   const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;canvas.getContext('2d').drawImage(original,0,0,width,height);original.close();const next=await createImageBitmap(canvas),blob=await new Promise(resolve=>canvas.toBlob(resolve));if(token!==loadToken){next.close();return;}
-  source?.close();source=next;for(const url of [sourceUrl,vectorUrl,outlineUrl])if(url)URL.revokeObjectURL(url);vectorUrl='';outlineUrl='';sourceUrl=URL.createObjectURL(blob);const rgba=canvas.getContext('2d').getImageData(0,0,width,height).data;sourceHasAlpha=rgba.some((v,i)=>i%4===3&&v<255);paletteCache.clear();config.palette=null;name=(file.name||'image').replace(/\.[^.]+$/,'');svg='';$('outlines').checked=false;$('vector').disabled=true;config=defaults();pageHistory=[];step=0;display();busy=true;progress=0;stage='Анализ изображения';show();fit();const analysis=await analyzeSource();if(token!==loadToken)return;config.category=analysis?.category||'photo';busy=false;show();$('filename').textContent=file.name||'Пример';status(width+'×'+height+' · '+(file.name||'Пример')+(scale<1?' · уменьшено для обработки':''));
+  source?.close();source=next;for(const url of [sourceUrl,vectorUrl,outlineUrl])if(url)URL.revokeObjectURL(url);vectorUrl='';outlineUrl='';sourceUrl=URL.createObjectURL(blob);const rgba=canvas.getContext('2d').getImageData(0,0,width,height).data;sourceHasAlpha=rgba.some((v,i)=>i%4===3&&v<255);paletteCache.clear();config.palette=null;name=(file.name||'image').replace(/\.[^.]+$/,'');svg='';$('outlines').checked=false;$('vector').disabled=true;config=defaults();pageHistory=[];step=0;display();busy=true;progress=0;stage='Анализ изображения';show();fit();const analysis=await analyzeSource();if(token!==loadToken)return;config.category=analysis?.category||'photo';recommendedPaletteCount=Math.max(2,Math.min(12,(analysis?.palette?.length||8)+Number(hasTransparentSlot())));busy=false;show();$('filename').textContent=file.name||'Пример';status(width+'×'+height+' · '+(file.name||'Пример')+(scale<1?' · уменьшено для обработки':''));
  }catch(error){busy=false;show();status('Не удалось открыть изображение: '+error.message);}
 }
 $('file').onchange=e=>{if(e.target.files[0])load(e.target.files[0]);e.target.value='';};
@@ -128,21 +131,26 @@ async function awaitSegments(buffer){
  if(segmentUrl)URL.revokeObjectURL(segmentUrl);const c=document.createElement('canvas');c.width=source.width;c.height=source.height;c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(buffer),c.width,c.height),0,0);segmentUrl=URL.createObjectURL(await new Promise(r=>c.toBlob(r)));
 }
 async function requestPalette(n){
- if(paletteCache.has(n))return paletteCache.get(n);const canvas=document.createElement('canvas');const scale=Math.min(1,500/Math.max(source.width,source.height));canvas.width=Math.max(1,Math.round(source.width*scale));canvas.height=Math.max(1,Math.round(source.height*scale));const context=canvas.getContext('2d');if(config.flatten){context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);}context.drawImage(source,0,0,canvas.width,canvas.height);const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
- paletteService();
- const id=++requestId,promise=new Promise(resolve=>pendingPalettes.set(id,resolve));paletteWorker.postMessage({operation:'palette',requestId:id,pixels:pixels.buffer,width:canvas.width,height:canvas.height,colors:n},[pixels.buffer]);const palette=await promise;paletteCache.set(n,palette);return palette;
+ const generation=loadToken,flatten=config.flatten,transparent=hasTransparentSlot(),key=generation+':'+Number(flatten)+':'+n;
+ if(paletteCache.has(key))return paletteCache.get(key);
+ const canvas=document.createElement('canvas'),scale=Math.min(1,500/Math.max(source.width,source.height));canvas.width=Math.max(1,Math.round(source.width*scale));canvas.height=Math.max(1,Math.round(source.height*scale));const context=canvas.getContext('2d');if(flatten){context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);}context.drawImage(source,0,0,canvas.width,canvas.height);const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
+ paletteService();const id=++requestId,promise=new Promise((resolve,reject)=>pendingPalettes.set(id,value=>Array.isArray(value)?resolve(value):reject(Error('Не удалось определить палитру'))));
+ paletteCache.set(key,promise);paletteWorker.postMessage({operation:'palette',requestId:id,pixels:pixels.buffer,width:canvas.width,height:canvas.height,colors:opaqueCount(n,transparent)},[pixels.buffer]);
+ try{return await promise;}catch(error){paletteCache.delete(key);throw error;}
 }
-function paletteSwatches(node,palette,editable=false){
- node.replaceChildren();for(const [i,rgb] of palette.entries()){const hex='#'+rgb.map(v=>v.toString(16).padStart(2,'0')).join('');if(editable){const input=document.createElement('input');input.type='color';input.value=hex;input.className='swatch-input';input.title=hex;input.setAttribute('aria-label','Цвет '+(i+1));input.oninput=()=>{config.palette[i]=input.value.slice(1).match(/../g).map(v=>parseInt(v,16));};node.append(input);}else{const s=document.createElement('span');s.className='swatch';s.style.background=hex;s.title=hex;node.append(s);}}
-}
+function paletteSwatches(node,palette,editable=false){paintPalette(node,palette,{transparent:hasTransparentSlot(),editable,onChange:(i,rgb)=>{config.palette[i]=rgb;syncPaletteSelection();}});}
+function syncPaletteSelection(){const key=config.palette?paletteKey(config.palette):'';for(const b of $('paletteList')?.querySelectorAll('button')||[])b.setAttribute('aria-pressed',String(b.dataset.paletteKey===key));}
 function buildPalettes(parent){
  const page=++palettePage;const f=document.createElement('fieldset');f.innerHTML='<legend>Предлагаемые Палитры</legend><div id="paletteList" class="palette-list"><p class="hint">Определение цветов…</p></div>';parent.append(f);
- const edit=document.createElement('fieldset');edit.innerHTML='<legend>Выбор Палитры</legend><div id="editablePalette" class="palette"></div><label class="formrow">Количество Цветов: <input id="colors" type="number" min="2" max="64"></label><p class="hint">Выберите палитру сверху. Для изменения цвета нажмите на цветной образец.</p>';parent.append(edit);$('colors').value=config.colors||9;
+ const edit=document.createElement('fieldset');edit.innerHTML='<legend>Выбор Палитры</legend><div id="editablePalette" class="palette"></div><label class="formrow">Количество Цветов: <input id="colors" type="number" min="2" max="64"></label><p class="hint">Выберите палитру сверху. Для изменения цвета нажмите на цветной образец.</p>';parent.append(edit);$('colors').value=config.colors||recommendedPaletteCount;
  const advanced=document.createElement('fieldset');advanced.innerHTML='<legend>Дополнительные Параметры</legend><label class="formrow">Минимальное Количество Пикселей: <input id="speckle" type="number" min="0" max="100"></label><label class="formrow">Построение <select id="curve"><option value="spline">Кривые Безье</option><option value="polygon">Прямые отрезки</option></select></label><label class="checkrow"><input id="gpu" type="checkbox">Использовать WebGPU, если доступен</label>';parent.append(advanced);$('speckle').value=config.speckle;$('curve').value=config.polygon?'polygon':'spline';$('gpu').checked=config.gpu;
- const selected=async n=>{config.colors=n;$('next').disabled=true;const palette=await requestPalette(n);if(step!==7||page!==palettePage)return;config.palette=palette.map(c=>[...c]);paletteSwatches($('editablePalette'),config.palette,true);$('colors').value=n;$('next').disabled=false;for(const b of $('paletteList').querySelectorAll('button'))b.setAttribute('aria-pressed',String(Number(b.dataset.count)===n));};
- if(config.palette?.length)paletteSwatches($('editablePalette'),config.palette,true);else selected(config.colors||9);
+ const choose=latestSelection();
+ const selected=n=>{const generation=loadToken;const previous=config.colors;config.colors=n;$('next').disabled=true;
+  choose(()=>requestPalette(n),palette=>{if(step!==7||page!==palettePage||generation!==loadToken)return;config.palette=palette.map(c=>[...c]);config.colors=Math.max(2,palette.length+Number(hasTransparentSlot()));paletteSwatches($('editablePalette'),config.palette,true);$('colors').value=config.colors;$('next').disabled=false;syncPaletteSelection();},error=>{if(step!==7||page!==palettePage)return;config.colors=previous;$('next').disabled=!config.palette?.length;status(error.message);});
+ };
+ if(config.palette?.length){config.colors=Math.max(2,config.palette.length+Number(hasTransparentSlot()));$('colors').value=config.colors;paletteSwatches($('editablePalette'),config.palette,true);$('next').disabled=false;}else selected(config.colors||recommendedPaletteCount);
  $('colors').onchange=()=>{const n=Number($('colors').value);if(Number.isInteger(n)&&n>=2&&n<=64)selected(n);};
- (async()=>{const list=$('paletteList');list.replaceChildren();for(const n of [2,3,4,5,6,7,8,9,10,11,12]){const palette=await requestPalette(n);if(step!==7||page!==palettePage)return;const b=document.createElement('button');b.className='palette-row';b.dataset.count=n;b.setAttribute('aria-pressed',String(n===config.colors));const arrow=document.createElement('span');arrow.textContent=n===config.colors?'▶▶':'';const swatches=document.createElement('span');swatches.className='palette';paletteSwatches(swatches,palette);b.append(arrow,swatches);b.onclick=()=>selected(n);list.append(b);}})();
+ (async()=>{const list=$('paletteList'),seen=new Set();list.replaceChildren();try{for(const n of [2,3,4,5,6,7,8,9,10,11,12]){const palette=await requestPalette(n);if(step!==7||page!==palettePage)return;const key=paletteKey(palette);if(seen.has(key))continue;seen.add(key);const b=document.createElement('button');b.className='palette-row';b.dataset.count=n;b.dataset.paletteKey=key;b.setAttribute('aria-label','Палитра: '+(palette.length+Number(hasTransparentSlot()))+' цветов');const arrow=document.createElement('span');arrow.className='palette-arrow';arrow.textContent=n===recommendedPaletteCount?'▶▶':'';const swatches=document.createElement('span');swatches.className='palette';paletteSwatches(swatches,palette);b.append(arrow,swatches);b.onclick=()=>selected(n);list.append(b);syncPaletteSelection();}}catch(error){if(step===7&&page===palettePage)status(error.message);}})();
 }
 function buildExport(parent,add){
  add('Сохранение Результата','• Совет: Попробуйте перетащить изображение в нужное вам место.\n• Клавиши быстрого доступа: Ctrl-S.','save',false,()=>save());
@@ -155,7 +163,7 @@ function buildExport(parent,add){
 }
 async function pasteImage(){try{for(const item of await navigator.clipboard.read()){const type=item.types.find(t=>t.startsWith('image/'));if(type){const blob=await item.getType(type);await load(new File([blob],'clipboard.png',{type}));return;}}status('В буфере обмена нет изображения.');}catch(error){status('Вставка из буфера: '+error.message);}}
 const batchInput=document.createElement('input');batchInput.type='file';batchInput.multiple=true;batchInput.accept='image/png,image/jpeg,image/webp,image/bmp';batchInput.hidden=true;document.body.append(batchInput);batchInput.onchange=()=>runBatch(Array.from(batchInput.files));
-$('about').onclick=()=>$('helpDialog').showModal();$('more').onclick=()=>{$('computeGpu').checked=config.gpu;$('computeCpu').checked=!config.gpu;$('advancedSettings').disabled=!source;$('settingsDialog').showModal();};$('closeSettings').onclick=()=>$('settingsDialog').close();$('computeGpu').onchange=()=>{config.gpu=true;if($('gpu'))$('gpu').checked=true;};$('computeCpu').onchange=()=>{config.gpu=false;if($('gpu'))$('gpu').checked=false;};$('advancedSettings').onclick=()=>{$('settingsDialog').close();config.mode='advanced';config.colors=config.colors||9;go(7);};
+$('about').onclick=()=>$('helpDialog').showModal();$('more').onclick=()=>{$('computeGpu').checked=config.gpu;$('computeCpu').checked=!config.gpu;$('advancedSettings').disabled=!source;$('settingsDialog').showModal();};$('closeSettings').onclick=()=>$('settingsDialog').close();$('computeGpu').onchange=()=>{config.gpu=true;if($('gpu'))$('gpu').checked=true;};$('computeCpu').onchange=()=>{config.gpu=false;if($('gpu'))$('gpu').checked=false;};$('advancedSettings').onclick=()=>{$('settingsDialog').close();config.mode='advanced';config.colors=config.colors||recommendedPaletteCount;go(7);};
 $('segments').onclick=()=>{if(!segmentUrl)return;view='segments';previewToken++;$('preview').classList.remove('joint-preview');$('preview').src=segmentUrl;$('preview').style.transform='translate('+panX+'px,'+panY+'px)';$('bitmap').setAttribute('aria-pressed','false');$('vector').setAttribute('aria-pressed','false');};
 for(const b of document.querySelectorAll('[data-pan]'))b.onclick=()=>{if(b.dataset.pan==='fit'){fit();return;}const [x,y]=b.dataset.pan.split(',').map(Number);panX+=x;panY+=y;refreshView();};
 let panStart;const viewport=$('viewport');viewport.onpointerdown=e=>{if(!source||e.target.closest('button'))return;if((step===8||step===9)&&editTool==='cut'){removeVectorAt(e.clientX,e.clientY);return;}panStart=[e.clientX,e.clientY,panX,panY];viewport.setPointerCapture(e.pointerId);};viewport.onpointermove=e=>{if(!panStart)return;panX=panStart[2]+e.clientX-panStart[0];panY=panStart[3]+e.clientY-panStart[1];refreshView();};viewport.onpointerup=()=>{panStart=null;};

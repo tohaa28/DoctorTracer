@@ -7,6 +7,7 @@ fn d(a:&[f32;3],b:&[f32;3])->f32{let x=a[0]-b[0];let y=a[1]-b[1];let z=a[2]-b[2]
 fn med(mut v:Vec<u8>)->u8{v.sort_unstable();let n=v.len();if n%2==1{v[n/2]}else{((v[n/2-1] as u16+v[n/2] as u16)/2) as u8}}
 pub fn find(a:&[u8],w:usize,h:usize,count:usize,photo:bool)->Vec<[u8;3]>{
  let all:Vec<[u8;3]>=a.chunks_exact(4).filter(|p|p[3]>=128).map(|p|[p[0],p[1],p[2]]).collect();if all.is_empty(){return vec![[255;3]];}
+ if count==1{return vec![std::array::from_fn(|c|med(all.iter().map(|p|p[c]).collect()))];}
  if !photo&&count==0{
   let mut flat=Vec::new();for y in 0..h{for x in 0..w{let i=4*(y*w+x);if a[i+3]<128{continue;}let mut lo=[255u8;3];let mut hi=[0u8;3];for yy in y.saturating_sub(1)..=(y+1).min(h-1){for xx in x.saturating_sub(1)..=(x+1).min(w-1){for c in 0..3{lo[c]=lo[c].min(a[4*(yy*w+xx)+c]);hi[c]=hi[c].max(a[4*(yy*w+xx)+c]);}}}if (0..3).map(|c|hi[c]-lo[c]).max().unwrap()<22{flat.push([a[i],a[i+1],a[i+2]]);}}}
   let values=if flat.len()>64{&flat}else{&all};let samples:Vec<_>=values.iter().step_by((values.len()/60000).max(1)).collect();let mut bins=vec![Vec::<[u8;3]>::new();32768];for &&p in &samples{let key=(p[0] as usize/8)*1024+(p[1] as usize/8)*32+p[2] as usize/8;bins[key].push(p);}

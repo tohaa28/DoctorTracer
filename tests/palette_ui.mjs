@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {opaqueCount,paletteKey,latestSelection} from '../web/palette-ui.mjs';
+import createTracer from '../web/rust-tracer.mjs';import fs from 'node:fs/promises';
+assert.equal(opaqueCount(9,true),8);assert.equal(opaqueCount(2,true),1);assert.equal(opaqueCount(9,false),9);
+assert.equal(paletteKey([[1,2,3],[4,5,6]]),paletteKey([[4,5,6],[1,2,3]]));
+let oldResolve,newResolve,applied=[];const choose=latestSelection();
+const a=choose(()=>new Promise(r=>oldResolve=r),v=>applied.push(v),()=>assert.fail());
+const b=choose(()=>new Promise(r=>newResolve=r),v=>applied.push(v),()=>assert.fail());
+newResolve(12);await b;oldResolve(2);await a;assert.deepEqual(applied,[12]);
+const runtime=await createTracer({wasmBinary:await fs.readFile(new URL('../web/doctortracer.wasm',import.meta.url))});
+const pixels=new Uint8Array([0,0,0,0,10,30,70,255,20,40,80,255]);
+assert.deepEqual([...runtime.stage(pixels,3,1,{kind:2,colors:1})],[15,35,75]);
+const svg=runtime.trace(pixels,3,1,{colors:2,palette:[[15,35,75]],category:'hard',speckle:0});assert(!svg.includes('NaN'));assert(svg.includes('<path'));
+console.log('Palette WASM: transparent counts, stale selection, single RGB median and tracing passed');

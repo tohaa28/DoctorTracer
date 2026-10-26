@@ -29,16 +29,16 @@ for package in sorted(metadata['packages'],key=lambda p:p['name']):
  for p in sorted(files):licenses.append(p.read_text(encoding='utf8',errors='replace'))
 (root/'web/LICENSE.txt').write_text('\n'.join(licenses),encoding='utf8')
 site=root/'build/site';site.mkdir(parents=True,exist_ok=True)
-files=['index.html','style.css','app.js','worker.js','rust-tracer.mjs','doctortracer.wasm','gpu.js','exports.mjs','icons.js','geometry.mjs','paths.mjs','desktop-curves.mjs','preview.mjs','zip.mjs','diagnostics.html','desktop-layout.json','demo.png','LICENSE.txt']
+files=['palette-ui.mjs','index.html','style.css','app.js','worker.js','rust-tracer.mjs','doctortracer.wasm','gpu.js','exports.mjs','icons.js','geometry.mjs','paths.mjs','desktop-curves.mjs','preview.mjs','zip.mjs','diagnostics.html','desktop-layout.json','demo.png','LICENSE.txt']
 for name in files:shutil.copy2(root/'web'/name,site/name)
 for folder in ['vendor','desktop-icons']:shutil.copytree(root/'web'/folder,site/folder,dirs_exist_ok=True)
 # Version the deployed resource URLs, so an older browser cache cannot mix ABIs.
 for path in site.rglob('*'):
  if '.git' in path.parts or path.suffix not in ('.js','.mjs','.html'):continue
  text=path.read_text(encoding='utf8')
- text=re.sub(r"(['\"])(\./[^'\"]+\.(?:m?js|wasm|css))\1",lambda m:m[1]+m[2]+'?v=0.13.0'+m[1],text)
- text=re.sub(r'(src|href)="([^"?]+\.(?:m?js|css))"',lambda m:m[1]+'="'+m[2]+'?v=0.13.0"',text)
- text=text.replace("frame.src='./'","frame.src='./?v=0.13.0'")
+ text=re.sub(r"(['\"])(\./[^'\"]+\.(?:m?js|wasm|css))\1",lambda m:m[1]+m[2]+'?v=0.13.1'+m[1],text)
+ text=re.sub(r'(src|href)="([^"?]+\.(?:m?js|css))"',lambda m:m[1]+'="'+m[2]+'?v=0.13.1"',text)
+ text=text.replace("frame.src='./'","frame.src='./?v=0.13.1'")
  path.write_text(text,encoding='utf8')
 (site/'.nojekyll').write_text('')
 print('Built Rust WASM and build/site static artifact')
