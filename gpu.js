@@ -71,3 +71,5 @@ export async function gpuAssign(pixels,w,h,palette,strength=200){
   encoder.copyBufferToBuffer(input,0,readback,0,w*h*4);device.queue.submit([encoder.finish()]);await readback.mapAsync(GPUMapMode.READ);const result=Uint8Array.from(new Uint32Array(readback.getMappedRange()));readback.unmap();return result;
  }catch{device=null;return null;}finally{for(const b of buffers)b.destroy();}
 }
+
+export async function gpuDevice(){return await init()?device:null;}

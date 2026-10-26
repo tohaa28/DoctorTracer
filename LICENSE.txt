@@ -1,4 +1,4 @@
-DoctorTracer Desktop WASM 0.12
+DoctorTracer Desktop WASM 0.14
 
 Rust desktop algorithm port: MIT; OpenCV palette adaptation: Apache-2.0. Potrace 1.16: GPL-2.0-or-later. Skia PathKit: BSD. Clipper 6.4.2: Boost-1.0. Combined browser distribution: GPL-3.0-or-later.
 Source: https://github.com/tohaa28/DoctorTracer/tree/spatial-photo-preview
