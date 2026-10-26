@@ -50,6 +50,7 @@ pub fn find(a:&[u8],w:usize,h:usize,count:usize,photo:bool)->Vec<[u8;3]>{
    }).count();if explained as f64/sample.len() as f64>=0.995{return interior;}
   }
  }
+ if crate::joint_palette::narrow(&all){return legacy(a,w,h,count,true);}
  let mut counts=vec![0u32;32768];let mut sums=vec![[0u64;3];32768];
  for p in all.iter().step_by((all.len()/60000).max(1)){
   let k=(p[0] as usize/8)*1024+(p[1] as usize/8)*32+p[2] as usize/8;counts[k]+=1;for j in 0..3{sums[k][j]+=p[j] as u64;}

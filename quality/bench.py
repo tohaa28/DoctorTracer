@@ -57,7 +57,7 @@ def case_config(profile,image,folder,corpus):
         with Image.open(folder/image['path']) as im:
             im=im.convert('RGBA');im.thumbnail((500,500));pixels=np.array(im)
         count=max(1,cfg['colors']-int(image.get('transparent_slot',False)))
-        cfg['palette']=['#%02x%02x%02x'%tuple(c) for c in find_palette(pixels,count)]
+        cfg['palette']=['#%02x%02x%02x'%tuple(c) for c in find_palette(pixels,count)];cfg['palette_generated']=True
     return cfg
 
 def validate_svg_source(path):
@@ -233,7 +233,7 @@ def run(args,folder):
     data=load(folder);run_dir=folder/'runs'/safe(args.name)
     if run_dir.exists():raise ValueError('Run exists; choose a new immutable name')
     run_dir.mkdir(parents=True);qapp=app();rows=[];prepared=[]
-    source_paths=[*(ROOT/'desktop').glob('*.py'),*(ROOT/'rust/src').glob('*.rs'),*(ROOT/'web').glob('*.mjs'),*(ROOT/'web').glob('*.js'),*(ROOT/'web/vendor').glob('*.wasm'),*(ROOT/'quality').glob('*.py'),ROOT/'web/doctortracer.wasm']
+    source_paths=[*(ROOT/'desktop').glob('*.py'),*(ROOT/'rust/src').glob('*.rs'),*(ROOT/'web').glob('*.mjs'),*(ROOT/'web').glob('*.js'),*(ROOT/'web/vendor').glob('*.wasm'),*(ROOT/'desktop/vendor/quality').glob('*.dll'),*(ROOT/'quality').glob('*.py'),ROOT/'web/doctortracer.wasm']
     hashes={p.relative_to(ROOT).as_posix():digest(p) for p in source_paths}
     started=now();corpus_hash=digest(folder/'corpus.json')
     profiles=args.profiles.split(',')
@@ -312,7 +312,7 @@ def compare(args,folder):
                         if getattr(args,'proposal_comparison',False):
                             if data.get('palette_policy')!='ui-total-slots-v2':raise ValueError('Proposal comparison requires a wizard-proposal corpus')
                             for settings in [previous_config,current_config]:
-                                settings.pop('compute',None)
+                                settings.pop('compute',None);settings.pop('palette_generated',None)
                                 if settings.get('colors'):settings.pop('palette',None)
                             row['baseline_comparison_policy']='same UI limit; generated proposals may differ; CPU/GPU backend may differ'
                             row['baseline_config']=prev['config']

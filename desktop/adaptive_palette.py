@@ -28,6 +28,8 @@ def discover(a, limit, legacy):
                     t=np.clip((rgb-left)@d/den,0,1)
                     explained|=((rgb-left-t[:,None]*d)**2).sum(1)<=64
             if np.mean(explained)>=.995:return inks
+    from joint_palette import narrow_model
+    if narrow_model(sample):return legacy(a,limit,True)
     keys=(sample.astype(np.int32)//8)@np.array([1024,32,1])
     counts=np.bincount(keys,minlength=32768)
     sums=np.stack([np.bincount(keys,weights=sample[:,j],minlength=32768) for j in range(3)],1)

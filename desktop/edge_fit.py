@@ -38,7 +38,12 @@ def fit(coordinates,graph,loops,keep,labels,palette,source,radius=1.5,compute='c
         except Exception as exc:
             if metrics is not None:metrics.update(edge_fit_compute='CPU',edge_fit_gpu_fallback=str(exc))
     def loss(points):
-        if gpu_loss is not None:return gpu_loss(points)
+        nonlocal gpu_loss
+        if gpu_loss is not None:
+            try:return gpu_loss(points)
+            except Exception as exc:
+                gpu_loss=None
+                if metrics is not None:metrics.update(edge_fit_compute='CPU',edge_fit_gpu_fallback=str(exc))
 
         xy=np.clip(points-.5,[0,0],[w-1.000001,h-1.000001]);ij=np.floor(xy).astype(int);f=xy-ij;x=ij[:,0];y=ij[:,1]
         observed=(pixels[y,x]*(1-f[:,0,None])*(1-f[:,1,None])+pixels[y,x+1]*f[:,0,None]*(1-f[:,1,None])+pixels[y+1,x]*(1-f[:,0,None])*f[:,1,None]+pixels[y+1,x+1]*f[:,0,None]*f[:,1,None])

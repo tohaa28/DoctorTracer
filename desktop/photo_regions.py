@@ -42,6 +42,10 @@ def trace(path,cfg):
         metrics['palette_cache_hit']=hit
     report(cfg,28,'Сегментация изображения')
     a,labels,palette,original=segment(path,{**options,'_source':(source,original)})
+    if not unlimited and (not cfg.get('palette') or cfg.get('palette_generated',False)) and cfg.get('joint_refine',True):
+        from joint_palette import refine
+        labels,palette,history=refine(a,labels,palette,cfg.get('compute','gpu'),options.get('spatial_strength',700),options.get('spatial_iterations',2))
+        metrics['joint_palette_steps']=history
     if unlimited:
         # A region retains its own mean colour. A global ink table alone would
         # erase gradual shading in photos even when the shape remains intact.
@@ -77,6 +81,18 @@ def trace(path,cfg):
     report(cfg,70,'Построение общих границ')
     svg,geometry=shared_regions.trace(labels,palette,original,smooth=cfg.get('shared_smoothing',True),
         curve_tolerance=tolerance,rounding=1.5*cfg.get('alphamax',1.),passes=([10,8,5] if unlimited else [4,2,1])[detail],progress=cfg.get('_progress'),compute=cfg.get('compute','gpu'),source=a if cfg.get('edge_fit',True) else None)
+    if cfg.get('raster_refit',True) and cfg.get('shared_smoothing',True):
+        from raster_refit import optimize
+        from vector_partition import audit_pieces
+        import xml.etree.ElementTree as ET
+        candidate,refit=optimize(svg,a)
+        if candidate!=svg:
+            document=ET.fromstring(candidate);audit={}
+            try:
+                audit_pieces([(p.get('fill'),p.get('d')) for p in document.iter('{http://www.w3.org/2000/svg}path')],audit)
+                svg=candidate;geometry['geometry_audit']=audit
+            except ValueError as exc:refit.update(rejected=str(exc));refit['after']=refit['before']
+        metrics['raster_refit']=refit
     return svg,{**geometry,**metrics,'width':original[0],'height':original[1],
         'working_size':[labels.shape[1],labels.shape[0]],'colors':geometry['color_groups'],
         'seconds':time.perf_counter()-started,'backend':'shared photographic regions',

@@ -84,7 +84,7 @@ function fit(){if(!source)return;const v=$('viewport');panX=0;panY=0;$('zoom').v
 function updateProgress(){if($('progress')){$('progress').value=progress;$('processingStage').textContent=stage;$('percent').textContent=progress+'%';}status(stage+' · '+progress+'%');}
 async function run(){
  if(!source||busy||!readConfig())return;busy=true;if(step!==5){pageHistory.push(step);step=5;}svg='';progress=0;stage='Подготовка изображения';$('outlines').checked=false;$('vector').disabled=true;show();
- if(config.colors>0&&!config.palette?.length&&hasTransparentSlot()){try{const generation=loadToken,palette=await requestPalette(config.colors);if(generation!==loadToken||!busy)return;config.palette=palette;}catch(error){busy=false;step=pageHistory.pop()??4;show();status(error.message);return;}}
+ if(config.colors>0&&!config.palette?.length&&hasTransparentSlot()){try{const generation=loadToken,palette=await requestPalette(config.colors);if(generation!==loadToken||!busy)return;config.palette=palette;config.palette_generated=true;}catch(error){busy=false;step=pageHistory.pop()??4;show();status(error.message);return;}}
  const canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;const context=canvas.getContext('2d',{willReadFrequently:true});
  if(config.flatten){context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);}context.drawImage(source,0,0);const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
  worker??=new Worker(new URL('./worker.js',import.meta.url),{type:'module'});
@@ -138,7 +138,7 @@ async function requestPalette(n){
  paletteCache.set(key,promise);paletteWorker.postMessage({operation:'palette',requestId:id,pixels:pixels.buffer,width:canvas.width,height:canvas.height,colors:opaqueCount(n,transparent)},[pixels.buffer]);
  try{return await promise;}catch(error){paletteCache.delete(key);throw error;}
 }
-function paletteSwatches(node,palette,editable=false){paintPalette(node,palette,{transparent:hasTransparentSlot(),editable,onChange:(i,rgb)=>{config.palette[i]=rgb;syncPaletteSelection();}});}
+function paletteSwatches(node,palette,editable=false){paintPalette(node,palette,{transparent:hasTransparentSlot(),editable,onChange:(i,rgb)=>{config.palette_generated=false;config.palette[i]=rgb;syncPaletteSelection();}});}
 function syncPaletteSelection(){const key=config.palette?paletteKey(config.palette):'';for(const b of $('paletteList')?.querySelectorAll('button')||[])b.setAttribute('aria-pressed',String(b.dataset.paletteKey===key));}
 function buildPalettes(parent){
  const page=++palettePage;const f=document.createElement('fieldset');f.innerHTML='<legend>Предлагаемые Палитры</legend><div id="paletteList" class="palette-list"><p class="hint">Определение цветов…</p></div>';parent.append(f);
@@ -146,7 +146,7 @@ function buildPalettes(parent){
  const advanced=document.createElement('fieldset');advanced.innerHTML='<legend>Дополнительные Параметры</legend><label class="formrow">Минимальное Количество Пикселей: <input id="speckle" type="number" min="0" max="100"></label><label class="formrow">Построение <select id="curve"><option value="spline">Кривые Безье</option><option value="polygon">Прямые отрезки</option></select></label><label class="checkrow"><input id="gpu" type="checkbox">Использовать WebGPU, если доступен</label>';parent.append(advanced);$('speckle').value=config.speckle;$('curve').value=config.polygon?'polygon':'spline';$('gpu').checked=config.gpu;
  const choose=latestSelection();
  const selected=n=>{const generation=loadToken;const previous=config.colors;config.colors=n;$('next').disabled=true;
-  choose(()=>requestPalette(n),palette=>{if(step!==7||page!==palettePage||generation!==loadToken)return;config.palette=palette.map(c=>[...c]);config.colors=Math.max(2,palette.length+Number(hasTransparentSlot()));paletteSwatches($('editablePalette'),config.palette,true);$('colors').value=config.colors;$('next').disabled=false;syncPaletteSelection();},error=>{if(step!==7||page!==palettePage)return;config.colors=previous;$('next').disabled=!config.palette?.length;status(error.message);});
+  choose(()=>requestPalette(n),palette=>{if(step!==7||page!==palettePage||generation!==loadToken)return;config.palette=palette.map(c=>[...c]);config.palette_generated=true;config.colors=Math.max(2,palette.length+Number(hasTransparentSlot()));paletteSwatches($('editablePalette'),config.palette,true);$('colors').value=config.colors;$('next').disabled=false;syncPaletteSelection();},error=>{if(step!==7||page!==palettePage)return;config.colors=previous;$('next').disabled=!config.palette?.length;status(error.message);});
  };
  if(config.palette?.length){config.colors=Math.max(2,config.palette.length+Number(hasTransparentSlot()));$('colors').value=config.colors;paletteSwatches($('editablePalette'),config.palette,true);$('next').disabled=false;}else selected(config.colors||recommendedPaletteCount);
  $('colors').oninput=$('colors').onchange=()=>{const n=Number($('colors').value);if(Number.isInteger(n)&&n>=2&&n<=64)selected(n);};
