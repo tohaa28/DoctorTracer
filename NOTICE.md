@@ -21,3 +21,8 @@ visioncortex 0.8.8 (MIT OR Apache-2.0) provides region clustering and curve fitt
 ## Desktop WASM 0.12
 
 Version 0.12 replaces the visioncortex pipeline with independently ported desktop algorithms. The combined browser distribution remains GPL-3.0-or-later. Rust modules retain MIT or Apache-2.0 SPDX notices; Potrace 1.16 is GPL-2.0-or-later, Clipper 6.4.2 is Boost-1.0, and Skia PathKit uses its preserved BSD-style notice. Exact sources and build adapters are in core/, rust/ and scripts/. Qt-derived UI icons are DoctorTracer's own MIT artwork; no proprietary Vector Magic resources are distributed. web/LICENSE.txt contains the distribution notices. The preceding 0.11 dependency description is historical.
+
+
+The Windows distribution includes doctortracer_quality.dll built from this repository’s rust/src/raster_refit.rs and ABI in rust/src/lib.rs (MIT). Rebuild with scripts/build_quality_native.py. Combined distribution licensing remains as described above.
+
+The Windows doctortracer_clipper.dll is built from core/clipper.cpp (Boost-1.0) and core/wasm_audit.cpp (MIT), also used by web/vendor/audit.wasm. Rebuild with scripts/build_clipper_native.py.

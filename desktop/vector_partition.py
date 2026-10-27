@@ -63,11 +63,18 @@ def components(p):
     holes=[c for c in contours if c.clockwise]
     if not outers and contours:raise ValueError('Invalid outer contour winding')
     grouped=[pathops.Path(c) for c in outers]
+    # Parent containment is exact; the grid only rejects impossible bounding boxes.
+    # Avoid scanning every disconnected outer for each tiny hole in textures.
+    cells={};bounds=[c.bounds for c in outers];areas=[abs(c.area) for c in outers]
+    for j,b in enumerate(bounds):
+        for y in range(math.floor(b[1]/8),math.floor(b[3]/8)+1):
+            for x in range(math.floor(b[0]/8),math.floor(b[2]/8)+1):cells.setdefault((x,y),[]).append(j)
     for hole in holes:
-        point=hole.firstPoints[0]
-        parents=[j for j,c in enumerate(outers) if c.contains(point)]
+        point=hole.firstPoints[0];x,y=point
+        candidates=cells.get((math.floor(x/8),math.floor(y/8)),[])
+        parents=[j for j in candidates if bounds[j][0]<=x<=bounds[j][2] and bounds[j][1]<=y<=bounds[j][3] and outers[j].contains(point)]
         if not parents:raise ValueError('Unattached vector hole')
-        parent=min(parents,key=lambda j:abs(outers[j].area))
+        parent=min(parents,key=lambda j:areas[j])
         grouped[parent].addPath(hole)
     return grouped
 
@@ -95,16 +102,19 @@ def polygon_data(data):
             current.append((round(float(tokens[i])*10000000),round(float(tokens[i+1])*10000000)));i+=2;cmd='L'
         if len(current)>=3:paths.append(current)
         return paths
-    for polygon in qpath(data).toSubpathPolygons(QTransform().scale(64,64)):
-        points=[(round(point.x()/64*10000000),round(point.y()/64*10000000)) for point in polygon]
-        if len(points)>=3:paths.append(points)
+    # Flatten independent contours separately: the same Qt cubic subdivision,
+    # without its huge compound-path allocation limit.
+    for contour in re.findall(r'M[^M]*',data):
+        for polygon in qpath(contour).toSubpathPolygons(QTransform().scale(64,64)):
+            points=[(round(point.x()/64*10000000),round(point.y()/64*10000000)) for point in polygon]
+            if len(points)>=3:paths.append(points)
     return paths
 
 
 def polygon_paths(p):return polygon_data(serialize(p))
 
 
-def audit_pieces(pieces,report=None):
+def audit_global(pieces,report=None):
     """Independent integer intersection audit, including same-color objects."""
     import pyclipper as pc
     seen=[];index=SpatialIndex();pairs=0;maximum=0.
@@ -125,6 +135,13 @@ def audit_pieces(pieces,report=None):
         index.add(len(seen),bounds);seen.append(polygons)
     if report is not None:report.update({'pairs_checked':pairs,'max_intersection_area_px2':maximum,'tolerance_px2':.0001})
     return pairs
+
+
+def audit_pieces(pieces,report=None):
+    pieces=list(pieces)
+    if sum(data.count('M') for _,data in pieces)<=128:return audit_global(pieces,report)
+    from audit_tiles import audit
+    return audit([polygon_data(data) for _,data in pieces],report)
 
 
 def curve_tile(items,candidates,bounds):
@@ -232,14 +249,14 @@ class SpatialIndex:
 def tile_result(items,candidates,bounds,cache):
     try:
         pieces=curve_tile(items,candidates,bounds)
-        audit_pieces(pieces)
+        audit_global(pieces)
         return pieces,False
     except (pathops.PathOpsError,ValueError):
         pieces=polygon_tile(items,candidates,bounds,cache)
-        try:audit_pieces(pieces)
+        try:audit_global(pieces)
         except ValueError:
             pieces=clean_polygon_pieces(pieces)
-            audit_pieces(pieces)
+            audit_global(pieces)
         return pieces,True
 
 
@@ -266,10 +283,21 @@ def parallel_tiles(items,jobs,workers):
             for i in range(workers):
                 processes.append(subprocess.Popen(command+['--geometry-worker',str(job),str(i)],
                     stdout=subprocess.PIPE,stderr=subprocess.PIPE,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0)))
-            for process in processes:
-                _,error=process.communicate(timeout=180)
-                if process.returncode:raise RuntimeError('Geometry worker failed: '+error.decode('utf8',errors='replace')[-1200:])
-            rows={i:result for output in outputs for i,result in json.loads(Path(output).read_text(encoding='utf8'))}
+            failed=[]
+            for worker,process in enumerate(processes):
+                try:
+                    _,error=process.communicate(timeout=180)
+                    if process.returncode:failed.append(worker)
+                except subprocess.TimeoutExpired:
+                    process.terminate();process.communicate();failed.append(worker)
+            rows={i:result for worker,output in enumerate(outputs) if worker not in failed
+                  for i,result in json.loads(Path(output).read_text(encoding='utf8'))}
+            if failed:
+                # Recover the complete image through the shared C++ integer
+                # backend. A native abort cannot be caught as PathOpsError.
+                from native_clipper import partition as recover
+                pieces=recover(items,max(b[2] for c,b in jobs),max(b[3] for c,b in jobs))
+                return [(pieces,True)]+[([],True) for _ in jobs[1:]]
             return [rows[i] for i in range(len(jobs))]
         finally:
             for process in processes:
@@ -301,7 +329,14 @@ def partition(svg):
             tiles+=1;operations+=len(candidates);jobs.append((candidates,bounds))
     workers=min(4,os.cpu_count() or 1) if len(items)>1000 and len(jobs)>12 else 1
     cache={}
-    results=parallel_tiles(items,jobs,workers) if workers>1 else [tile_result(items,c,b,cache) for c,b in jobs]
+    if workers>1:
+        # Highly fragmented images use the same tiled integer backend as WASM;
+        # avoid known native boolean aborts and redundant worker serialization.
+        from native_clipper import partition as recover
+        pieces=recover(items,left+width,top+height)
+        results=[(pieces,True)]+[([],True) for _ in jobs[1:]]
+        workers=1
+    else:results=[tile_result(items,c,b,cache) for c,b in jobs]
     for pieces,fallback in results:
         fallbacks+=int(fallback)
         for color,data in pieces:
