@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import {contours} from './paths.mjs?v=0.15.0';
+import {contours} from './paths.mjs?v=0.16.0';
 const encoder=new TextEncoder();
 export function svgGroups(svg){
  const groups=[];

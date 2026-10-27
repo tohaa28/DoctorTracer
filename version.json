@@ -1,5 +1,6 @@
 {
-  "version": "0.15.0-wasm-preview",
-  "sourceCommit": "086430b7e9fcd43d7815ffa3ea680011913d5adb",
-  "wasmSha256": "94073cf779658e545402d6ffa64a5490ae5fac959422d04076a27539fb874872"
+  "version": "0.16.0-wasm-preview",
+  "sourceCommit": "c7cc40ae12992092baf3bfdab2058199cc619fe1",
+  "wasmSha256": "3d10f59f3d1a51034fa270b66a61907186e66162762ec37ae6926e2cba84f86d",
+  "auditWasmSha256": "5909e3801072b864477d3e62e4364c4c8ba8a917a4b74bdc3eba824177fd97b9"
 }
