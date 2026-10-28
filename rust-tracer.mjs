@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 export default async function createTracer({wasmBinary,onProgress=()=>{}}={}){
- const bytes=wasmBinary??await(await fetch(new URL('./doctortracer.wasm?v=0.16.2',import.meta.url))).arrayBuffer();
+ const bytes=wasmBinary??await(await fetch(new URL('./doctortracer.wasm?v=0.16.3',import.meta.url))).arrayBuffer();
  const {instance}=await WebAssembly.instantiate(bytes,{env:{progress:onProgress}});const api=instance.exports;const decode=new TextDecoder();
  function input(bytes){const p=api.alloc(bytes.byteLength);if(!p)throw Error('Недостаточно памяти');new Uint8Array(api.memory.buffer,p,bytes.byteLength).set(new Uint8Array(bytes.buffer,bytes.byteOffset,bytes.byteLength));return p;}
  function palette(values=[]){if(!values.length){api.set_palette(0,0);return;}const data=new Uint8Array(values.flatMap(c=>typeof c==='string'?c.replace('#','').match(/../g).map(v=>parseInt(v,16)):Array.from(c)));const p=input(data);try{api.set_palette(p,values.length);}finally{api.dealloc(p,data.length);}}
@@ -9,7 +9,7 @@ export default async function createTracer({wasmBinary,onProgress=()=>{}}={}){
   analyze(pixels,w,h){const p=input(pixels);try{return JSON.parse(output(api.analyze_rgba(p,w,h),true));}finally{api.dealloc(p,pixels.length);}},
   stage(pixels,width,height,{colors=0,detail=1,kind=0,extra=0,palette:inks=[]}={}){palette(inks);const bytes=new Uint8Array(Math.max(pixels.byteLength,width*height*4));bytes.set(new Uint8Array(pixels.buffer,pixels.byteOffset,pixels.byteLength));const p=input(bytes);try{return output(api.desktop_stage(p,width,height,colors,detail,kind,extra));}finally{api.dealloc(p,bytes.length);}},
   filter(pixels,w,h,detail){return this.stage(pixels,w,h,{kind:0,detail});},
-  shared(labels,inks,w,h,detail=1,smooth=true){palette(inks);const p=input(labels);try{return output(api.shared_svg(p,w,h,detail,smooth?1:0),true);}finally{api.dealloc(p,labels.byteLength);}},
+  shared(labels,inks,w,h,detail=1,smooth=true,{fixed=false,polygon=false}={}){palette(inks);const p=input(labels);try{const svg=output(api.shared_svg(p,w,h,detail,(smooth?1:0)|(polygon?2:0)|(fixed?4:0)),true);if(!svg.includes('data-boundary-contract="paired"'))throw Error('Не подтверждено совпадение общих границ');return svg;}finally{api.dealloc(p,labels.byteLength);}},
   jointProposal(pixels,labels,w,h,inks){palette(inks);const p=input(pixels),l=input(labels);try{const raw=output(api.joint_proposal(p,l,w,h));return Array.from({length:raw.length/3},(_,i)=>Array.from(raw.slice(i*3,i*3+3)));}finally{api.dealloc(p,pixels.length);api.dealloc(l,labels.length);}},
   jointChoose(pixels,old,candidate,w,h,inks){palette(inks);const p=input(pixels),l=input(old),c=input(candidate);try{return output(api.joint_choose(p,l,c,w,h));}finally{api.dealloc(p,pixels.length);api.dealloc(l,old.length);api.dealloc(c,candidate.length);}},
   sharedInput(){return new Int32Array(output(api.shared_input()).buffer);},

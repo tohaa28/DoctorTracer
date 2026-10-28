@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: MIT
-import {contours} from './paths.mjs?v=0.16.2';
+import {contours} from './paths.mjs?v=0.16.3';
 const encoder=new TextEncoder();
+function dimensions(svg){
+ const w=Number(/\bwidth="([\d.]+)"/.exec(svg)?.[1]),h=Number(/\bheight="([\d.]+)"/.exec(svg)?.[1]);
+ const view=/\bviewBox="([^"]+)"/.exec(svg)?.[1];const [x,y,vw,vh]=view?view.trim().split(/[,\s]+/).map(Number):[0,0,w,h];
+ if(!(w>0&&h>0&&vw>0&&vh>0&&[x,y,vw,vh].every(Number.isFinite)))throw Error('Некорректный SVG');
+ return{w,h,x,y,vw,vh};
+}
 export function svgGroups(svg){
  const groups=[];
  for(const match of svg.matchAll(/<g\b[^>]*\bfill="(#[0-9a-f]{6})"[^>]*>([\s\S]*?)<\/g>/gi)){
@@ -19,8 +25,7 @@ export function connectedPaths(data){
  return outers.map(i=>groups.get(i).join(' '));
 }
 export function pdfBytes(svg){
- const w=Number(/\bwidth="([\d.]+)"/.exec(svg)?.[1]),h=Number(/\bheight="([\d.]+)"/.exec(svg)?.[1]);
- if(!(w>0&&h>0))throw Error('Некорректный SVG');
+ const {w,h,x,y,vw,vh}=dimensions(svg);
  const objects=['',''],refs=[],page=[];
  const stream=(data,attrs='')=>`<< ${attrs} /Length ${encoder.encode(data).length} >>\nstream\n${data}\nendstream`;
  for(const [index,group] of svgGroups(svg).entries()){
@@ -32,10 +37,10 @@ export function pdfBytes(svg){
     const n={M:2,L:2,C:6}[cmd];if(!n)throw Error('Неподдерживаемая команда SVG');parts.push(tokens.slice(i,i+n).join(' ')+' '+{M:'m',L:'l',C:'c'}[cmd]);i+=n;if(cmd==='M')cmd='L';
    }parts.push('f','Q');
   }
-  objects.push(stream(parts.join('\n'),`/Type /XObject /Subtype /Form /FormType 1 /Group << /S /Transparency /CS /DeviceRGB /I true /K false >> /BBox [0 0 ${w} ${h}] /Resources << >>`));
+  objects.push(stream(parts.join('\n'),`/Type /XObject /Subtype /Form /FormType 1 /Group << /S /Transparency /CS /DeviceRGB /I true /K false >> /BBox [${x} ${y} ${x+vw} ${y+vh}] /Resources << >>`));
   refs.push(`/Color${index} ${objects.length} 0 R`);page.push(`/Color${index} Do`);
  }
- objects.push(stream(`q\n1 0 0 -1 0 ${h} cm\n${page.join('\n')}\nQ`));const content=objects.length;
+ objects.push(stream(`q\n${w/vw} 0 0 ${-h/vh} ${-x*w/vw} ${h+y*h/vh} cm\n${page.join('\n')}\nQ`));const content=objects.length;
  objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${w} ${h}] /Resources << /XObject << ${refs.join(' ')} >> >> /Contents ${content} 0 R >>`);
  objects[0]='<< /Type /Catalog /Pages 2 0 R >>';objects[1]=`<< /Type /Pages /Kids [${objects.length} 0 R] /Count 1 >>`;
  let output='%PDF-1.4\n%DoctorTracer Rust\n';const offsets=[0];for(const [i,obj] of objects.entries()){offsets.push(output.length);output+=`${i+1} 0 obj\n${obj}\nendobj\n`;}
@@ -45,7 +50,7 @@ export function pdfBytes(svg){
 }
 
 export function epsText(svg){
- const w=Number(/\bwidth="([\d.]+)"/.exec(svg)?.[1]),h=Number(/\bheight="([\d.]+)"/.exec(svg)?.[1]);let out='%!PS-Adobe-3.0 EPSF-3.0\n%%BoundingBox: 0 0 '+Math.ceil(w)+' '+Math.ceil(h)+'\n%%EndComments\ngsave\n0 '+h+' translate 1 -1 scale\n';
+ const {w,h,x,y,vw,vh}=dimensions(svg);let out='%!PS-Adobe-3.0 EPSF-3.0\n%%BoundingBox: 0 0 '+Math.ceil(w)+' '+Math.ceil(h)+'\n%%EndComments\ngsave\n0 '+h+' translate '+(w/vw)+' '+(-h/vh)+' scale '+(-x)+' '+(-y)+' translate\n';
  for(const group of svgGroups(svg)){out+=group.color.slice(1).match(/../g).map(v=>parseInt(v,16)/255).join(' ')+' setrgbcolor\n';for(const {d,x,y} of group.paths){out+='gsave '+x+' '+y+' translate newpath\n';const tokens=d.match(/[MLCZ]|[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?/g)||[];let i=0,cmd='';while(i<tokens.length){if(/^[MLCZ]$/.test(tokens[i]))cmd=tokens[i++];if(cmd==='Z'){out+='closepath\n';cmd='';continue;}const n={M:2,L:2,C:6}[cmd];out+=tokens.slice(i,i+n).join(' ')+' '+{M:'moveto',L:'lineto',C:'curveto'}[cmd]+'\n';i+=n;if(cmd==='M')cmd='L';}out+='fill grestore\n';}}
  return out+'grestore\nshowpage\n%%EOF\n';
 }
