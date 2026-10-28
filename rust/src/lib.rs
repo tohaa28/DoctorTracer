@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Desktop photographic algorithm port. Pixels remain in a dedicated Web Worker.
-mod shared_contract;mod joint_palette;mod raster_refit;mod edge_fit;mod desktop_filters;mod desktop_palette;mod desktop_regions;mod desktop_shared;
+mod post_smooth;mod shared_contract;mod joint_palette;mod raster_refit;mod edge_fit;mod desktop_filters;mod desktop_palette;mod desktop_regions;mod desktop_shared;
 use std::cell::RefCell;
 thread_local!{static RESULT:RefCell<Vec<u8>>=const{RefCell::new(Vec::new())};static PALETTE:RefCell<Vec<[u8;3]>>=const{RefCell::new(Vec::new())};static STATS:RefCell<Vec<u8>>=const{RefCell::new(Vec::new())};static SEGMENT:RefCell<Vec<u8>>=const{RefCell::new(Vec::new())};static LAST:RefCell<Option<(Vec<i32>,Vec<[u8;3]>,usize,usize,usize)>>=const{RefCell::new(None)};}
 #[cfg(target_arch="wasm32")]#[link(wasm_import_module="env")]extern "C"{fn progress(value:u32,stage:u32);}
@@ -82,4 +82,13 @@ fn raster_pass(svg:String,a:&[u8],w:usize,h:usize)->String{
 }
 #[no_mangle]pub unsafe extern "C" fn joint_choose(p:*const u8,l:*const u8,c:*const u8,w:usize,h:usize)->*const u8{
  if p.is_null()||l.is_null()||c.is_null()||!valid(w,h){return std::ptr::null();}let a=std::slice::from_raw_parts(p,w*h*4);let old=std::slice::from_raw_parts(l,w*h);let candidate=std::slice::from_raw_parts(c,w*h);let pal=PALETTE.with(|r|r.borrow().clone());if pal.is_empty()||old.iter().chain(candidate).any(|&v|v!=255&&v as usize>=pal.len())||old.iter().zip(candidate).enumerate().any(|(i,(&u,&v))|a[4*i+3]>=128&&(u==255||v==255)){return std::ptr::null();}store(joint_palette::choose(a,old,candidate,&pal,w,h))
+}
+
+#[no_mangle]pub unsafe extern "C" fn result_smooth(p:*const u8,n:usize,strength:u32,sharp:u32)->*const u8{
+ if p.is_null()||n>32_000_000{return std::ptr::null();}
+ let Ok(svg)=std::str::from_utf8(std::slice::from_raw_parts(p,n))else{return std::ptr::null();};
+ match post_smooth::smooth(svg,strength,sharp!=0){
+  Ok((out,nodes,moved))=>{STATS.with(|r|*r.borrow_mut()=format!("{{\"nodes\":{nodes},\"moved\":{moved}}}").into_bytes());store(out.into_bytes())},
+  Err(_)=>{STATS.with(|r|*r.borrow_mut()=b"{\"error\":\"Unsafe or unsupported geometry\"}".to_vec());std::ptr::null()}
+ }
 }

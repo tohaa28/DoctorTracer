@@ -58,12 +58,15 @@ function show(){
   f.append(action('🌈 Цвета Без Ограничений',()=>{config.colors=0;config.palette=null;run();},config.colors===0),action('◉ Настраиваемые Цвета',()=>{config.colors=config.colors||recommendedPaletteCount;go(7);},config.colors>0));
   if(svg){const link=document.createElement('a');link.href='#';link.textContent='Текущая Палитра (изменить):';link.onclick=e=>{e.preventDefault();config.colors=config.colors||recommendedPaletteCount;go(7);};f.append(link);const palette=document.createElement('div');palette.className='palette';if(hasTransparentSlot())palette.append(transparentSwatch());for(const {color} of svgGroups(svg).slice(0,64)){const swatch=document.createElement('span');swatch.className='swatch';swatch.style.backgroundColor=color;swatch.title=color;palette.append(swatch);}f.append(palette);}
   const hr=document.createElement('hr');hr.className='hr';const advanced=document.createElement('span');advanced.className='sectionlabel';advanced.textContent='Расширенный';f.append(hr,advanced,action('✂ Удаление Фона',()=>{editTool='cut';go(9);}),action('✎ Редактирование Результата',()=>{editTool='pan';go(8);}),action('↶ Вернуться к Настройкам',()=>go(0)));p.append(f);
+  postSmoothTools(p);
   const skip=document.createElement('label');skip.className='checkrow review-footer';const check=document.createElement('input');check.type='checkbox';check.checked=!!config.skipReview;check.onchange=()=>{config.skipReview=check.checked;};skip.append(check,document.createTextNode('Пропускать эту страницу в следующий раз'));p.append(skip);
 
  }else if(step===8||step===9){
   buildVectorEditor(p);
+  postSmoothTools(p);
  }else{
   buildExport(p,add);
+  postSmoothTools(p);
 
  }
 }
@@ -122,7 +125,7 @@ $('help').onclick=()=>$('helpDialog').showModal();$('closeHelp').onclick=()=>$('
 $('viewport').ondragover=e=>e.preventDefault();$('viewport').ondrop=e=>{e.preventDefault();if(e.dataTransfer.files[0])load(e.dataTransfer.files[0]);};
 window.addEventListener('resize',()=>{if(source)fit();});
 // Avoid exporting a result for settings that have just been edited.
-document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key.toLowerCase()==='o'){e.preventDefault();$('file').click();return;}if(e.ctrlKey&&e.key.toLowerCase()==='s'){e.preventDefault();save();return;}if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(step===8||step===9){if(e.key.toLowerCase()==='d'){editTool='cut';show();}if(e.key.toLowerCase()==='a'){editTool='pan';show();}if(e.key.toLowerCase()==='z'&&vectorUndo.length){vectorRedo.push(svg);applyVector(vectorUndo.pop(),false);}if(e.key.toLowerCase()==='y'&&vectorRedo.length){vectorUndo.push(svg);applyVector(vectorRedo.pop(),false);}}if(e.key.toLowerCase()==='b')display(false);if(e.key.toLowerCase()==='v'&&svg)display(true);if(e.key==='Escape'&&busy){cancel();status('Трассировка отменена');}});show();
+document.addEventListener('keydown',e=>{if(document.querySelector('#postSmoothDialog[open]')){if(e.ctrlKey&&['s','o'].includes(e.key.toLowerCase()))e.preventDefault();return;}if(e.ctrlKey&&e.key.toLowerCase()==='o'){e.preventDefault();$('file').click();return;}if(e.ctrlKey&&e.key.toLowerCase()==='s'){e.preventDefault();save();return;}if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(step===8||step===9){if(e.key.toLowerCase()==='d'){editTool='cut';show();}if(e.key.toLowerCase()==='a'){editTool='pan';show();}if(e.key.toLowerCase()==='z'&&vectorUndo.length){vectorRedo.push(svg);applyVector(vectorUndo.pop(),false);}if(e.key.toLowerCase()==='y'&&vectorRedo.length){vectorUndo.push(svg);applyVector(vectorRedo.pop(),false);}}if(e.key.toLowerCase()==='b')display(false);if(e.key.toLowerCase()==='v'&&svg)display(true);if(e.key==='Escape'&&busy){cancel();status('Трассировка отменена');}});show();
 
 async function renderJointPreview(){
  const token=++previewToken,v=$('viewport');try{const blob=await partitionPreview(svg,source.width,source.height,{viewWidth:Math.max(1,v.clientWidth),viewHeight:Math.max(1,v.clientHeight),zoom:Number($('zoom').value)/100,panX,panY});if(token!==previewToken||view!=='vector'||$('outlines').checked)return;const url=URL.createObjectURL(blob);const img=$('preview');img.classList.add('joint-preview');img.style.transform='none';img.src=url;setTimeout(()=>URL.revokeObjectURL(url),60000);}catch(error){status('Предпросмотр: '+error.message);}
@@ -199,3 +202,22 @@ async function analyzeSource(){
 }
 
 function refreshView(){if(view==='segments'){$('segments').click();const zoom=Number($('zoom').value)/100;$('preview').style.width=source.width*zoom+'px';$('preview').style.height=source.height*zoom+'px';}else display(view==='vector');}
+
+function postSmoothTools(parent){
+ const box=document.createElement('fieldset');box.innerHTML='<legend>Готовый вектор</legend>';
+ box.append(action('Сглаживание результата…',openPostSmooth));
+ const undo=action('Отменить изменение',()=>{if(vectorUndo.length){vectorRedo.push(svg);applyVector(vectorUndo.pop(),false);}});undo.disabled=!vectorUndo.length;box.append(undo);parent.append(box);
+}
+function openPostSmooth(){
+ if(!svg||busy)return;const base=svg;let candidate=base,token=0,closed=false,timer;
+ const dialog=document.createElement('dialog');dialog.id='postSmoothDialog';dialog.style.cssText='width:min(440px,85vw);padding:20px;border:1px solid #888;border-radius:5px;background:#eee;font:13px Arial';
+ dialog.innerHTML='<h3>Сглаживание готового результата</h3><p>Дополнительная обработка готовых векторов. Общие границы цветов изменяются совместно.</p><label>Сила сглаживания: <output>35%</output><input id="postStrength" aria-label="Сила сглаживания" type="range" min="0" max="100" value="35" style="display:block;width:100%"></label><p><label><input id="postSharp" type="checkbox" checked> Сохранять острые углы</label></p><p><label><input id="postPreview" type="checkbox" checked> Предпросмотр на изображении</label></p><p id="postInfo" role="status">Подготовка…</p><div style="display:flex;gap:8px"><button id="postReset">Сброс</button><span style="flex:1"></span><button id="postApply" disabled>Применить</button><button id="postCancel">Отмена</button></div>';
+ document.body.append(dialog);const range=dialog.querySelector('#postStrength'),sharp=dialog.querySelector('#postSharp'),preview=dialog.querySelector('#postPreview'),info=dialog.querySelector('#postInfo'),apply=dialog.querySelector('#postApply');
+ const service=new Worker(new URL('./worker.js',import.meta.url),{type:'module'});
+ function paint(value){svg=value;if(vectorUrl)URL.revokeObjectURL(vectorUrl);if(outlineUrl)URL.revokeObjectURL(outlineUrl);outlineUrl='';vectorUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));display(true);}
+ function draw(){paint(preview.checked?candidate:base);}
+ function schedule(){token++;apply.disabled=true;dialog.querySelector('output').textContent=range.value+'%';info.textContent='Расчёт предпросмотра…';clearTimeout(timer);timer=setTimeout(()=>service.postMessage({operation:'postSmooth',svg:base,strength:Number(range.value),sharp:sharp.checked,requestId:token}),180);}
+ service.onmessage=({data})=>{if(closed||data.requestId!==token)return;if(data.error){info.textContent='Не удалось сгладить: '+data.error;return;}if(!data.postSmooth)return;candidate=data.postSmooth.svg;apply.disabled=candidate===base;info.textContent=candidate===base?'Результат не изменён. Попробуйте другую силу или отключите сохранение углов.':data.postSmooth.limited?'Сила уменьшена для защиты геометрии.':'Предпросмотр готов. Границы и мелкие детали защищены.';draw();};
+ function finish(accepted){if(closed)return;closed=true;clearTimeout(timer);service.terminate();svg=base;if(accepted&&candidate!==base)applyVector(candidate);else{paint(base);status('Сглаживание отменено');}dialog.close();dialog.remove();}
+ range.oninput=schedule;sharp.onchange=schedule;preview.onchange=draw;dialog.querySelector('#postReset').onclick=()=>{range.value=0;schedule();};apply.onclick=()=>finish(true);dialog.querySelector('#postCancel').onclick=()=>finish(false);dialog.oncancel=e=>{e.preventDefault();finish(false);};dialog.showModal();schedule();
+}

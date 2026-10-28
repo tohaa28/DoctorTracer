@@ -3,6 +3,7 @@ import createTracer from './rust-tracer.mjs';
 import {gpuPrepare,gpuAssign} from './gpu.js';
 import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs';
 import {auditNative} from './geometry.mjs';
+import {smoothResult} from './post-smooth.mjs';
 import {traceFixed} from './desktop-curves.mjs';
 let runtime,loading,lastProgress=0;
 function emitProgress(progress,stage){lastProgress=Math.max(lastProgress,progress);self.postMessage({progress:lastProgress,stage});}
@@ -11,6 +12,7 @@ self.onmessage=async ({data})=>{
  try{
   lastProgress=0;emitProgress(1,'Загрузка Rust WASM');
   runtime??=await (loading??=createTracer({onProgress:(progress,stage)=>emitProgress(Math.min(85,progress),stages[stage])}));
+  if(data.operation==='postSmooth'){const result=await smoothResult(runtime,data.svg,data.strength,data.sharp);self.postMessage({postSmooth:result,requestId:data.requestId});return;}
   if(data.operation==='analyze'){self.postMessage({analysis:runtime.analyze(new Uint8Array(data.pixels),data.width,data.height),requestId:data.requestId});return;}
   if(data.operation==='palette'){const colors=runtime.stage(new Uint8Array(data.pixels),data.width,data.height,{kind:2,colors:data.colors,extra:0});self.postMessage({palette:Array.from({length:colors.length/3},(_,i)=>Array.from(colors.slice(i*3,i*3+3))),requestId:data.requestId});return;}
   let pixels=new Uint8Array(data.pixels);let backend='Rust WASM CPU',prefiltered=false;

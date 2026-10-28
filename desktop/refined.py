@@ -107,7 +107,7 @@ class Window(wizard.WizardWindow):
         self.canvas.layer_buttons['Сегменты'].setText('Сегменты')
         for button in self.canvas.nav.findChildren(QPushButton):button.setStyleSheet('padding:0px;');button.setFixedSize(19,19)
         for label in self.statusBar().findChildren(QLabel):
-            if label.text()=='v2.0':label.setText('v0.14.2 preview')
+            if label.text()=='v2.0':label.setText('v0.15.0 preview')
         self.auto_timer=QTimer(self);self.auto_timer.setSingleShot(True);self.auto_timer.timeout.connect(self.apply_pending)
         for key,fn in [('A',lambda:self.set_background_tool('drag') if self.page=='background' else self.set_tool('drag')),('D',lambda:self.set_background_tool('cut') if self.page=='background' else self.set_tool('adapt')),('F',lambda:self.set_tool('fill')),('X',lambda:self.set_tool('pencil')),('C',lambda:self.set_tool('color')),('Z',lambda:self.undo_background() if self.page=='background' else self.undo_edit()),('Y',lambda:self.redo_background() if self.page=='background' else self.redo_edit()),('T',lambda:self.reset_background() if self.page=='background' else self.update_segmentation())]:
             action=wizard.QAction(self);action.setShortcut(key);action.triggered.connect(fn);self.addAction(action)
@@ -326,8 +326,20 @@ class Window(wizard.WizardWindow):
             if self.category!='photo':cfg['category']='aa' if self.adv['contour_aa'] else 'hard'
             cfg['palette_aa']=self.adv['palette_aa']
         return cfg
+    def post_smooth_tools(self):
+        row=QHBoxLayout();b=self.small_button(row,'Сглаживание результата…',self.open_post_smooth);b.setFixedWidth(190)
+        undo=self.small_button(row,'Отменить',self.undo_post_smooth);undo.setFixedWidth(80);undo.setEnabled(bool(getattr(self,'post_smooth_undo',[])));self.page_layout.addLayout(row)
+    def open_post_smooth(self):
+        from post_smooth_dialog import open_smoother
+        open_smoother(self);self.render_page()
+    def undo_post_smooth(self):
+        history=getattr(self,'post_smooth_undo',[])
+        if history:
+            self.svg_text=history.pop();self.background_original=self.svg_text;self.removed_shapes=set();self.background_undo=[];self.background_redo=[]
+            self.canvas.svg=QSvgRenderer(QByteArray(self.svg_text.encode('utf8')));self.set_contours();self.canvas.update();self.render_page()
     def build_review(self):
         super().build_review()
+        self.post_smooth_tools()
         # The original has no extra Compare button in this group.
         for b in self.scroll.widget().findChildren(QPushButton):
             if 'Сравнить Bitmap' in b.text():b.hide()
@@ -342,7 +354,7 @@ class Window(wizard.WizardWindow):
                 stats=json.loads(self.result_file.read_text(encoding='utf-8'));compute=stats.get('compute','CPU');compute+=(' · контуры GPU' if stats.get('contour_compute')=='OpenCL GPU FP64' and not stats.get('smoothing_fallback') else '');self.statusBar().showMessage(f"Готово за {float(stats.get('seconds',0)):.2f} с · {compute}"+(f" · {stats['device']}" if stats.get('device') else ''))
             except (ValueError,OSError):pass
         if not self.process and self.page!='processing' and self.svg_text:
-            self.background_original=self.svg_text;self.removed_shapes=set();self.background_undo=[];self.background_redo=[]
+            self.background_original=self.svg_text;self.removed_shapes=set();self.background_undo=[];self.background_redo=[];self.post_smooth_undo=[]
         if self.skip_review and self.page=='review':self.go('export')
     def begin_trace(self,target='review'):
         cfg=self.config()
@@ -420,6 +432,7 @@ class Window(wizard.WizardWindow):
                 else:self.removed_shapes.add(index)
                 self.apply_background();break
     def apply_background(self):
+        self.post_smooth_undo=[]
         root=ET.fromstring(self.background_original);paths=[p for p in root.iter() if p.tag.endswith('path')]
         for parent in root.iter():
             for child in list(parent):
@@ -482,8 +495,9 @@ class Window(wizard.WizardWindow):
         self.flatten_mode='preserve';self.selected_color=0
         super().load(path)
     def about(self):
-        QMessageBox.information(self,'Паспорт DoctorTracer','DoctorTracer 0.14.2 preview\n\nЛокальная трассировка SVG / EPS / PDF / PNG.\nSVG: группы по цветам, устранение наложений геометрии.\n\nGPU ускоряет фильтрацию фотографий, назначение цветов, пространственную сегментацию, сглаживание общих границ, упрощение цепочек и расчёт контрольных точек Безье.\nСвязность графа, объединение областей и проверка геометрии выполняются на CPU.\n\nНастройки находятся в меню «Дополнительные Параметры».')
+        QMessageBox.information(self,'Паспорт DoctorTracer','DoctorTracer 0.15.0 preview\n\nЛокальная трассировка SVG / EPS / PDF / PNG.\nSVG: группы по цветам, устранение наложений геометрии.\n\nGPU ускоряет фильтрацию фотографий, назначение цветов, пространственную сегментацию, сглаживание общих границ, упрощение цепочек и расчёт контрольных точек Безье.\nСвязность графа, объединение областей и проверка геометрии выполняются на CPU.\n\nНастройки находятся в меню «Дополнительные Параметры».')
     def build_export(self):
+        self.post_smooth_tools()
         self.choice('Сохранение Результата','• Совет: Попробуйте перетащить изображение в нужное вам место.\n• Клавиши быстрого доступа: Ctrl-S.','save',self.export)
         g=self.group('Перетаскивание Файла');row=QHBoxLayout();fmt=QComboBox();fmt.addItems(['.pdf','.svg','.eps']);mini=QCheckBox('Минимизировать окно');mini.setChecked(True);row.addWidget(DragFile(self,fmt,mini));right=QVBoxLayout();right.addWidget(fmt,0,Qt.AlignLeft);self.paragraph(right,'Перетащите файл в нужную директорию.');row.addLayout(right);g.addLayout(row);g.addWidget(mini)
         q=self.collapsible('Быстрое Сохранение');self.export_fields(q,False)

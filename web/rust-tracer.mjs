@@ -6,6 +6,7 @@ export default async function createTracer({wasmBinary,onProgress=()=>{}}={}){
  function palette(values=[]){if(!values.length){api.set_palette(0,0);return;}const data=new Uint8Array(values.flatMap(c=>typeof c==='string'?c.replace('#','').match(/../g).map(v=>parseInt(v,16)):Array.from(c)));const p=input(data);try{api.set_palette(p,values.length);}finally{api.dealloc(p,data.length);}}
  function output(pointer,text=false){if(!pointer)throw Error('Некорректные параметры трассировки');const bytes=new Uint8Array(api.memory.buffer,pointer,api.result_len());return text?decode.decode(bytes):bytes.slice();}
  return {
+  postSmooth(svg,strength=35,sharp=true){const bytes=new TextEncoder().encode(svg),p=input(bytes);try{const value=output(api.result_smooth(p,bytes.length,strength,sharp?1:0),true);return{svg:value,...this.stats()};}finally{api.dealloc(p,bytes.length);}},
   analyze(pixels,w,h){const p=input(pixels);try{return JSON.parse(output(api.analyze_rgba(p,w,h),true));}finally{api.dealloc(p,pixels.length);}},
   stage(pixels,width,height,{colors=0,detail=1,kind=0,extra=0,palette:inks=[]}={}){palette(inks);const bytes=new Uint8Array(Math.max(pixels.byteLength,width*height*4));bytes.set(new Uint8Array(pixels.buffer,pixels.byteOffset,pixels.byteLength));const p=input(bytes);try{return output(api.desktop_stage(p,width,height,colors,detail,kind,extra));}finally{api.dealloc(p,bytes.length);}},
   filter(pixels,w,h,detail){return this.stage(pixels,w,h,{kind:0,detail});},
