@@ -1,0 +1,56 @@
+name: Deploy DoctorTracer Web to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - 'tests/wasm.mjs'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: doctortracer-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check static assets and JS syntax
+        run: |
+          test -s web/index.html
+          test -s web/style.css
+          test -s web/app.js
+          test -s web/worker.js
+          test -s web/tracer.mjs
+          test -s web/tracer.wasm
+          node --check web/app.js
+          node --check web/worker.js
+          node --check web/tracer.mjs
+
+      - name: Test committed WebAssembly runtime
+        run: node tests/wasm.mjs
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload static site (only web/)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
