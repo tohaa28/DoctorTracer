@@ -177,38 +177,35 @@ def trace_graphic(path,cfg):
     aa=cfg.get('category','aa')=='aa'
     report(cfg,8,'Подготовка изображения');metrics={};stage=time.perf_counter()
     source=load_source(path,{**cfg,'_metrics':metrics})
-    # Transparent illustrations need a smooth silhouette independently of their
-    # interior color regions. A solid underlayer also prevents pale seams.
+    # Alpha and every ink are faces of one common boundary graph.
     layered=aa and cfg.get('shape_strategy','auto')!='independent' and bool(np.any(source[0][:,:,3]<128)) and 'supersample' not in cfg
     supersample=1 if layered else cfg.get('supersample',2 if aa else 1)
     a,labels,palette,original=segment(path,{**cfg,'supersample':supersample,'_metrics':metrics,'_source':source})
-    metrics['shape_strategy']='silhouette + interior layers' if layered else 'independent masks'
-    metrics['segmentation_seconds']=time.perf_counter()-stage;stage=time.perf_counter()
-    report(cfg,30,'Построение контуров');h,w=labels.shape
-    root=ET.Element('{'+NS+'}svg',{'width':str(original[0]),'height':str(original[1]),'viewBox':f'0 0 {w} {h}','version':'1.1'})
-    # Trace actual segmentation masks; smooth/optimize curves independently of palette discovery.
-    counts=np.bincount(labels[labels!=255],minlength=len(palette))
-    order=sorted((i for i in range(len(palette)) if counts[i]),key=lambda i:-counts[i])
-    from concurrent.futures import ThreadPoolExecutor
-    def trace_ink(i):
-        if layered and i==order[0]:
-            alpha=cv2.resize(a[:,:,3],None,fx=2,fy=2,interpolation=cv2.INTER_LINEAR)
-            return i,native_trace(alpha>=128,cfg,scale=2.)
-        mask=labels==i
-        if cfg.get('contour_blur',0)>0:mask=cv2.GaussianBlur(mask.astype(np.float32),(0,0),cfg['contour_blur']*cfg.get('supersample',2 if aa else 1))>=.5
-        return i,native_trace(mask,cfg)
-    with ThreadPoolExecutor(max_workers=min(4,len(order) or 1)) as pool:
-        for completed,(i,paths) in enumerate(pool.map(trace_ink,order),1):
-            report(cfg,30+int(35*completed/max(1,len(order))),'Построение контуров')
-            for data in paths:ET.SubElement(root,'{'+NS+'}path',{'d':data,'fill':'#%02x%02x%02x'%tuple(palette[i]),'fill-rule':'nonzero'})
-    metrics['curves_seconds']=time.perf_counter()-stage
-    ET.register_namespace('',NS)
-    from vector_partition import partition
-    report(cfg,75,'Объединение и проверка геометрии')
-    svg,layout=partition(ET.tostring(root,encoding='unicode',xml_declaration=True))
-    return svg,{
-        'colors':layout['color_groups'],'width':original[0],'height':original[1],**layout,
-        'working_size':[w,h],'palette':['#%02x%02x%02x'%tuple(c) for c in palette],**metrics}
+    from shared_regions import trace as shared_trace
+    detail=cfg.get('detail',1);polygon=cfg.get('mode','spline')!='spline'
+    # Exact pixel artwork has no antialias evidence to smooth. Preserve its
+    # original grid, including square QR modules, without image-specific rules.
+    source_pixels=source[0];binary_alpha=bool(np.all((source_pixels[:,:,3]==0)|(source_pixels[:,:,3]==255)))
+    if binary_alpha:
+        exact=source_pixels[:,:,3]<128
+        for ink in palette:exact|=np.all(source_pixels[:,:,:3]==ink,axis=2)
+        polygon=polygon or bool(np.all(exact))
+    if not polygon:
+        orthogonal=True
+        for mask in (labels[1:]!=labels[:-1],(labels[:,1:]!=labels[:,:-1]).T):
+            for row in mask:
+                turns=np.diff(np.pad(row.astype(np.int8),(1,1)))
+                if np.any(np.flatnonzero(turns==-1)-np.flatnonzero(turns==1)<3):orthogonal=False;break
+            if not orthogonal:break
+        polygon=orthogonal
+    svg,layout=shared_trace(labels,palette,original,smooth=not polygon,
+        curve_tolerance=[.375,.25,.15][detail],rounding=1.5,
+        passes=[4,2,1][detail],compute=cfg.get('compute','gpu'),polygon=polygon)
+    metrics['shape_strategy']='shared planar color graph'
+    metrics['segmentation_seconds']=time.perf_counter()-stage
+    return svg,{'colors':layout['color_groups'],'width':original[0],'height':original[1],
+        **layout,'working_size':[a.shape[1],a.shape[0]],
+        'palette':['#%02x%02x%02x'%tuple(c) for c in palette],**metrics}
 
 
 def prepare(path, cfg):
@@ -261,7 +258,7 @@ def trace(path, cfg):
     if cfg.get('backend','auto')!='vtracer' and (not photo or use_palette) and cfg.get('mode')!='none':
         svg,stats=trace_graphic(path,cfg)
         stats['seconds']=round(time.monotonic()-start,2)
-        stats['backend']='segmentation + Potrace 1.16'
+        stats['backend']='shared planar color graph'
         return svg,stats
     if photo and not use_palette:
         # Keep straight RGB through segmentation. Compositing semitransparent
@@ -318,7 +315,7 @@ def to_eps(svg):
     view = [float(v) for v in root.get('viewBox', f'0 0 {width} {height}').split()]
     lines = ['%!PS-Adobe-3.0 EPSF-3.0', f'%%BoundingBox: 0 0 {int(width+.999)} {int(height+.999)}',
              '%%Creator: DoctorTracer', '%%EndComments', f'0 {height} translate',
-             f'{width/view[2]} {-height/view[3]} scale']
+             f'{width/view[2]} {-height/view[3]} scale', f'{-view[0]} {-view[1]} translate']
     if any(el.tag not in ('{'+NS+'}svg','{'+NS+'}g','{'+NS+'}path') for el in root.iter()):
         raise ValueError('Unsupported SVG element')
     for el in root.iter('{'+NS+'}path'):

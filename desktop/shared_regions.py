@@ -11,7 +11,7 @@ import numpy as np
 
 NS='http://www.w3.org/2000/svg'
 
-def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,passes=8,progress=None,compute='cpu',source=None):
+def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,passes=8,progress=None,compute='cpu',source=None,polygon=False):
     acceleration={}
     started=time.perf_counter();h,w=labels.shape;stride=w+1
     # Duplicate RGB entries are one editable object, including their boundaries.
@@ -26,7 +26,6 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
     edges=collections.defaultdict(dict);graph=collections.defaultdict(set)
     padded=np.pad(labels.astype(np.int32),1,constant_values=-1)
     def add(color,a,b):
-        if color<0:return
         edges[int(color)].setdefault(a,[]).append(b)
     # All grid edges once. Clockwise directed loops keep the material at right.
     ys,xs=np.nonzero(padded[:-1,1:-1]!=padded[1:,1:-1])
@@ -91,7 +90,7 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
     def middle(a,b):
         a,b=xy(a),xy(b);return ((a[0]+b[0])/2,(a[1]+b[1])/2)
     root=ET.Element('{'+NS+'}svg',{'width':str(original[0]),'height':str(original[1]),'viewBox':f'0 0 {w} {h}','version':'1.1','data-color-objects':'merged','data-shared-boundaries':'true'})
-    loops=segments=0;pieces=[]
+    loops=segments=0;pieces=[];contract_faces=[]
     for completed,(color,color_loops) in enumerate(sorted(loops_by_color.items())):
         if progress:progress(72+int(14*completed/max(1,len(loops_by_color))),'РЎРіР»Р°Р¶РёРІР°РЅРёРµ РѕР±С‰РёС… РіСЂР°РЅРёС†')
         paths=[]
@@ -117,8 +116,8 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
                         return (corner[0]+delta[0]*f,corner[1]+delta[1]*f)
                     enter,leave=near(before),near(after);c1=tuple((enter[j]+2*corner[j])/3 for j in (0,1));c2=tuple((leave[j]+2*corner[j])/3 for j in (0,1))
                 else:enter,c1,c2,leave,corner=curve_values[curve_offsets[id(loop)]+i]
-                if i==0:data[0]='M'+fmt(enter if len(graph[v])==2 else corner)
-                if len(graph[v])==2:
+                if i==0:data[0]='M'+fmt(enter if len(graph[v])==2 and not polygon and 0<corner[0]<w and 0<corner[1]<h else corner)
+                if len(graph[v])==2 and not polygon and 0<corner[0]<w and 0<corner[1]<h:
                     data.append('L'+fmt(enter))
                     data.append('C'+fmt(c1)+' '+fmt(c2)+' '+fmt(leave))
                 else:data.append('L'+fmt(corner))
@@ -127,17 +126,25 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
             # A separately rounded midpoint could create a subpixel sliver.
             data.append('Z');path=' '.join(data);paths.append(path);loops+=1
         if paths:
+            contract_faces.append((color,' '.join(paths)))
+            if color<0:loops-=len(paths);continue
             fill='#%02x%02x%02x'%tuple(palette[color]);g=ET.SubElement(root,'{'+NS+'}g',{'fill':fill,'id':'color-'+fill[1:]})
             data=' '.join(paths)
             ET.SubElement(g,'{'+NS+'}path',{'d':data,'fill':fill,'fill-rule':'nonzero'})
             pieces.append((fill,data))
     if progress:progress(90,'РџСЂРѕРІРµСЂРєР° РїРµСЂРµСЃРµС‡РµРЅРёР№')
     report={}
+    from boundary_contract import verify
+    try:report.update(verify(contract_faces))
+    except ValueError:
+        if not polygon:return trace(labels,palette,original,smooth=False,polygon=True)
+        raise
+    root.set('data-boundary-contract','paired')
     if smooth:
         from vector_partition import audit_pieces
         try:audit_pieces(pieces,report)
         except ValueError as exc:
-            fallback,stats=trace(labels,palette,original,smooth=False)
+            fallback,stats=trace(labels,palette,original,smooth=False,polygon=True)
             document=ET.fromstring(fallback)
             audit_pieces([(p.get('fill'),p.get('d')) for p in document.iter('{'+NS+'}path')],report)
             stats.update(acceleration);stats['geometry_verified']=True;stats['geometry_audit']=report
@@ -146,4 +153,4 @@ def trace(labels,palette,original,smooth=False,curve_tolerance=.5,rounding=1.5,p
             return fallback,stats
     ET.register_namespace('',NS)
     return ET.tostring(root,encoding='unicode'),{**acceleration,'paths':loops,'color_groups':len(root),'shared_corners':segments,'shared_boundary_seconds':time.perf_counter()-started,'vector_layout':'shared boundary color groups','geometry_compute':'shared grid CPU',
-        'geometry_verified':bool(smooth),'geometry_audit':report}
+        'geometry_verified':True,'geometry_audit':report}

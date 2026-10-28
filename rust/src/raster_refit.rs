@@ -9,7 +9,14 @@ fn adjust(svg:&str,tension:f64)->Option<String>{
  if tension==1.{return Some(svg.to_string());}let mut out=String::new();let mut tail=svg;
  while let Some(i)=tail.find("<path "){out.push_str(&tail[..i]);tail=&tail[i..];let end=tail.find('>')?;let tag=&tail[..end];let d=attr(tag,"d")?;let ts=tokens(d);let mut i=0;let mut current=[0.;2];let mut start=[0.;2];let mut data=String::new();
   while i<ts.len(){let cmd=ts[i].as_str();i+=1;let count=match cmd{"M"|"L"=>2,"C"=>6,"Z"|"z"=>0,_=>return None};if i+count>ts.len(){return None;}let mut p=Vec::new();for token in &ts[i..i+count]{p.push(token.parse::<f64>().ok()?);}i+=count;
-   if cmd=="C"{for j in 0..2{let q1=current[j]+(p[4+j]-current[j])/3.;let q2=current[j]+2.*(p[4+j]-current[j])/3.;p[j]=q1+(p[j]-q1)*tension;p[2+j]=q2+(p[2+j]-q2)*tension;}}
+   if cmd=="C"{
+   // Canonical orientation makes both owners produce bit-identical controls.
+   let end=[p[4],p[5]];let c1=[p[0],p[1]];let c2=[p[2],p[3]];
+   let reverse=current>end||(current==end&&c1>c2);
+   let (s,e,left,right)=if reverse{(end,current,c2,c1)}else{(current,end,c1,c2)};
+   let mut a=[0.;2];let mut b=[0.;2];for j in 0..2{let q1=s[j]+(e[j]-s[j])/3.;let q2=s[j]+2.*(e[j]-s[j])/3.;a[j]=q1+(left[j]-q1)*tension;b[j]=q2+(right[j]-q2)*tension;}
+   for j in 0..2{p[j]=if reverse{b[j]}else{a[j]};p[2+j]=if reverse{a[j]}else{b[j]};}
+  }
    if count>0{current=[p[count-2],p[count-1]];if cmd=="M"{start=current;}}else{current=start;}
    data.push_str(cmd);for v in p{write!(data,"{v:.6} ").ok()?;}
   }

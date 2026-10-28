@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Desktop photographic algorithm port. Pixels remain in a dedicated Web Worker.
-mod joint_palette;mod raster_refit;mod edge_fit;mod desktop_filters;mod desktop_palette;mod desktop_regions;mod desktop_shared;
+mod shared_contract;mod joint_palette;mod raster_refit;mod edge_fit;mod desktop_filters;mod desktop_palette;mod desktop_regions;mod desktop_shared;
 use std::cell::RefCell;
 thread_local!{static RESULT:RefCell<Vec<u8>>=const{RefCell::new(Vec::new())};static PALETTE:RefCell<Vec<[u8;3]>>=const{RefCell::new(Vec::new())};static STATS:RefCell<Vec<u8>>=const{RefCell::new(Vec::new())};static SEGMENT:RefCell<Vec<u8>>=const{RefCell::new(Vec::new())};static LAST:RefCell<Option<(Vec<i32>,Vec<[u8;3]>,usize,usize,usize)>>=const{RefCell::new(None)};}
 #[cfg(target_arch="wasm32")]#[link(wasm_import_module="env")]extern "C"{fn progress(value:u32,stage:u32);}
