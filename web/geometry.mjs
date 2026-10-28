@@ -32,5 +32,14 @@ export async function partitionNative(shapes,w,h,{wasmBinary}={}){
  for(const item of [...shapes].reverse()){
   const paths=contours(item.d);if(!paths.length)continue;let size=0;for(const p of paths)size+=1+p.length*2;const bytes=new Float64Array(size);let i=0;for(const p of paths){bytes[i++]=p.length;for(const point of p){bytes[i++]=point.X;bytes[i++]=point.Y;}}
   const ptr=native._malloc(bytes.byteLength);if(!ptr)throw Error('Недостаточно памяти');let data;try{native.HEAPF64.set(bytes,ptr/8);const result=native._partition_add(ptr,bytes.length);if(!result)throw Error('Clipper partition failed');data=native.UTF8ToString(result);}finally{native._free(ptr);}if(data){if(!groups.has(item.color))groups.set(item.color,[]);groups.get(item.color).push(data);}
- }return groups;
+ }
+ // Tile cuts are implementation details, not exported object boundaries.
+ // Union every complete color once, after all visibility subtraction is done.
+ for(const [color,data] of groups){
+  const paths=data.flatMap(d=>contours(d));let size=0;for(const p of paths)size+=1+p.length*2;
+  const bytes=new Float64Array(size);let i=0;for(const p of paths){bytes[i++]=p.length;for(const point of p){bytes[i++]=point.X;bytes[i++]=point.Y;}}
+  const ptr=native._malloc(bytes.byteLength);if(!ptr)throw Error('Недостаточно памяти при объединении цветов');
+  try{native.HEAPF64.set(bytes,ptr/8);const result=native._merge_paths(ptr,bytes.length);if(!result)throw Error('Color union failed');const d=native.UTF8ToString(result);groups.set(color,d?[d]:[]);}finally{native._free(ptr);}
+ }
+ return groups;
 }

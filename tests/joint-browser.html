@@ -1,5 +1,5 @@
 <!doctype html><meta charset="utf-8"><title>Joint palette GPU parity</title><pre id="result">Running…</pre><script type="module">
-import createTracer from '../build/site/rust-tracer.mjs?v=0.16.0';
+import createTracer from '../build/site/rust-tracer.mjs?v=0.16.1';
 const result=document.querySelector('#result');
 try{
  const runtime=await createTracer();let gpuCases=0;
@@ -7,7 +7,7 @@ try{
   const w=80,h=64,p=new Uint8Array(w*h*4);
   for(let y=0;y<h;y++)for(let x=0;x<w;x++)p.set([40+x*2,20+y*3,30+x+y,alpha&&x>=22&&x<37&&y>=19&&y<28?0:255],4*(y*w+x));
   const cfg={category:'photo',detail:1,speckle:2,colors:4,palette:['#3c2832','#b4a096','#78644b','#b47850'],palette_generated:true};
-  const expected=runtime.trace(p,w,h,cfg),worker=new Worker('../build/site/worker.js?v=0.16.0',{type:'module'});
+  const expected=runtime.trace(p,w,h,cfg),worker=new Worker('../build/site/worker.js?v=0.16.1',{type:'module'});
   try{
    const reply=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('worker timeout')),60000);worker.onmessage=({data})=>{if(data.svg||data.error){clearTimeout(timer);resolve(data);}};worker.postMessage({...cfg,pixels:p.buffer,width:w,height:h,gpu:true});});
    if(reply.error)throw Error(reply.error);if(reply.svg!==expected)throw Error('Joint GPU result differs '+alpha);

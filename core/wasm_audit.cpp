@@ -33,6 +33,15 @@ double audit_add(const double *data,int length){try{Paths paths=decode(data,leng
  double maxArea=0;for(const auto &entry:areas)maxArea=std::max(maxArea,entry.second);pairs+=(int)compared.size();originals.push_back(std::move(paths));return maxArea;
  }catch(...){return -1;}}
 void partition_set_group(int group){active_group=group;}
+// Stitch computational tiles before exporting. Nonzero union preserves holes
+// and removes coincident internal edges, without expanding any color region.
+const char* merge_paths(const double *data,int length){try{
+ Paths input=decode(data,length),output;Clipper c;c.AddPaths(input,ptSubject,true);
+ c.Execute(ctUnion,output,pftNonZero,pftNonZero);partition_text.clear();char point[100];
+ for(const auto &path:output){for(size_t j=0;j<path.size();j++){
+  snprintf(point,sizeof(point),"%c%.7f %.7f ",j?'L':'M',path[j].X/1e7,path[j].Y/1e7);partition_text+=point;
+ }partition_text+="Z ";}return partition_text.c_str();
+ }catch(...){return NULL;}}
 double partition_verify(){audit_start();double maximum=0;for(const auto &entry:partition_groups){std::vector<double> data;for(const auto &p:entry.second){data.push_back(p.size());for(const auto &v:p){data.push_back((double)v.X);data.push_back((double)v.Y);}}double area=audit_add(data.data(),(int)data.size());if(area<0||area>.0001)return area;maximum=std::max(maximum,area);}return maximum;}
 
 }
