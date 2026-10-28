@@ -1,0 +1,182 @@
+{
+  "versions": {
+    "windows": "0.14.1-preview",
+    "wasm": "0.16.2-wasm-preview"
+  },
+  "supplied_image": {
+    "size": [
+      1024,
+      1536
+    ],
+    "privacy": "Input and rendered comparisons remain local; no image is included in release assets.",
+    "ink_area": [
+      {
+        "rgb_inks": 3,
+        "ui_slots_including_transparency": 4,
+        "dark_before": 46107,
+        "dark_after": 37890
+      },
+      {
+        "rgb_inks": 4,
+        "ui_slots_including_transparency": 5,
+        "dark_before": 45499,
+        "dark_after": 37880
+      },
+      {
+        "rgb_inks": 5,
+        "ui_slots_including_transparency": 6,
+        "dark_before": 40185,
+        "dark_after": 35312
+      }
+    ],
+    "native_wasm_parity": [
+      {
+        "ui_slots": 4,
+        "rgba_mae": 0.0001136461893717448,
+        "limit": 0.25,
+        "passed": true
+      },
+      {
+        "ui_slots": 5,
+        "rgba_mae": 0.0001174608866373698,
+        "limit": 0.25,
+        "passed": true
+      }
+    ]
+  },
+  "synthetic": {
+    "cases": 3,
+    "cpu_opencl_rust_exact": true,
+    "true_antialias_restriction_preserved": true
+  },
+  "public_validation": {
+    "desktop": {
+      "cases": 8,
+      "verified_reference_cases": 8,
+      "missing_or_unverified": 0,
+      "regressions": [],
+      "errors": [],
+      "baseline_missing": [],
+      "proposal_comparison": false,
+      "coverage_complete": true,
+      "baseline": "desktop-joint-release-016",
+      "run": "desktop-aa-support-0162",
+      "generated": "2026-10-28T11:56:31.723512+00:00",
+      "regression_thresholds": {
+        "white_mae_increase": 0.1,
+        "alpha_iou_decrease": 0.001,
+        "boundary_f1_decrease": 0.01
+      },
+      "notice": "Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.",
+      "mean_rgb_mae_white": 0.5958962509055542,
+      "by_profile": {
+        "graphic-medium-9": {
+          "cases": 8,
+          "mean_rgb_mae_white": 0.5958962509055542
+        }
+      },
+      "by_split": {
+        "external-holdout": {
+          "cases": 8,
+          "mean_rgb_mae_white": 0.5958962509055542
+        }
+      },
+      "by_category": {
+        "illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 0.7193253926462077
+        },
+        "line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 0.22560882568359375
+        }
+      },
+      "schema": 2,
+      "palette_policy": "ui-total-slots-v2",
+      "source_families": [
+        "hfg-gmuend/openmoji",
+        "scikit-image/scikit-image",
+        "twbs/icons",
+        "twitter/twemoji"
+      ],
+      "recommended_domain_cases": 8,
+      "stress_domain_cases": 0,
+      "by_profile_category": {
+        "graphic-medium-9/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 0.7193253926462077,
+          "mean_region_boundary_f1": 0.9999489644112846
+        },
+        "graphic-medium-9/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 0.22560882568359375,
+          "mean_region_boundary_f1": 1.0
+        }
+      }
+    },
+    "wasm": {
+      "cases": 8,
+      "verified_reference_cases": 8,
+      "missing_or_unverified": 0,
+      "regressions": [],
+      "errors": [],
+      "baseline_missing": [],
+      "proposal_comparison": false,
+      "coverage_complete": true,
+      "baseline": "wasm-joint-release-016",
+      "run": "wasm-aa-support-0162",
+      "generated": "2026-10-28T11:56:36.008730+00:00",
+      "regression_thresholds": {
+        "white_mae_increase": 0.1,
+        "alpha_iou_decrease": 0.001,
+        "boundary_f1_decrease": 0.01
+      },
+      "notice": "Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.",
+      "mean_rgb_mae_white": 0.5960896635367199,
+      "by_profile": {
+        "graphic-medium-9": {
+          "cases": 8,
+          "mean_rgb_mae_white": 0.5960896635367199
+        }
+      },
+      "by_split": {
+        "external-holdout": {
+          "cases": 8,
+          "mean_rgb_mae_white": 0.5960896635367199
+        }
+      },
+      "by_category": {
+        "illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 0.7194434039213559
+        },
+        "line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 0.2260284423828125
+        }
+      },
+      "schema": 2,
+      "palette_policy": "ui-total-slots-v2",
+      "source_families": [
+        "hfg-gmuend/openmoji",
+        "scikit-image/scikit-image",
+        "twbs/icons",
+        "twitter/twemoji"
+      ],
+      "recommended_domain_cases": 8,
+      "stress_domain_cases": 0,
+      "by_profile_category": {
+        "graphic-medium-9/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 0.7194434039213559,
+          "mean_region_boundary_f1": 0.9999489644112846
+        },
+        "graphic-medium-9/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 0.2260284423828125,
+          "mean_region_boundary_f1": 1.0
+        }
+      }
+    }
+  }
+}

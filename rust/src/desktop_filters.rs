@@ -22,7 +22,19 @@ pub fn modes(a:&[u8],w:usize,h:usize,detail:usize)->Vec<u8>{
 pub fn segment(a:&[u8],w:usize,h:usize,palette:&[[u8;3]],strength:i32,aa:bool,radius:usize)->Vec<u8>{
  let mut labels=vec![255u8;w*h];let mut distance=vec![i32::MAX;w*h];
  for i in 0..w*h{if a[4*i+3]<128{continue;}for(k,p)in palette.iter().enumerate(){let d=(0..3).map(|c|(a[4*i+c] as i32-p[c] as i32).pow(2)).sum();if d<distance[i]{distance[i]=d;labels[i]=k as u8;}}}
- if aa{let old=labels.clone();for y in 0..h{for x in 0..w{let i=y*w+x;if old[i]==255{continue;}let mut allowed=[false;128];for yy in y.saturating_sub(radius)..=(y+radius).min(h-1){for xx in x.saturating_sub(radius)..=(x+radius).min(w-1){let j=yy*w+xx;if old[j]!=255&&distance[j]<576{allowed[old[j] as usize]=true;}}}let mut best=i32::MAX;for(k,p)in palette.iter().enumerate(){if !allowed[k]{continue;}let d=(0..3).map(|c|(a[4*i+c] as i32-p[c] as i32).pow(2)).sum();if d<best{best=d;labels[i]=k as u8;}}}}}
+ if aa{let old=labels.clone();for y in 0..h{for x in 0..w{let i=y*w+x;if old[i]==255{continue;}let mut allowed=[false;128];for yy in y.saturating_sub(radius)..=(y+radius).min(h-1){for xx in x.saturating_sub(radius)..=(x+radius).min(w-1){let j=yy*w+xx;if old[j]!=255&&distance[j]<576{allowed[old[j] as usize]=true;}}}let mut best=i32::MAX;for(k,p)in palette.iter().enumerate(){if !allowed[k]{continue;}let d=(0..3).map(|c|(a[4*i+c] as i32-p[c] as i32).pow(2)).sum();if d<best{best=d;labels[i]=k as u8;}}
+ if labels[i]!=old[i]{
+  let mut mixture=false;
+  for l in 0..palette.len(){if !allowed[l]{continue;}
+   for r in l+1..palette.len(){if !allowed[r]{continue;}
+    let d: [i64;3]=std::array::from_fn(|j|palette[r][j] as i64-palette[l][j] as i64);
+    let e: [i64;3]=std::array::from_fn(|j|a[4*i+j] as i64-palette[l][j] as i64);
+    let den:i64=d.iter().map(|v|v*v).sum();let dot:i64=(0..3).map(|j|e[j]*d[j]).sum();let e2:i64=e.iter().map(|v|v*v).sum();
+    if den>0&&dot>0&&dot<den&&e2*den-dot*dot<=64*den{mixture=true;break;}
+   }if mixture{break;}
+  }if !mixture{labels[i]=old[i];}
+ }
+ }}}
  if strength>0{for _ in 0..2{for phase in 0..2{let old=labels.clone();for y in 0..h{for x in 0..w{let i=y*w+x;if old[i]==255||(x+y)%2!=phase{continue;}let neighbors=[if x>0{old[i-1]}else{255},if x+1<w{old[i+1]}else{255},if y>0{old[i-w]}else{255},if y+1<h{old[i+w]}else{255}];let mut best=i32::MAX;for(k,p)in palette.iter().enumerate(){let energy=(0..3).map(|c|(a[4*i+c] as i32-p[c] as i32).pow(2)).sum::<i32>()+strength*neighbors.iter().filter(|&&v|v!=255&&v!=k as u8).count() as i32;if energy<best{best=energy;labels[i]=k as u8;}}}}}}}
  labels
 }
