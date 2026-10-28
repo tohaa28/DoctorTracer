@@ -247,65 +247,17 @@ def prepare(path, cfg):
 
 
 def trace(path, cfg):
-    report(cfg,3,'Подготовка изображения')
-    start = time.monotonic()
-    category=cfg.get('category','aa')
-    use_palette=bool(cfg.get('palette')) or bool(cfg.get('colors'))
-    photo=category=='photo' or cfg.get('preset')=='Фотография'
-    if photo and (cfg.get('backend')=='shared' or (cfg.get('photo_regions') and cfg.get('backend','auto')=='auto')) and cfg.get('mode','spline')=='spline':
+    # Every supported route, including restored legacy presets, uses one
+    # verified graph. A backend flag must never bypass the boundary contract.
+    report(cfg,3,'Подготовка изображения');start=time.monotonic()
+    photo=cfg.get('category','aa')=='photo' or cfg.get('preset')=='Фотография'
+    if photo:
         from photo_regions import trace as trace_regions
         return trace_regions(path,cfg)
-    if cfg.get('backend','auto')!='vtracer' and (not photo or use_palette) and cfg.get('mode')!='none':
-        svg,stats=trace_graphic(path,cfg)
-        stats['seconds']=round(time.monotonic()-start,2)
-        stats['backend']='shared planar color graph'
-        return svg,stats
-    if photo and not use_palette:
-        # Keep straight RGB through segmentation. Compositing semitransparent
-        # pixels against white before tracing creates pale fringes on dark views.
-        a, original=load_source(path,{**cfg,'denoise':False,'quality':2})
-        detail=cfg.get('detail',2)
-        spatial,color=[(7,30),(5,20),(3,15)][detail]
-        a[:,:,:3]=cv2.pyrMeanShiftFiltering(a[:,:,:3],spatial,color,maxLevel=1)
-        a[:,:,3]=np.where(a[:,:,3]>=128,255,0)
-        im=Image.fromarray(a)
-    else:
-        im, original = prepare(path, cfg)
-    buf = io.BytesIO()
-    im.save(buf, format='PNG')
-    detail = cfg.get('detail', 2)
-    report(cfg,25,'Построение цветовых областей')
-    svg = vtracer.convert_raw_image_to_svg(
-        buf.getvalue(), img_format='png', colormode='color', hierarchical='stacked',
-        mode=cfg.get('mode', 'spline'), filter_speckle=(cfg.get('photo_speckle',[12,6,4][detail])+max(0,cfg.get('speckle',2)-2) if photo and not use_palette else cfg.get('speckle',4)),
-        color_precision=8 if cfg.get('colors') else [5, 6, 7][detail],
-        layer_difference=8 if cfg.get('colors') else [32, 24, 16][detail],
-        corner_threshold=cfg.get('corner', 60), length_threshold=[6., 4., 3.][detail],
-        max_iterations=10, splice_threshold=45, path_precision=3)
-    report(cfg,65,'Сглаживание контуров')
-    refit_seconds=0.
-    if photo and not use_palette and cfg.get('mode','spline')=='spline' and cfg.get('photo_curve_refit',True):
-        from photo_curves import refit_curves
-        stage=time.perf_counter()
-        svg,_=refit_curves(svg,cfg.get('photo_curve_tolerance',[.6,.4,.25][detail]),cfg.get('photo_curve_alpha',1.2))
-        refit_seconds=time.perf_counter()-stage
-    root = ET.fromstring(svg)
-    # Preserve physical image dimensions even when processing resolution is limited.
-    root.set('viewBox', f'0 0 {im.width} {im.height}')
-    root.set('width', str(original[0]))
-    root.set('height', str(original[1]))
-    ET.register_namespace('', 'http://www.w3.org/2000/svg')
-    svg = ET.tostring(root, encoding='unicode', xml_declaration=True)
-    from vector_partition import partition
-    report(cfg,80,'Проверка геометрии')
-    svg,layout=partition(svg)
-    return svg, {**layout,'seconds': round(time.monotonic()-start, 2),
-                 'width': original[0], 'height': original[1], 'working_size': list(im.size),
-                 'colors': layout['color_groups'],
-                 'backend':'spatial color regions + VTracer' if photo and not use_palette else 'VTracer',
-                 'curve_backend':'Potrace Bezier refit' if refit_seconds else 'VTracer',
-                 'curve_refit_seconds':round(refit_seconds,4),
-                 'compute':'CPU', 'alpha_threshold':128 if photo and not use_palette else None}
+    svg,stats=trace_graphic(path,cfg)
+    stats['seconds']=round(time.monotonic()-start,2)
+    stats['backend']='shared planar color graph'
+    return svg,stats
 
 
 def to_eps(svg):

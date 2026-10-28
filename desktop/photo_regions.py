@@ -80,7 +80,7 @@ def trace(path,cfg):
     if not unlimited:tolerance*=.5
     report(cfg,70,'Построение общих границ')
     svg,geometry=shared_regions.trace(labels,palette,original,smooth=cfg.get('shared_smoothing',True),
-        curve_tolerance=tolerance,rounding=1.5*cfg.get('alphamax',1.),passes=([10,8,5] if unlimited else [4,2,1])[detail],progress=cfg.get('_progress'),compute=cfg.get('compute','gpu'),source=a if cfg.get('edge_fit',True) else None)
+        curve_tolerance=tolerance,rounding=1.5*cfg.get('alphamax',1.),passes=([10,8,5] if unlimited else [4,2,1])[detail],progress=cfg.get('_progress'),compute=cfg.get('compute','gpu'),source=a if cfg.get('edge_fit',True) else None,polygon=cfg.get('mode','spline')!='spline')
     if cfg.get('raster_refit',True) and cfg.get('shared_smoothing',True):
         from raster_refit import optimize
         from vector_partition import audit_pieces
