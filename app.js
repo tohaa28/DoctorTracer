@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import {icon} from './icons.js?v=0.17.0';
-import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs?v=0.17.0';
-import {zip} from './zip.mjs?v=0.17.0';
-import {opaqueCount,paletteKey,paintPalette,transparentSwatch,latestSelection} from './palette-ui.mjs?v=0.17.0';
-import {partitionPreview} from './preview.mjs?v=0.17.0';
+import {icon} from './icons.js?v=0.18.0';
+import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs?v=0.18.0';
+import {zip} from './zip.mjs?v=0.18.0';
+import {opaqueCount,paletteKey,paintPalette,transparentSwatch,latestSelection} from './palette-ui.mjs?v=0.18.0';
+import {partitionPreview} from './preview.mjs?v=0.18.0';
 const $=id=>document.getElementById(id);
 const hasTransparentSlot=()=>sourceHasAlpha&&!config.flatten;
 const defaults=()=>({mode:'basic',category:'photo',detail:2,colors:0,speckle:2,flatten:false,polygon:false,gpu:true});
@@ -90,7 +90,7 @@ async function run(){
  if(config.colors>0&&!config.palette?.length&&hasTransparentSlot()){try{const generation=loadToken,palette=await requestPalette(config.colors);if(generation!==loadToken||!busy)return;config.palette=palette;config.palette_generated=true;}catch(error){busy=false;step=pageHistory.pop()??4;show();status(error.message);return;}}
  const canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;const context=canvas.getContext('2d',{willReadFrequently:true});
  if(config.flatten){context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);}context.drawImage(source,0,0);const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
- worker??=new Worker(new URL('./worker.js?v=0.17.0',import.meta.url),{type:'module'});
+ worker??=new Worker(new URL('./worker.js?v=0.18.0',import.meta.url),{type:'module'});
  worker.onmessage=({data})=>{
   if(data.progress!==undefined){progress=data.progress;stage=data.stage;updateProgress();return;}
   busy=false;if(data.error){worker?.terminate();worker=null;status(data.error);step=pageHistory.pop()??0;show();return;}svg=data.svg;vectorUndo=[];vectorRedo=[];elapsed=data.seconds;backend=data.backend;panX=0;panY=0;if(data.segments)awaitSegments(data.segments);$('segments').hidden=!data.segments;
@@ -173,7 +173,7 @@ let panStart;const viewport=$('viewport');viewport.onpointerdown=e=>{if(!source|
 
 let batchAbort=null;
 async function runBatch(files){
- if(!files.length||busy)return;const options=structuredClone(config),result=[];busy=true;step=5;progress=0;stage='Пакетная Обработка';show();const batchWorker=new Worker(new URL('./worker.js?v=0.17.0',import.meta.url),{type:'module'});let aborted=false,rejectJob;
+ if(!files.length||busy)return;const options=structuredClone(config),result=[];busy=true;step=5;progress=0;stage='Пакетная Обработка';show();const batchWorker=new Worker(new URL('./worker.js?v=0.18.0',import.meta.url),{type:'module'});let aborted=false,rejectJob;
  batchAbort=()=>{aborted=true;batchWorker.terminate();rejectJob?.(Error('Трассировка отменена'));};
  try{for(const [index,file] of files.entries()){if(aborted)break;const image=await createImageBitmap(file),scale=Math.min(1,2400/Math.max(image.width,image.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(image.width*scale));c.height=Math.max(1,Math.round(image.height*scale));const ctx=c.getContext('2d');if(options.flatten){ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);}ctx.drawImage(image,0,0,c.width,c.height);image.close();const pixels=ctx.getImageData(0,0,c.width,c.height).data;
  const traced=await new Promise((resolve,reject)=>{rejectJob=reject;batchWorker.onerror=e=>reject(Error(e.message));batchWorker.onmessage=({data})=>{if(data.progress!==undefined){progress=Math.floor((index+data.progress/100)/files.length*100);stage=(index+1)+' / '+files.length+' · '+data.stage;updateProgress();}else if(data.error)reject(Error(data.error));else resolve(data.svg);};batchWorker.postMessage({pixels:pixels.buffer,width:c.width,height:c.height,...options},[pixels.buffer]);});
@@ -195,7 +195,7 @@ function buildVectorEditor(parent){
 }
 
 function paletteService(){
- if(!paletteWorker){paletteWorker=new Worker(new URL('./worker.js?v=0.17.0',import.meta.url),{type:'module'});paletteWorker.onmessage=({data})=>{if(data.requestId!==undefined&&(data.palette||data.analysis||data.error)){const resolve=pendingPalettes.get(data.requestId);pendingPalettes.delete(data.requestId);resolve?.(data.palette||data.analysis||null);}};}return paletteWorker;
+ if(!paletteWorker){paletteWorker=new Worker(new URL('./worker.js?v=0.18.0',import.meta.url),{type:'module'});paletteWorker.onmessage=({data})=>{if(data.requestId!==undefined&&(data.palette||data.analysis||data.error)){const resolve=pendingPalettes.get(data.requestId);pendingPalettes.delete(data.requestId);resolve?.(data.palette||data.analysis||null);}};}return paletteWorker;
 }
 async function analyzeSource(){
  const c=document.createElement('canvas'),scale=Math.min(1,900/Math.max(source.width,source.height));c.width=Math.max(1,Math.round(source.width*scale));c.height=Math.max(1,Math.round(source.height*scale));const ctx=c.getContext('2d');ctx.drawImage(source,0,0,c.width,c.height);const pixels=ctx.getImageData(0,0,c.width,c.height).data,id=++requestId,promise=new Promise(resolve=>pendingPalettes.set(id,resolve));paletteService().postMessage({operation:'analyze',requestId:id,pixels:pixels.buffer,width:c.width,height:c.height},[pixels.buffer]);return promise;
@@ -205,19 +205,22 @@ function refreshView(){if(view==='segments'){$('segments').click();const zoom=Nu
 
 function postSmoothTools(parent){
  const box=document.createElement('fieldset');box.innerHTML='<legend>Готовый вектор</legend>';
- box.append(action('Сглаживание результата…',openPostSmooth));
+ box.append(action('Сглаживание результата…',()=>openPostSmooth(false)));box.append(action('Очистка и упрощение…',()=>openPostSmooth(true)));
  const undo=action('Отменить изменение',()=>{if(vectorUndo.length){vectorRedo.push(svg);applyVector(vectorUndo.pop(),false);}});undo.disabled=!vectorUndo.length;box.append(undo);parent.append(box);
 }
-function openPostSmooth(){
+function openPostSmooth(cleanup=false){
  if(!svg||busy)return;const base=svg;let candidate=base,token=0,closed=false,timer;
  const dialog=document.createElement('dialog');dialog.id='postSmoothDialog';dialog.style.cssText='width:min(440px,85vw);padding:20px;border:1px solid #888;border-radius:5px;background:#eee;font:13px Arial';
  dialog.innerHTML='<h3>Сглаживание готового результата</h3><p>Дополнительная обработка готовых векторов. Общие границы цветов изменяются совместно.</p><label>Сила сглаживания: <output>35%</output><input id="postStrength" aria-label="Сила сглаживания" type="range" min="0" max="100" value="35" style="display:block;width:100%"></label><p><label><input id="postSharp" type="checkbox" checked> Сохранять острые углы</label></p><p><label><input id="postPreview" type="checkbox" checked> Предпросмотр на изображении</label></p><p id="postInfo" role="status">Подготовка…</p><div style="display:flex;gap:8px"><button id="postReset">Сброс</button><span style="flex:1"></span><button id="postApply" disabled>Применить</button><button id="postCancel">Отмена</button></div>';
+ if(cleanup){dialog.querySelector('h3').textContent='Очистка и упрощение результата';dialog.querySelector('p').innerHTML='Удаление замкнутых мелких островков и отверстий. Детали на стыках цветов сохраняются.<br><label>Площадь до (пкс²): <input id="postArea" type="number" min="0" max="10000" step="0.25" value="4" style="width:90px"></label>';dialog.querySelector('#postStrength').value=25;dialog.querySelector('#postSharp').parentElement.lastChild.textContent=' Защищать углы и тонкие элементы';}
  document.body.append(dialog);const range=dialog.querySelector('#postStrength'),sharp=dialog.querySelector('#postSharp'),preview=dialog.querySelector('#postPreview'),info=dialog.querySelector('#postInfo'),apply=dialog.querySelector('#postApply');
- const service=new Worker(new URL('./worker.js?v=0.17.0',import.meta.url),{type:'module'});
+ const area=dialog.querySelector('#postArea');if(cleanup){range.parentElement.firstChild.textContent='Допуск упрощения: ';range.setAttribute('aria-label','Допуск упрощения');}
+ const service=new Worker(new URL('./worker.js?v=0.18.0',import.meta.url),{type:'module'});
  function paint(value){svg=value;if(vectorUrl)URL.revokeObjectURL(vectorUrl);if(outlineUrl)URL.revokeObjectURL(outlineUrl);outlineUrl='';vectorUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));display(true);}
  function draw(){paint(preview.checked?candidate:base);}
- function schedule(){token++;apply.disabled=true;dialog.querySelector('output').textContent=range.value+'%';info.textContent='Расчёт предпросмотра…';clearTimeout(timer);timer=setTimeout(()=>service.postMessage({operation:'postSmooth',svg:base,strength:Number(range.value),sharp:sharp.checked,requestId:token}),180);}
- service.onmessage=({data})=>{if(closed||data.requestId!==token)return;if(data.error){info.textContent='Не удалось сгладить: '+data.error;return;}if(!data.postSmooth)return;candidate=data.postSmooth.svg;apply.disabled=candidate===base;info.textContent=candidate===base?'Результат не изменён. Попробуйте другую силу или отключите сохранение углов.':data.postSmooth.limited?'Сила уменьшена для защиты геометрии.':'Предпросмотр готов. Границы и мелкие детали защищены.';draw();};
- function finish(accepted){if(closed)return;closed=true;clearTimeout(timer);service.terminate();svg=base;if(accepted&&candidate!==base)applyVector(candidate);else{paint(base);status('Сглаживание отменено');}dialog.close();dialog.remove();}
- range.oninput=schedule;sharp.onchange=schedule;preview.onchange=draw;dialog.querySelector('#postReset').onclick=()=>{range.value=0;schedule();};apply.onclick=()=>finish(true);dialog.querySelector('#postCancel').onclick=()=>finish(false);dialog.oncancel=e=>{e.preventDefault();finish(false);};dialog.showModal();schedule();
+ function schedule(){token++;apply.disabled=true;dialog.querySelector('output').textContent=cleanup?(Number(range.value)/100).toFixed(2)+' пкс':range.value+'%';info.textContent='Расчёт предпросмотра…';clearTimeout(timer);timer=setTimeout(()=>service.postMessage({operation:cleanup?'postClean':'postSmooth',svg:base,strength:Number(range.value),sharp:sharp.checked,minArea:area?Math.max(0,Math.min(10000,Number(area.value))):0,tolerance:Number(range.value)/100,protect:sharp.checked,requestId:token}),180);}
+ service.onmessage=({data})=>{if(closed||data.requestId!==token)return;if(data.error){info.textContent='Не удалось обработать: '+data.error;return;}const result=cleanup?data.postClean:data.postSmooth;if(!result)return;candidate=result.svg;apply.disabled=candidate===base;info.textContent=candidate===base?'Результат не изменён. Попробуйте другую силу или отключите сохранение углов.':result.limited?'Сила уменьшена для защиты геометрии.':'Предпросмотр готов. Границы и мелкие детали защищены.';if(cleanup)info.textContent=`Удалено островков: ${result.removed_elements}; защищено: ${result.protected_elements}. Узлов: ${result.nodes_before} → ${result.nodes_after}.`+(result.limited?' Допуск уменьшен для защиты геометрии.':'');draw();};
+ service.onerror=()=>{info.textContent='Не удалось загрузить модуль обработки.';};
+ function finish(accepted){if(closed)return;closed=true;clearTimeout(timer);service.terminate();svg=base;if(accepted&&candidate!==base)applyVector(candidate);else{paint(base);status('Обработка отменена');}dialog.close();dialog.remove();}
+ range.oninput=schedule;if(area)area.oninput=schedule;sharp.onchange=schedule;preview.onchange=draw;dialog.querySelector('#postReset').onclick=()=>{range.value=0;if(area)area.value=0;schedule();};apply.onclick=()=>finish(true);dialog.querySelector('#postCancel').onclick=()=>finish(false);dialog.oncancel=e=>{e.preventDefault();finish(false);};dialog.showModal();schedule();
 }
