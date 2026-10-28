@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 export default async function createTracer({wasmBinary,onProgress=()=>{}}={}){
- const bytes=wasmBinary??await(await fetch(new URL('./doctortracer.wasm?v=0.16.1',import.meta.url))).arrayBuffer();
+ const bytes=wasmBinary??await(await fetch(new URL('./doctortracer.wasm?v=0.16.2',import.meta.url))).arrayBuffer();
  const {instance}=await WebAssembly.instantiate(bytes,{env:{progress:onProgress}});const api=instance.exports;const decode=new TextDecoder();
  function input(bytes){const p=api.alloc(bytes.byteLength);if(!p)throw Error('Недостаточно памяти');new Uint8Array(api.memory.buffer,p,bytes.byteLength).set(new Uint8Array(bytes.buffer,bytes.byteOffset,bytes.byteLength));return p;}
  function palette(values=[]){if(!values.length){api.set_palette(0,0);return;}const data=new Uint8Array(values.flatMap(c=>typeof c==='string'?c.replace('#','').match(/../g).map(v=>parseInt(v,16)):Array.from(c)));const p=input(data);try{api.set_palette(p,values.length);}finally{api.dealloc(p,data.length);}}
