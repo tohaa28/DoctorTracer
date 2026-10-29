@@ -19,6 +19,9 @@ p=[(50+.08*math.sin(i*1.7),i*.1)for i in range(1001)];p[0]=(50,0);p[-1]=(50,100)
 a='M0 0 L50 0 '+coords(p[1:])+' L0 100 Z';b='M50 0 L100 0 L100 100 '+coords(list(reversed(p)))+' Z';cases.append(('long-wave',svg([('#ff0000',a),('#0000ff',b)]),.15,True,True,True))
 top=[(5+i*2.25,50+.1*math.sin(math.pi*i/40))for i in range(41)];bottom=[(x,100-y)for x,y in reversed(top)]
 lens=svg([('#ff0000','M5 50 '+coords(top[1:])+' '+coords(bottom[1:])+' Z')]);cases.append(('thin-guard',lens,.3,True,True,True))
+junction_points=[(50+.06*math.sin(i),i*2)for i in range(26)];junction_points[0]=(50,0);junction_points[-1]=(50,50)
+a='M0 0 L50 0 '+coords(junction_points[1:])+' L0 50 Z';b='M0 50 L50 50 L50 100 L0 100 Z';c='M50 0 L100 0 L100 100 L50 100 L50 50 '+coords(list(reversed(junction_points[:-1])))+' Z'
+cases.append(('junction',svg([('#ff0000',a),('#00ff00',b),('#0000ff',c)]),.15,True,True,True))
 private=ROOT/'build/nf-quality/corrected.svg'
 if private.exists():cases.append(('nf',private.read_text(encoding='utf8'),.15,True,True,True))
 jobs=[]
@@ -43,6 +46,11 @@ for name,source,tol,straight,curved,protect in cases:
   before=next(ET.fromstring(source).iter('{http://www.w3.org/2000/svg}path')).get('d');after=next(ET.fromstring(result).iter('{http://www.w3.org/2000/svg}path')).get('d')
   assert abs(parse(after).area)>=abs(parse(before).area)*.8
   assert stats['limited'] and stats['applied_tolerance']<tol,stats
+ if name=='junction':
+  from boundary_contract import verify
+  paths=list(ET.fromstring(result).iter('{http://www.w3.org/2000/svg}path'))
+  verify([(i,p.get('d'))for i,p in enumerate(paths)]+[(-1,'M0 0 L0 50 L0 100 L50 100 L100 100 L100 0 L50 0 Z')])
+  assert stats['nodes_after']==13,stats
  if name=='nf':
   src_paths=list(ET.fromstring(source).iter('{http://www.w3.org/2000/svg}path'));dst_paths=list(ET.fromstring(result).iter('{http://www.w3.org/2000/svg}path'))
   # Four oval contours and four stars remain geometrically identical.

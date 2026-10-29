@@ -24,7 +24,7 @@
           "tolerance_px2": 0.0001
         }
       },
-      "seconds": 0.12781340000219643
+      "seconds": 0.13179689995013177
     },
     {
       "name": "wave-zero",
@@ -45,7 +45,7 @@
           "tolerance_px2": 0.0001
         }
       },
-      "seconds": 0.0011264999629929662
+      "seconds": 0.001114899991080165
     },
     {
       "name": "disabled",
@@ -66,7 +66,7 @@
           "tolerance_px2": 0.0001
         }
       },
-      "seconds": 0.0007708999328315258
+      "seconds": 0.000773100065998733
     },
     {
       "name": "curve",
@@ -87,7 +87,7 @@
           "tolerance_px2": 0.0001
         }
       },
-      "seconds": 0.0007520000217482448
+      "seconds": 0.0008024000562727451
     },
     {
       "name": "star",
@@ -108,7 +108,7 @@
           "tolerance_px2": 0.0001
         }
       },
-      "seconds": 0.00022879999596625566
+      "seconds": 0.0002590999938547611
     },
     {
       "name": "tiny",
@@ -129,7 +129,7 @@
           "tolerance_px2": 0.0001
         }
       },
-      "seconds": 0.0001797000877559185
+      "seconds": 0.00019399996381253004
     },
     {
       "name": "bow",
@@ -150,7 +150,7 @@
           "tolerance_px2": 0.0001
         }
       },
-      "seconds": 0.0001949999714270234
+      "seconds": 0.00019269995391368866
     },
     {
       "name": "bow-keep",
@@ -171,7 +171,7 @@
           "tolerance_px2": 0.0001
         }
       },
-      "seconds": 0.00029170000925660133
+      "seconds": 0.0002946000313386321
     },
     {
       "name": "long-wave",
@@ -192,7 +192,7 @@
           "tolerance_px2": 0.0001
         }
       },
-      "seconds": 0.00991929997690022
+      "seconds": 0.010469399974681437
     },
     {
       "name": "thin-guard",
@@ -213,7 +213,28 @@
           "tolerance_px2": 0.0001
         }
       },
-      "seconds": 0.0010632999474182725
+      "seconds": 0.001150700030848384
+    },
+    {
+      "name": "junction",
+      "tolerance": 0.15,
+      "straight": true,
+      "curved": true,
+      "protect": true,
+      "stats": {
+        "nodes_before": 61,
+        "nodes_after": 13,
+        "straightened": 1,
+        "curves_fitted": 0,
+        "applied_tolerance": 0.15,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.0004296000115573406
     },
     {
       "name": "nf",
@@ -234,7 +255,7 @@
           "tolerance_px2": 0.0001
         }
       },
-      "seconds": 0.03275710006710142
+      "seconds": 0.03366299998015165
     }
   ],
   "nf_pdf_comparison": {
