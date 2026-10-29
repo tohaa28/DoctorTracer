@@ -1,5 +1,5 @@
 // Standalone finished-result module. Every candidate passes the usual audit.
-import {auditNative} from './geometry.mjs?v=0.18.0';
+import {auditNative} from './geometry.mjs?v=0.19.0';
 export async function smoothResult(runtime,svg,strength=35,sharp=true){
  if(!strength)return{svg,nodes:0,moved:0,applied_strength:0};
  for(let attempt=0;attempt<5;attempt++){

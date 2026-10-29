@@ -1,4 +1,4 @@
-import{auditNative}from'./geometry.mjs?v=0.18.0';
+import{auditNative}from'./geometry.mjs?v=0.19.0';
 export async function cleanResult(runtime,svg,minArea=4,tolerance=.25,protect=true){
  for(const amount of [...Array.from({length:5},(_,i)=>tolerance/2**i),0]){
   const result=runtime.postClean(svg,minArea,amount,protect);
