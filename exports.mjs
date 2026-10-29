@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import {contours} from './paths.mjs?v=0.19.0';
+import {contours} from './paths.mjs?v=0.20.0';
 const encoder=new TextEncoder();
 function dimensions(svg){
  const w=Number(/\bwidth="([\d.]+)"/.exec(svg)?.[1]),h=Number(/\bheight="([\d.]+)"/.exec(svg)?.[1]);

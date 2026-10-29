@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import createTracer from './rust-tracer.mjs?v=0.19.0';
-import {gpuPrepare,gpuAssign} from './gpu.js?v=0.19.0';
-import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs?v=0.19.0';
-import {auditNative} from './geometry.mjs?v=0.19.0';
-import{cleanResult}from'./post-clean.mjs?v=0.19.0';
-import {smoothResult} from './post-smooth.mjs?v=0.19.0';
-import {traceFixed} from './desktop-curves.mjs?v=0.19.0';
+import createTracer from './rust-tracer.mjs?v=0.20.0';
+import {gpuPrepare,gpuAssign} from './gpu.js?v=0.20.0';
+import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs?v=0.20.0';
+import {auditNative} from './geometry.mjs?v=0.20.0';
+import{regularizeResult}from'./regularize.mjs?v=0.20.0';
+import{cleanResult}from'./post-clean.mjs?v=0.20.0';
+import {smoothResult} from './post-smooth.mjs?v=0.20.0';
+import {traceFixed} from './desktop-curves.mjs?v=0.20.0';
 let runtime,loading,lastProgress=0;
 function emitProgress(progress,stage){lastProgress=Math.max(lastProgress,progress);self.postMessage({progress:lastProgress,stage});}
 const stages=['','Подготовка изображения','Определение палитры','Сегментация','Объединение областей','Построение кривых','Готово'];
@@ -13,6 +14,7 @@ self.onmessage=async ({data})=>{
  try{
   lastProgress=0;emitProgress(1,'Загрузка Rust WASM');
   runtime??=await (loading??=createTracer({onProgress:(progress,stage)=>emitProgress(Math.min(85,progress),stages[stage])}));
+  if(data.operation==='regularize'){const result=await regularizeResult(runtime,data.svg,data.tolerance,data.straight,data.curved,data.protect);self.postMessage({regularize:result,requestId:data.requestId});return;}
   if(data.operation==='postClean'){const result=await cleanResult(runtime,data.svg,data.minArea,data.tolerance,data.protect);self.postMessage({postClean:result,requestId:data.requestId});return;}
   if(data.operation==='postSmooth'){const result=await smoothResult(runtime,data.svg,data.strength,data.sharp);self.postMessage({postSmooth:result,requestId:data.requestId});return;}
   if(data.operation==='analyze'){self.postMessage({analysis:runtime.analyze(new Uint8Array(data.pixels),data.width,data.height),requestId:data.requestId});return;}
