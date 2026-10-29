@@ -108,3 +108,10 @@ thread_local!{static LOGO:RefCell<Option<logo::Plan>>=RefCell::new(None);}
  LOGO.with(|r|*r.borrow_mut()=None);if p.is_null()||!valid(w,h){return std::ptr::null();}let source=std::slice::from_raw_parts(p,w*h*4);let palette=PALETTE.with(|r|r.borrow().clone());let Some(plan)=logo::prepare(source,w,h,&palette)else{return std::ptr::null();};let mask=plan.mask.clone();STATS.with(|r|*r.borrow_mut()=format!("{{\"ellipse_rings\":{},\"stars\":{},\"scale\":8}}",plan.rings.len(),plan.stars.len()).into_bytes());LOGO.with(|r|*r.borrow_mut()=Some(plan));store(mask)
 }
 #[no_mangle]pub unsafe extern "C" fn logo_finish(p:*const u8,n:usize)->*const u8{if p.is_null()||n>32000000{return std::ptr::null();}let Ok(d)=std::str::from_utf8(std::slice::from_raw_parts(p,n))else{return std::ptr::null();};let result=LOGO.with(|r|r.borrow().as_ref().and_then(|plan|logo::finish(plan,d)));match result{Some(svg)=>store(svg.into_bytes()),None=>std::ptr::null()}}
+
+#[no_mangle]pub unsafe extern "C" fn result_regularize(p:*const u8,n:usize,tolerance:f64,flags:u32)->*const u8{
+ if p.is_null()||n>32000000||!tolerance.is_finite(){return std::ptr::null();}let Ok(svg)=std::str::from_utf8(std::slice::from_raw_parts(p,n))else{return std::ptr::null();};
+ match post_clean::regularize(svg,tolerance,flags&1!=0,flags&2!=0,flags&4!=0){
+ Ok((out,before,after,lines,curves))=>{STATS.with(|r|*r.borrow_mut()=format!("{{\"nodes_before\":{before},\"nodes_after\":{after},\"straightened\":{lines},\"curves_fitted\":{curves}}}").into_bytes());store(out.into_bytes())},Err(_)=>std::ptr::null()
+ }
+}

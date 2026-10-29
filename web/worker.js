@@ -3,6 +3,7 @@ import createTracer from './rust-tracer.mjs';
 import {gpuPrepare,gpuAssign} from './gpu.js';
 import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs';
 import {auditNative} from './geometry.mjs';
+import{regularizeResult}from'./regularize.mjs';
 import{cleanResult}from'./post-clean.mjs';
 import {smoothResult} from './post-smooth.mjs';
 import {traceFixed} from './desktop-curves.mjs';
@@ -13,6 +14,7 @@ self.onmessage=async ({data})=>{
  try{
   lastProgress=0;emitProgress(1,'Загрузка Rust WASM');
   runtime??=await (loading??=createTracer({onProgress:(progress,stage)=>emitProgress(Math.min(85,progress),stages[stage])}));
+  if(data.operation==='regularize'){const result=await regularizeResult(runtime,data.svg,data.tolerance,data.straight,data.curved,data.protect);self.postMessage({regularize:result,requestId:data.requestId});return;}
   if(data.operation==='postClean'){const result=await cleanResult(runtime,data.svg,data.minArea,data.tolerance,data.protect);self.postMessage({postClean:result,requestId:data.requestId});return;}
   if(data.operation==='postSmooth'){const result=await smoothResult(runtime,data.svg,data.strength,data.sharp);self.postMessage({postSmooth:result,requestId:data.requestId});return;}
   if(data.operation==='analyze'){self.postMessage({analysis:runtime.analyze(new Uint8Array(data.pixels),data.width,data.height),requestId:data.requestId});return;}

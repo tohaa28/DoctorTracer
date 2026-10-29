@@ -8,6 +8,7 @@ export default async function createTracer({wasmBinary,onProgress=()=>{}}={}){
  return {
   logoPrepare(pixels,w,h,inks){palette(inks);const p=input(pixels);try{const ptr=api.logo_prepare(p,w,h);return ptr?{mask:output(ptr),...this.stats()}:null;}finally{api.dealloc(p,pixels.byteLength);}},
   logoFinish(data){const bytes=new TextEncoder().encode(data),p=input(bytes);try{return output(api.logo_finish(p,bytes.length),true);}finally{api.dealloc(p,bytes.length);}},
+  regularize(svg,tolerance=.15,straight=true,curved=true,protect=true){const bytes=new TextEncoder().encode(svg),p=input(bytes);try{const flags=(straight?1:0)|(curved?2:0)|(protect?4:0);const value=output(api.result_regularize(p,bytes.length,tolerance,flags),true);return{svg:value,...this.stats()};}finally{api.dealloc(p,bytes.length);}},
   postClean(svg,minArea=4,tolerance=.25,protect=true){const bytes=new TextEncoder().encode(svg),p=input(bytes);try{const value=output(api.result_clean(p,bytes.length,minArea,tolerance,protect?1:0),true);return{svg:value,...this.stats()};}finally{api.dealloc(p,bytes.length);}},
   postSmooth(svg,strength=35,sharp=true){const bytes=new TextEncoder().encode(svg),p=input(bytes);try{const value=output(api.result_smooth(p,bytes.length,strength,sharp?1:0),true);return{svg:value,...this.stats()};}finally{api.dealloc(p,bytes.length);}},
   analyze(pixels,w,h){const p=input(pixels);try{return JSON.parse(output(api.analyze_rgba(p,w,h),true));}finally{api.dealloc(p,pixels.length);}},
