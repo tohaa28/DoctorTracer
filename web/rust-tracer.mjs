@@ -6,6 +6,8 @@ export default async function createTracer({wasmBinary,onProgress=()=>{}}={}){
  function palette(values=[]){if(!values.length){api.set_palette(0,0);return;}const data=new Uint8Array(values.flatMap(c=>typeof c==='string'?c.replace('#','').match(/../g).map(v=>parseInt(v,16)):Array.from(c)));const p=input(data);try{api.set_palette(p,values.length);}finally{api.dealloc(p,data.length);}}
  function output(pointer,text=false){if(!pointer)throw Error('Некорректные параметры трассировки');const bytes=new Uint8Array(api.memory.buffer,pointer,api.result_len());return text?decode.decode(bytes):bytes.slice();}
  return {
+  logoPrepare(pixels,w,h,inks){palette(inks);const p=input(pixels);try{const ptr=api.logo_prepare(p,w,h);return ptr?{mask:output(ptr),...this.stats()}:null;}finally{api.dealloc(p,pixels.byteLength);}},
+  logoFinish(data){const bytes=new TextEncoder().encode(data),p=input(bytes);try{return output(api.logo_finish(p,bytes.length),true);}finally{api.dealloc(p,bytes.length);}},
   postClean(svg,minArea=4,tolerance=.25,protect=true){const bytes=new TextEncoder().encode(svg),p=input(bytes);try{const value=output(api.result_clean(p,bytes.length,minArea,tolerance,protect?1:0),true);return{svg:value,...this.stats()};}finally{api.dealloc(p,bytes.length);}},
   postSmooth(svg,strength=35,sharp=true){const bytes=new TextEncoder().encode(svg),p=input(bytes);try{const value=output(api.result_smooth(p,bytes.length,strength,sharp?1:0),true);return{svg:value,...this.stats()};}finally{api.dealloc(p,bytes.length);}},
   analyze(pixels,w,h){const p=input(pixels);try{return JSON.parse(output(api.analyze_rgba(p,w,h),true));}finally{api.dealloc(p,pixels.length);}},

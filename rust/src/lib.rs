@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Desktop photographic algorithm port. Pixels remain in a dedicated Web Worker.
 mod post_smooth;
-mod post_clean;mod shared_contract;mod joint_palette;mod raster_refit;mod edge_fit;mod desktop_filters;mod desktop_palette;mod desktop_regions;mod desktop_shared;
+mod post_clean;mod logo;mod shared_contract;mod joint_palette;mod raster_refit;mod edge_fit;mod desktop_filters;mod desktop_palette;mod desktop_regions;mod desktop_shared;
 use std::cell::RefCell;
 thread_local!{static RESULT:RefCell<Vec<u8>>=const{RefCell::new(Vec::new())};static PALETTE:RefCell<Vec<[u8;3]>>=const{RefCell::new(Vec::new())};static STATS:RefCell<Vec<u8>>=const{RefCell::new(Vec::new())};static SEGMENT:RefCell<Vec<u8>>=const{RefCell::new(Vec::new())};static LAST:RefCell<Option<(Vec<i32>,Vec<[u8;3]>,usize,usize,usize)>>=const{RefCell::new(None)};}
 #[cfg(target_arch="wasm32")]#[link(wasm_import_module="env")]extern "C"{fn progress(value:u32,stage:u32);}
@@ -102,3 +102,9 @@ fn raster_pass(svg:String,a:&[u8],w:usize,h:usize)->String{
   Err(_)=>std::ptr::null()
  }
 }
+
+thread_local!{static LOGO:RefCell<Option<logo::Plan>>=RefCell::new(None);}
+#[no_mangle]pub unsafe extern "C" fn logo_prepare(p:*const u8,w:usize,h:usize)->*const u8{
+ LOGO.with(|r|*r.borrow_mut()=None);if p.is_null()||!valid(w,h){return std::ptr::null();}let source=std::slice::from_raw_parts(p,w*h*4);let palette=PALETTE.with(|r|r.borrow().clone());let Some(plan)=logo::prepare(source,w,h,&palette)else{return std::ptr::null();};let mask=plan.mask.clone();STATS.with(|r|*r.borrow_mut()=format!("{{\"ellipse_rings\":{},\"stars\":{},\"scale\":8}}",plan.rings.len(),plan.stars.len()).into_bytes());LOGO.with(|r|*r.borrow_mut()=Some(plan));store(mask)
+}
+#[no_mangle]pub unsafe extern "C" fn logo_finish(p:*const u8,n:usize)->*const u8{if p.is_null()||n>32000000{return std::ptr::null();}let Ok(d)=std::str::from_utf8(std::slice::from_raw_parts(p,n))else{return std::ptr::null();};let result=LOGO.with(|r|r.borrow().as_ref().and_then(|plan|logo::finish(plan,d)));match result{Some(svg)=>store(svg.into_bytes()),None=>std::ptr::null()}}

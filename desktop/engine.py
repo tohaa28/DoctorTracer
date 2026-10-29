@@ -177,6 +177,11 @@ def trace_graphic(path,cfg):
     aa=cfg.get('category','aa')=='aa'
     report(cfg,8,'Подготовка изображения');metrics={};stage=time.perf_counter()
     source=load_source(path,{**cfg,'_metrics':metrics})
+    if aa and cfg.get('detail',1)==2 and cfg.get('mode','spline')=='spline' and cfg.get('logo_reconstruction',True):
+        palette=([[int(c[i:i+2],16)for i in (1,3,5)]for c in cfg['palette']] if cfg.get('palette') else find_palette(source[0],cfg.get('colors',0)))
+        from logo_trace import trace as reconstruct_logo
+        candidate=reconstruct_logo(source[0],palette)
+        if candidate is not None:return candidate
     # Alpha and every ink are faces of one common boundary graph.
     layered=aa and cfg.get('shape_strategy','auto')!='independent' and bool(np.any(source[0][:,:,3]<128)) and 'supersample' not in cfg
     supersample=1 if layered else cfg.get('supersample',2 if aa else 1)

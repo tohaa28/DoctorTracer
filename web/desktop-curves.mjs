@@ -16,6 +16,10 @@ export async function traceFixed(runtime,pixels,w,h,config,progress=()=>{}){
  const photo=config.category==='photo',aa=config.category==='aa';let a=pixels;
  if(!config.prefiltered&&(photo||config.detail===0))a=runtime.stage(a,w,h,{kind:0});
  const raw=config.palette?.length?config.palette:runtime.stage(a,w,h,{kind:2,colors:config.colors,extra:photo?1:0});const palette=Array.isArray(raw)?raw.map(c=>typeof c==='string'?c.slice(1).match(/../g).map(v=>parseInt(v,16)):c):Array.from({length:raw.length/3},(_,i)=>Array.from(raw.slice(i*3,i*3+3)));
+ if(aa&&config.detail===2&&!config.polygon&&config.logo_reconstruction!==false&&palette.length===2){
+  progress(12,'Восстановление тонких линий и геометрических форм');const plan=runtime.logoPrepare(a,w,h,palette);
+  if(plan){const{mask}=await curveRuntime();const path=traceMask(mask,plan.mask,w*8,h*8,.4,.85);try{const svg=runtime.logoFinish(path);const geometry=await auditNative(svg);return{svg,palette,geometry,segments:a,algorithm:'source-fitted two-ink shared interfaces',logo_reconstruction:{ellipse_rings:plan.ellipse_rings,stars:plan.stars,scale:plan.scale}};}catch{}}
+ }
  const layered=aa&&a.some((v,i)=>i%4===3&&v<128),scale=aa&&!layered&&w*h<=2000000&&w<=2048&&h<=2048?2:1;const working=scale===2?runtime.stage(a,w,h,{kind:6}):a,ww=w*scale,hh=h*scale;
  let labels=config.gpu&&photo?await gpuAssign(working,ww,hh,palette,700):null;labels??=runtime.stage(working,ww,hh,{kind:3,palette,extra:photo?700:aa?(65536|((3*scale)<<17)):0});labels=runtime.stage(labels,ww,hh,{kind:4,palette,colors:palette.length,extra:(photo?Math.max(8,config.speckle):Math.max(1,config.speckle))|((config.artifact_strength??0)<<16)});
  // A single planar graph owns every interface. Never fit adjacent color
