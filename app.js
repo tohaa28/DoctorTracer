@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import {icon} from './icons.js?v=0.20.0';
-import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs?v=0.20.0';
-import {zip} from './zip.mjs?v=0.20.0';
-import {opaqueCount,paletteKey,paintPalette,transparentSwatch,latestSelection} from './palette-ui.mjs?v=0.20.0';
-import {partitionPreview} from './preview.mjs?v=0.20.0';
+import {icon} from './icons.js?v=0.20.1';
+import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs?v=0.20.1';
+import {zip} from './zip.mjs?v=0.20.1';
+import {opaqueCount,paletteKey,paintPalette,transparentSwatch,latestSelection} from './palette-ui.mjs?v=0.20.1';
+import {partitionPreview} from './preview.mjs?v=0.20.1';
 const $=id=>document.getElementById(id);
 const hasTransparentSlot=()=>sourceHasAlpha&&!config.flatten;
 const defaults=()=>({mode:'basic',category:'photo',detail:2,colors:0,speckle:2,flatten:false,polygon:false,gpu:true});
@@ -78,10 +78,10 @@ function readConfig(){
 }
 
 function display(vector=false){
- const img=$('preview');img.src=vector&&vectorUrl?vectorUrl:sourceUrl;img.hidden=!source;img.style.width=source?Math.round(source.width*Number($('zoom').value)/100)+'px':'';
- $('zoomValue').textContent=$('zoom').value+'%';view=vector?'vector':'bitmap';$('bitmap').setAttribute('aria-pressed',String(!vector));$('vector').setAttribute('aria-pressed',String(vector));$('empty').hidden=!!source;
+ const img=$('preview');if(!(vector&&svg&&!$('outlines').checked&&svg.includes('data-shared-boundaries')))img.src=vector&&vectorUrl?vectorUrl:sourceUrl;img.hidden=!source;img.style.width=source?(source.width*Number($('zoom').value)/100)+'px':'';
+ $('zoomValue').textContent=Number($('zoom').value).toFixed(1).replace(/\.0$/,'')+'%';view=vector?'vector':'bitmap';$('bitmap').setAttribute('aria-pressed',String(!vector));$('vector').setAttribute('aria-pressed',String(vector));$('empty').hidden=!!source;
  if(vector&&svg&&$('outlines').checked){if(!outlineUrl){const doc=new DOMParser().parseFromString(svg,'image/svg+xml');for(const g of doc.querySelectorAll('g'))g.setAttribute('fill','none');for(const p of doc.querySelectorAll('path')){p.setAttribute('fill','none');p.setAttribute('stroke','#143d61');p.setAttribute('stroke-width','.5');}outlineUrl=URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(doc)],{type:'image/svg+xml'}));}img.src=outlineUrl;}
- if(vector&&svg&&!$('outlines').checked&&svg.includes('data-shared-boundaries'))renderJointPreview();else{img.classList.remove('joint-preview');img.style.transform='translate('+panX+'px,'+panY+'px)';}
+ if(vector&&svg&&!$('outlines').checked&&svg.includes('data-shared-boundaries')){img.hidden=true;jointCanvas.hidden=false;queueJointPreview();}else{previewToken++;jointCanvas.hidden=true;img.classList.remove('joint-preview');img.style.transform='translate('+panX+'px,'+panY+'px)';}
 }
 function fit(){if(!source)return;const v=$('viewport');panX=0;panY=0;$('zoom').value=Math.max(10,Math.min(800,Math.floor(100*Math.min((v.clientWidth-2)/source.width,(v.clientHeight-2)/source.height))));refreshView();}
 function updateProgress(){if($('progress')){$('progress').value=progress;$('processingStage').textContent=stage;$('percent').textContent=progress+'%';}status(stage+' · '+progress+'%');}
@@ -90,7 +90,7 @@ async function run(){
  if(config.colors>0&&!config.palette?.length&&hasTransparentSlot()){try{const generation=loadToken,palette=await requestPalette(config.colors);if(generation!==loadToken||!busy)return;config.palette=palette;config.palette_generated=true;}catch(error){busy=false;step=pageHistory.pop()??4;show();status(error.message);return;}}
  const canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;const context=canvas.getContext('2d',{willReadFrequently:true});
  if(config.flatten){context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);}context.drawImage(source,0,0);const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
- worker??=new Worker(new URL('./worker.js?v=0.20.0',import.meta.url),{type:'module'});
+ worker??=new Worker(new URL('./worker.js?v=0.20.1',import.meta.url),{type:'module'});
  worker.onmessage=({data})=>{
   if(data.progress!==undefined){progress=data.progress;stage=data.stage;updateProgress();return;}
   busy=false;if(data.error){worker?.terminate();worker=null;status(data.error);step=pageHistory.pop()??0;show();return;}svg=data.svg;vectorUndo=[];vectorRedo=[];elapsed=data.seconds;backend=data.backend;panX=0;panY=0;if(data.segments)awaitSegments(data.segments);$('segments').hidden=!data.segments;
@@ -127,8 +127,12 @@ window.addEventListener('resize',()=>{if(source)fit();});
 // Avoid exporting a result for settings that have just been edited.
 document.addEventListener('keydown',e=>{if(document.querySelector('#postSmoothDialog[open]')){if(e.ctrlKey&&['s','o'].includes(e.key.toLowerCase()))e.preventDefault();return;}if(e.ctrlKey&&e.key.toLowerCase()==='o'){e.preventDefault();$('file').click();return;}if(e.ctrlKey&&e.key.toLowerCase()==='s'){e.preventDefault();save();return;}if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;if(step===8||step===9){if(e.key.toLowerCase()==='d'){editTool='cut';show();}if(e.key.toLowerCase()==='a'){editTool='pan';show();}if(e.key.toLowerCase()==='z'&&vectorUndo.length){vectorRedo.push(svg);applyVector(vectorUndo.pop(),false);}if(e.key.toLowerCase()==='y'&&vectorRedo.length){vectorUndo.push(svg);applyVector(vectorRedo.pop(),false);}}if(e.key.toLowerCase()==='b')display(false);if(e.key.toLowerCase()==='v'&&svg)display(true);if(e.key==='Escape'&&busy){cancel();status('Трассировка отменена');}});show();
 
+const jointCanvas=document.createElement('canvas');jointCanvas.id='jointCanvas';jointCanvas.hidden=true;$('viewport').append(jointCanvas);
+let jointFrame=0;
+function queueJointPreview(){previewToken++;if(!jointFrame)jointFrame=requestAnimationFrame(()=>{jointFrame=0;renderJointPreview();});}
 async function renderJointPreview(){
- const token=++previewToken,v=$('viewport');try{const blob=await partitionPreview(svg,source.width,source.height,{viewWidth:Math.max(1,v.clientWidth),viewHeight:Math.max(1,v.clientHeight),zoom:Number($('zoom').value)/100,panX,panY});if(token!==previewToken||view!=='vector'||$('outlines').checked)return;const url=URL.createObjectURL(blob);const img=$('preview');img.classList.add('joint-preview');img.style.transform='none';img.src=url;setTimeout(()=>URL.revokeObjectURL(url),60000);}catch(error){status('Предпросмотр: '+error.message);}
+ const token=previewToken,v=$('viewport');if(!source)return;
+ try{const canvas=await partitionPreview(svg,source.width,source.height,{viewWidth:Math.max(1,v.clientWidth),viewHeight:Math.max(1,v.clientHeight),zoom:Number($('zoom').value)/100,panX,panY,canvasOnly:true});if(token!==previewToken||view!=='vector'||$('outlines').checked)return;jointCanvas.width=canvas.width;jointCanvas.height=canvas.height;jointCanvas.getContext('2d').drawImage(canvas,0,0);}catch(error){status('Предпросмотр: '+error.message);}
 }
 async function awaitSegments(buffer){
  if(segmentUrl)URL.revokeObjectURL(segmentUrl);const c=document.createElement('canvas');c.width=source.width;c.height=source.height;c.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(buffer),c.width,c.height),0,0);segmentUrl=URL.createObjectURL(await new Promise(r=>c.toBlob(r)));
@@ -167,13 +171,15 @@ function buildExport(parent,add){
 async function pasteImage(){try{for(const item of await navigator.clipboard.read()){const type=item.types.find(t=>t.startsWith('image/'));if(type){const blob=await item.getType(type);await load(new File([blob],'clipboard.png',{type}));return;}}status('В буфере обмена нет изображения.');}catch(error){status('Вставка из буфера: '+error.message);}}
 const batchInput=document.createElement('input');batchInput.type='file';batchInput.multiple=true;batchInput.accept='image/png,image/jpeg,image/webp,image/bmp';batchInput.hidden=true;document.body.append(batchInput);batchInput.onchange=()=>runBatch(Array.from(batchInput.files));
 $('about').onclick=()=>$('helpDialog').showModal();$('more').onclick=()=>{$('computeGpu').checked=config.gpu;$('computeCpu').checked=!config.gpu;$('advancedSettings').disabled=!source;$('settingsDialog').showModal();};$('closeSettings').onclick=()=>$('settingsDialog').close();$('computeGpu').onchange=()=>{config.gpu=true;if($('gpu'))$('gpu').checked=true;};$('computeCpu').onchange=()=>{config.gpu=false;if($('gpu'))$('gpu').checked=false;};$('advancedSettings').onclick=()=>{$('settingsDialog').close();config.mode='advanced';config.colors=config.colors||recommendedPaletteCount;go(7);};
-$('segments').onclick=()=>{if(!segmentUrl)return;view='segments';previewToken++;$('preview').classList.remove('joint-preview');$('preview').src=segmentUrl;$('preview').style.transform='translate('+panX+'px,'+panY+'px)';$('bitmap').setAttribute('aria-pressed','false');$('vector').setAttribute('aria-pressed','false');};
+$('segments').onclick=()=>{if(!segmentUrl)return;view='segments';previewToken++;jointCanvas.hidden=true;$('preview').hidden=false;$('preview').classList.remove('joint-preview');$('preview').src=segmentUrl;$('preview').style.transform='translate('+panX+'px,'+panY+'px)';$('bitmap').setAttribute('aria-pressed','false');$('vector').setAttribute('aria-pressed','false');};
 for(const b of document.querySelectorAll('[data-pan]'))b.onclick=()=>{if(b.dataset.pan==='fit'){fit();return;}const [x,y]=b.dataset.pan.split(',').map(Number);panX+=x;panY+=y;refreshView();};
-let panStart;const viewport=$('viewport');viewport.onpointerdown=e=>{if(!source||e.target.closest('button'))return;if((step===8||step===9)&&editTool==='cut'){removeVectorAt(e.clientX,e.clientY);return;}panStart=[e.clientX,e.clientY,panX,panY];viewport.setPointerCapture(e.pointerId);};viewport.onpointermove=e=>{if(!panStart)return;panX=panStart[2]+e.clientX-panStart[0];panY=panStart[3]+e.clientY-panStart[1];refreshView();};viewport.onpointerup=()=>{panStart=null;};
+let panStart;const viewport=$('viewport');viewport.onpointerdown=e=>{if(!source||e.button!==0||e.target.closest('button'))return;e.preventDefault();if((step===8||step===9)&&editTool==='cut'){removeVectorAt(e.clientX,e.clientY);return;}panStart=[e.clientX,e.clientY,panX,panY];viewport.setPointerCapture(e.pointerId);};viewport.onpointermove=e=>{if(!panStart)return;panX=panStart[2]+e.clientX-panStart[0];panY=panStart[3]+e.clientY-panStart[1];refreshView();};viewport.onpointerup=viewport.onpointercancel=viewport.onlostpointercapture=()=>{panStart=null;};
+viewport.addEventListener('wheel',e=>{if(!source)return;e.preventDefault();const r=viewport.getBoundingClientRect(),old=Number($('zoom').value),delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?r.height:1),next=Math.max(10,Math.min(800,old*Math.exp(-delta*.0015)));$('zoom').value=next;const ratio=Number($('zoom').value)/old,x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2;panX=x-(x-panX)*ratio;panY=y-(y-panY)*ratio;refreshView();},{passive:false});
+new ResizeObserver(()=>{if(source)refreshView();}).observe(viewport);
 
 let batchAbort=null;
 async function runBatch(files){
- if(!files.length||busy)return;const options=structuredClone(config),result=[];busy=true;step=5;progress=0;stage='Пакетная Обработка';show();const batchWorker=new Worker(new URL('./worker.js?v=0.20.0',import.meta.url),{type:'module'});let aborted=false,rejectJob;
+ if(!files.length||busy)return;const options=structuredClone(config),result=[];busy=true;step=5;progress=0;stage='Пакетная Обработка';show();const batchWorker=new Worker(new URL('./worker.js?v=0.20.1',import.meta.url),{type:'module'});let aborted=false,rejectJob;
  batchAbort=()=>{aborted=true;batchWorker.terminate();rejectJob?.(Error('Трассировка отменена'));};
  try{for(const [index,file] of files.entries()){if(aborted)break;const image=await createImageBitmap(file),scale=Math.min(1,2400/Math.max(image.width,image.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(image.width*scale));c.height=Math.max(1,Math.round(image.height*scale));const ctx=c.getContext('2d');if(options.flatten){ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);}ctx.drawImage(image,0,0,c.width,c.height);image.close();const pixels=ctx.getImageData(0,0,c.width,c.height).data;
  const traced=await new Promise((resolve,reject)=>{rejectJob=reject;batchWorker.onerror=e=>reject(Error(e.message));batchWorker.onmessage=({data})=>{if(data.progress!==undefined){progress=Math.floor((index+data.progress/100)/files.length*100);stage=(index+1)+' / '+files.length+' · '+data.stage;updateProgress();}else if(data.error)reject(Error(data.error));else resolve(data.svg);};batchWorker.postMessage({pixels:pixels.buffer,width:c.width,height:c.height,...options},[pixels.buffer]);});
@@ -195,7 +201,7 @@ function buildVectorEditor(parent){
 }
 
 function paletteService(){
- if(!paletteWorker){paletteWorker=new Worker(new URL('./worker.js?v=0.20.0',import.meta.url),{type:'module'});paletteWorker.onmessage=({data})=>{if(data.requestId!==undefined&&(data.palette||data.analysis||data.error)){const resolve=pendingPalettes.get(data.requestId);pendingPalettes.delete(data.requestId);resolve?.(data.palette||data.analysis||null);}};}return paletteWorker;
+ if(!paletteWorker){paletteWorker=new Worker(new URL('./worker.js?v=0.20.1',import.meta.url),{type:'module'});paletteWorker.onmessage=({data})=>{if(data.requestId!==undefined&&(data.palette||data.analysis||data.error)){const resolve=pendingPalettes.get(data.requestId);pendingPalettes.delete(data.requestId);resolve?.(data.palette||data.analysis||null);}};}return paletteWorker;
 }
 async function analyzeSource(){
  const c=document.createElement('canvas'),scale=Math.min(1,900/Math.max(source.width,source.height));c.width=Math.max(1,Math.round(source.width*scale));c.height=Math.max(1,Math.round(source.height*scale));const ctx=c.getContext('2d');ctx.drawImage(source,0,0,c.width,c.height);const pixels=ctx.getImageData(0,0,c.width,c.height).data,id=++requestId,promise=new Promise(resolve=>pendingPalettes.set(id,resolve));paletteService().postMessage({operation:'analyze',requestId:id,pixels:pixels.buffer,width:c.width,height:c.height},[pixels.buffer]);return promise;
@@ -216,7 +222,7 @@ function openPostSmooth(cleanup=false,regularize=false){
  if(regularize){dialog.querySelector('h3').textContent='Выравнивание контуров';dialog.querySelector('p').textContent='Подгонка длинных общих участков целиком. Более высокий допуск сильнее меняет форму.';dialog.querySelector('#postStrength').max=200;dialog.querySelector('#postStrength').value=15;const options=document.createElement('p');options.innerHTML='<label><input id="postStraight" type="checkbox" checked> Выпрямлять почти прямые участки</label><br><label><input id="postCurved" type="checkbox" checked> Выравнивать плавные кривые</label>';dialog.querySelector('#postSharp').closest('p').before(options);dialog.querySelector('#postSharp').parentElement.lastChild.textContent=' Сохранять углы и мелкие детали';}
  document.body.append(dialog);const range=dialog.querySelector('#postStrength'),sharp=dialog.querySelector('#postSharp'),preview=dialog.querySelector('#postPreview'),info=dialog.querySelector('#postInfo'),apply=dialog.querySelector('#postApply');
  const area=dialog.querySelector('#postArea');if(cleanup||regularize){range.parentElement.firstChild.textContent=regularize?'Допуск изменения формы: ':'Допуск упрощения: ';range.setAttribute('aria-label',regularize?'Допуск изменения формы':'Допуск упрощения');}
- const service=new Worker(new URL('./worker.js?v=0.20.0',import.meta.url),{type:'module'});
+ const service=new Worker(new URL('./worker.js?v=0.20.1',import.meta.url),{type:'module'});
  function paint(value){svg=value;if(vectorUrl)URL.revokeObjectURL(vectorUrl);if(outlineUrl)URL.revokeObjectURL(outlineUrl);outlineUrl='';vectorUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));display(true);}
  function draw(){paint(preview.checked?candidate:base);}
  function schedule(){token++;apply.disabled=true;dialog.querySelector('output').textContent=(cleanup||regularize)?(Number(range.value)/100).toFixed(2)+' пкс':range.value+'%';info.textContent='Расчёт предпросмотра…';clearTimeout(timer);timer=setTimeout(()=>service.postMessage({operation:regularize?'regularize':cleanup?'postClean':'postSmooth',svg:base,strength:Number(range.value),sharp:sharp.checked,minArea:area?Math.max(0,Math.min(10000,Number(area.value))):0,tolerance:Number(range.value)/100,protect:sharp.checked,straight:dialog.querySelector('#postStraight')?.checked,curved:dialog.querySelector('#postCurved')?.checked,requestId:token}),180);}

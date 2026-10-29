@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Exact dyadic shared-grid diffusion: integer arithmetic avoids float32 drift.
-import {gpuDevice} from './gpu.js?v=0.20.0';
+import {gpuDevice} from './gpu.js?v=0.20.1';
 const shader=`
 struct Params{w:u32,h:u32,scale:u32,n:u32}
 @group(0) @binding(0) var<storage,read> labels:array<i32>;
