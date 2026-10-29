@@ -120,7 +120,7 @@ $('file').onchange=e=>{if(e.target.files[0])load(e.target.files[0]);e.target.val
 $('demo').onclick=async()=>{const blob=await (await fetch(new URL('./demo.png',import.meta.url))).blob();await load(new File([blob],'Пример.png',{type:'image/png'}));};
 $('next').onclick=()=>{if(step===6)save();else if(step===5){go(6);}else if(config.mode==='auto'||step===7)run();else if(step===8||step===9){go(5);}else if(step===4){config.colors=0;run();}else go(step===1?(sourceHasAlpha?2:3):step+1);};
 $('back').onclick=()=>{if(busy){cancel();status('Трассировка отменена');return;}if(readConfig()){step=pageHistory.pop()??(step===7?4:Math.max(0,step-1));show();}};$('home').onclick=()=>{pageHistory=[];step=source?0:-1;show();};
-$('bitmap').onclick=()=>display(false);$('vector').onclick=()=>display(true);$('zoom').oninput=()=>refreshView();$('fit').onclick=fit;$('outlines').onchange=()=>{if(!svg)$('outlines').checked=false;display(!!svg);};
+$('bitmap').onclick=()=>display(false);$('vector').onclick=()=>display(true);$('zoom').oninput=()=>{const ratio=Number($('zoom').value)/previousZoom;panX*=ratio;panY*=ratio;refreshView();};$('fit').onclick=fit;$('outlines').onchange=()=>{if(!svg)$('outlines').checked=false;display(!!svg);};
 $('help').onclick=()=>$('helpDialog').showModal();$('closeHelp').onclick=()=>$('helpDialog').close();
 $('viewport').ondragover=e=>e.preventDefault();$('viewport').ondrop=e=>{e.preventDefault();if(e.dataTransfer.files[0])load(e.dataTransfer.files[0]);};
 window.addEventListener('resize',()=>{if(source)fit();});
@@ -207,7 +207,8 @@ async function analyzeSource(){
  const c=document.createElement('canvas'),scale=Math.min(1,900/Math.max(source.width,source.height));c.width=Math.max(1,Math.round(source.width*scale));c.height=Math.max(1,Math.round(source.height*scale));const ctx=c.getContext('2d');ctx.drawImage(source,0,0,c.width,c.height);const pixels=ctx.getImageData(0,0,c.width,c.height).data,id=++requestId,promise=new Promise(resolve=>pendingPalettes.set(id,resolve));paletteService().postMessage({operation:'analyze',requestId:id,pixels:pixels.buffer,width:c.width,height:c.height},[pixels.buffer]);return promise;
 }
 
-function refreshView(){if(view==='segments'){$('segments').click();const zoom=Number($('zoom').value)/100;$('preview').style.width=source.width*zoom+'px';$('preview').style.height=source.height*zoom+'px';}else display(view==='vector');}
+let previousZoom=100;
+function refreshView(){previousZoom=Number($('zoom').value);$('zoomValue').textContent=previousZoom.toFixed(1).replace(/\.0$/,'')+'%';if(view==='segments'){$('segments').click();const zoom=Number($('zoom').value)/100;$('preview').style.width=source.width*zoom+'px';$('preview').style.height=source.height*zoom+'px';}else display(view==='vector');}
 
 function postSmoothTools(parent){
  const box=document.createElement('fieldset');box.innerHTML='<legend>Готовый вектор</legend>';
