@@ -1,0 +1,286 @@
+{
+  "versions": {
+    "windows": "0.18.0-preview",
+    "wasm": "0.20.0-wasm-preview"
+  },
+  "same_input_svg_byte_identical": true,
+  "cases": [
+    {
+      "name": "wave",
+      "tolerance": 0.15,
+      "straight": true,
+      "curved": true,
+      "protect": true,
+      "stats": {
+        "nodes_before": 86,
+        "nodes_after": 8,
+        "straightened": 1,
+        "curves_fitted": 0,
+        "applied_tolerance": 0.15,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.13179689995013177
+    },
+    {
+      "name": "wave-zero",
+      "tolerance": 0,
+      "straight": true,
+      "curved": true,
+      "protect": true,
+      "stats": {
+        "nodes_before": 86,
+        "nodes_after": 86,
+        "straightened": 0,
+        "curves_fitted": 0,
+        "applied_tolerance": 0.0,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 1,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.001114899991080165
+    },
+    {
+      "name": "disabled",
+      "tolerance": 0.15,
+      "straight": false,
+      "curved": false,
+      "protect": true,
+      "stats": {
+        "nodes_before": 86,
+        "nodes_after": 86,
+        "straightened": 0,
+        "curves_fitted": 0,
+        "applied_tolerance": 0.15,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 1,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.000773100065998733
+    },
+    {
+      "name": "curve",
+      "tolerance": 0.2,
+      "straight": false,
+      "curved": true,
+      "protect": true,
+      "stats": {
+        "nodes_before": 33,
+        "nodes_after": 5,
+        "straightened": 0,
+        "curves_fitted": 2,
+        "applied_tolerance": 0.2,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.0008024000562727451
+    },
+    {
+      "name": "star",
+      "tolerance": 0.3,
+      "straight": true,
+      "curved": true,
+      "protect": true,
+      "stats": {
+        "nodes_before": 10,
+        "nodes_after": 10,
+        "straightened": 0,
+        "curves_fitted": 0,
+        "applied_tolerance": 0.3,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.0002590999938547611
+    },
+    {
+      "name": "tiny",
+      "tolerance": 0.3,
+      "straight": true,
+      "curved": true,
+      "protect": true,
+      "stats": {
+        "nodes_before": 4,
+        "nodes_after": 4,
+        "straightened": 0,
+        "curves_fitted": 0,
+        "applied_tolerance": 0.3,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.00019399996381253004
+    },
+    {
+      "name": "bow",
+      "tolerance": 0.15,
+      "straight": true,
+      "curved": false,
+      "protect": true,
+      "stats": {
+        "nodes_before": 4,
+        "nodes_after": 4,
+        "straightened": 1,
+        "curves_fitted": 0,
+        "applied_tolerance": 0.15,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.00019269995391368866
+    },
+    {
+      "name": "bow-keep",
+      "tolerance": 0.15,
+      "straight": false,
+      "curved": true,
+      "protect": true,
+      "stats": {
+        "nodes_before": 4,
+        "nodes_after": 4,
+        "straightened": 0,
+        "curves_fitted": 0,
+        "applied_tolerance": 0.15,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.0002946000313386321
+    },
+    {
+      "name": "long-wave",
+      "tolerance": 0.15,
+      "straight": true,
+      "curved": true,
+      "protect": true,
+      "stats": {
+        "nodes_before": 2006,
+        "nodes_after": 8,
+        "straightened": 1,
+        "curves_fitted": 0,
+        "applied_tolerance": 0.15,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.010469399974681437
+    },
+    {
+      "name": "thin-guard",
+      "tolerance": 0.3,
+      "straight": true,
+      "curved": true,
+      "protect": true,
+      "stats": {
+        "nodes_before": 80,
+        "nodes_after": 2,
+        "straightened": 0,
+        "curves_fitted": 2,
+        "applied_tolerance": 0.075,
+        "limited": true,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.001150700030848384
+    },
+    {
+      "name": "junction",
+      "tolerance": 0.15,
+      "straight": true,
+      "curved": true,
+      "protect": true,
+      "stats": {
+        "nodes_before": 61,
+        "nodes_after": 13,
+        "straightened": 1,
+        "curves_fitted": 0,
+        "applied_tolerance": 0.15,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.0004296000115573406
+    },
+    {
+      "name": "nf",
+      "tolerance": 0.15,
+      "straight": true,
+      "curved": true,
+      "protect": true,
+      "stats": {
+        "nodes_before": 720,
+        "nodes_after": 432,
+        "straightened": 28,
+        "curves_fitted": 47,
+        "applied_tolerance": 0.15,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 1,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.03366299998015165
+    }
+  ],
+  "nf_pdf_comparison": {
+    "before": {
+      "foreground_iou": 0.9665100612463705,
+      "xor_pixels": 14556
+    },
+    "after": {
+      "foreground_iou": 0.966699940658825,
+      "xor_pixels": 14478
+    }
+  },
+  "ui_tests": [
+    "preview",
+    "cancel",
+    "apply and undo snapshot",
+    "zero tolerance",
+    "closing during calculation"
+  ],
+  "regressions": [
+    "post_clean",
+    "post_smooth",
+    "shared_contract",
+    "aa_support",
+    "pdf_color_groups",
+    "existing postprocessing dialogs"
+  ]
+}

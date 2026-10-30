@@ -7,9 +7,10 @@ from PIL import Image,ImageDraw
 from PySide6.QtCore import Qt,QRectF,QSize,QPointF,QByteArray,Signal,QTimer
 from PySide6.QtGui import QPainter,QColor,QPen,QFont,QPixmap,QImage,QLinearGradient,QRadialGradient,QPainterPath,QPolygonF,QAction,QKeySequence,QIcon
 from PySide6.QtWidgets import QApplication,QWidget,QPushButton,QLabel,QFrame,QVBoxLayout,QHBoxLayout,QGridLayout,QScrollArea,QGroupBox,QComboBox,QSpinBox,QSlider,QCheckBox,QFileDialog,QMessageBox,QColorDialog,QMenu,QListWidget,QListWidgetItem,QProgressBar
-from PySide6.QtSvg import QSvgRenderer
+from vector_render import QSvgRenderer
 from legacy import MainWindow as ServiceWindow,Canvas as BaseCanvas
 from engine import analyze_image,segment,find_palette
+from palette_ui import transparency_slot,transparent_swatch
 
 STYLE='''
 QWidget {font-family:Tahoma;font-size:12px;color:#101010;}
@@ -36,57 +37,8 @@ QSlider::groove:vertical {background:#aaa;width:4px;}
 QSlider::handle:vertical {background:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 #aaa,stop:1 #ddd);border:1px solid #888;height:14px;margin:0 -7px;border-radius:4px;}
 '''
 
-def icon(kind):
-    """Original drawings, without artwork copied from the proprietary executable."""
-    im=QPixmap(100,90);im.fill(Qt.white);p=QPainter(im);p.setRenderHint(QPainter.Antialiasing)
-    def gradient(rect,top,bottom):
-        g=QLinearGradient(rect.topLeft(),rect.bottomLeft());g.setColorAt(0,QColor(top));g.setColorAt(1,QColor(bottom));return g
-    p.setPen(QPen(QColor('#55676b'),2))
-    if kind=='folder':
-        p.setBrush(QColor('#a8cec8'));p.drawRoundedRect(QRectF(7,9,80,65),5,5)
-        p.setBrush(QColor('#ecdfa5'));p.drawPolygon(QPolygonF([QPointF(12,22),QPointF(37,22),QPointF(43,29),QPointF(91,29),QPointF(84,79),QPointF(15,70)]))
-        p.setBrush(gradient(QRectF(10,30,81,50),'#c4e8e5','#46787e'));p.drawPolygon(QPolygonF([QPointF(10,30),QPointF(39,35),QPointF(49,30),QPointF(91,38),QPointF(84,79),QPointF(15,70)]));p.setPen(QPen(Qt.white,2));p.drawLine(19,44,78,53)
-    elif kind=='clipboard':
-        p.setBrush(gradient(QRectF(17,9,68,75),'#d6b189','#8a633b'));p.drawRoundedRect(QRectF(17,9,68,75),6,6);p.setBrush(Qt.white);p.drawRect(24,22,54,53)
-        p.setBrush(gradient(QRectF(31,3,40,20),'#ddd','#777'));p.drawRoundedRect(QRectF(31,3,40,20),5,5);p.setPen(QPen(QColor('#aebdc2'),2))
-        for y in range(32,67,8):p.drawLine(31,y,69,y)
-    elif kind in ('auto','review'):
-        p.setPen(QPen(QColor('#777'),2));p.setBrush(gradient(QRectF(15,33,72,49),'#e9e9e9','#666'));p.drawEllipse(QRectF(15,33,72,49))
-        p.setPen(QPen(QColor('#62992c'),2));g=QRadialGradient(38,26,61);g.setColorAt(0,QColor('#a2f548'));g.setColorAt(.6,QColor('#4cba00'));g.setColorAt(1,QColor('#247f00'));p.setBrush(g);p.drawEllipse(QRectF(19,5,66,63))
-        if kind=='review':p.setPen(QPen(Qt.white,6,Qt.SolidLine,Qt.RoundCap,Qt.RoundJoin));p.drawPolyline(QPolygonF([QPointF(34,35),QPointF(47,49),QPointF(70,22)]))
-    elif kind in ('basic','advanced'):
-        if kind=='basic':
-            p.setPen(QPen(QColor('#777'),5));p.drawArc(QRectF(8,15,80,55),320,4560)
-            for x,y in [(10,12),(48,33),(75,64)]:p.setPen(QPen(QColor('#39678b'),1));p.setBrush(gradient(QRectF(x,y,23,18),'#83b9df','#2f5989'));p.drawRect(QRectF(x,y,23,18))
-        else:
-            p.fillRect(3,2,94,87,QColor('#39566e'))
-            for x in range(13,90,18):p.setPen(QPen(QColor('#263c4c'),4));p.drawLine(x,9,x-7,78);p.setPen(QPen(QColor('#c2d5e0'),1));p.setBrush(QColor('#b8cdd9'));p.drawRect(QRectF(x-8,20+(x%30),14,20))
-    elif kind in ('gears','batch'):
-        for cx,cy,r in [(37,53,29),(72,27,23),(79,70,13)]:
-            path=QPainterPath()
-            for j in range(48):
-                a=j*math.pi/24;rr=r if j%4 in (0,1) else r*.84;pt=QPointF(cx+rr*math.cos(a),cy+rr*math.sin(a));path.moveTo(pt) if j==0 else path.lineTo(pt)
-            path.closeSubpath();p.setPen(QPen(QColor('#59768b'),1));p.setBrush(gradient(QRectF(cx-r,cy-r,r*2,r*2),'#d7e9f5','#4d7e9e'));p.drawPath(path);p.setBrush(QColor('#c2d9e9'));p.drawEllipse(QRectF(cx-r*.3,cy-r*.3,r*.6,r*.6))
-    elif kind=='save':
-        p.setPen(QPen(QColor('#304d64'),3));p.setBrush(gradient(QRectF(12,6,77,78),'#668aa0','#23475e'));p.drawRoundedRect(QRectF(12,6,77,78),4,4);p.setBrush(QColor('#eee'));p.drawRect(28,8,46,27);p.setBrush(QColor('#737d85'));p.drawRect(31,15,35,5);p.setBrush(QColor('#c3d3dd'));p.drawRect(27,51,48,30);p.setBrush(QColor('#4e6b7e'));p.drawRect(38,56,10,23)
-    elif kind=='photo':
-        p.fillRect(2,2,96,86,gradient(QRectF(2,2,96,86),'#3b66a0','#bfd8e5'));p.setPen(QPen(QColor('#6d685f'),1));p.setBrush(QColor('#e3dbc9'));p.drawRect(29,35,44,54);p.setBrush(QColor('#b57e4e'));p.drawEllipse(QRectF(29,17,44,35));p.setBrush(QColor('#eee2c7'));p.drawRect(29,34,44,8);p.setBrush(QColor('#4a5360'))
-        for x in [38,53,65]:
-            for y in [49,64,78]:p.drawRoundedRect(QRectF(x,y,6,10),3,3)
-    elif kind in ('aa','hard','high','medium','low'):
-        small=QImage(14,14,QImage.Format_RGB32);small.fill(Qt.white);q=QPainter(small);q.setRenderHint(QPainter.Antialiasing,kind!='hard');q.setPen(Qt.NoPen);q.setBrush(QColor('#155888'));path=QPainterPath();path.moveTo(0,14);path.lineTo(2,13);path.lineTo(8,7);path.lineTo(9,1);path.lineTo(11,8);path.lineTo(14,14);path.closeSubpath();q.drawPath(path);q.end();p.setRenderHint(QPainter.SmoothPixmapTransform,kind not in ('hard','low'));p.drawImage(QRectF(3,3,94,84),small)
-    elif kind=='flex':
-        g=QLinearGradient(0,0,100,80)
-        for j,c in enumerate(['#da002c','#ffc32e','#09c251','#09a0d4','#7033d0']):g.setColorAt(j/4,QColor(c))
-        p.fillRect(3,2,94,86,g)
-    elif kind=='two':
-        p.setBrush(Qt.black);p.setPen(Qt.NoPen)
-        for x,y,r in [(24,32,17),(51,51,28),(77,26,15)]:p.drawEllipse(QRectF(x-r,y-r,r*2,r*2))
-        p.setPen(QPen(Qt.white,2));p.drawLine(20,65,80,13)
-    else:
-        p.setPen(QPen(QColor('#97652c'),2));p.setBrush(QColor('#d1ad67'));p.drawEllipse(QRectF(9,9,82,73))
-        for x,y,c in [(30,28,'#d92127'),(55,21,'#276cab'),(72,40,'#37a55a'),(49,64,'#e6ab12')]:p.setBrush(QColor(c));p.drawEllipse(QRectF(x-9,y-8,17,16))
-    p.end();return im
+from ui_icons import icon
+
 
 class Choice(QPushButton):
     def __init__(self,title,text,kind,callback,selected=False,recommended=False):
@@ -183,7 +135,7 @@ class WizardWindow(ServiceWindow):
         if self.canvas.pix:self.zoom_label.setText(f'{100*self.canvas.image_rect().width()/self.canvas.image_size.width():.0f}%')
     def config(self):
         cfg=super().config();cfg.update({'category':self.category,'curve_tolerance':self.curve_tolerance*[4,2,1][self.detail.currentIndex()],'alphamax':self.alphamax})
-        if self.manual_palette and self.color_mode=='fixed':cfg['palette']=self.manual_palette
+        if self.manual_palette and self.color_mode in ('fixed','two'):cfg['palette']=self.manual_palette
         return cfg
     def go(self,page,push=True):
         if self.process:return
@@ -217,39 +169,56 @@ class WizardWindow(ServiceWindow):
         for key,title,text,kind in [('two','Два Цвета','• Использование только двух цветов.','two'),('fixed','Настраиваемые Цвета','• Выбор цветов на ваше усмотрение.\n• Используются только указанные вами цвета.','fixed'),('flex','Цвета Без Ограничений','• Используются имеющиеся цвета.\n• Подбор градиентов.','flex')]:self.choice(title,text,kind,lambda checked=False,m=key:self.choose_color(m),self.color_mode==key,(key=='flex')==(self.category=='photo') and key!='two')
     def choose_color(self,mode):
         self.color_mode=mode;self.manual_palette=None;self.colors.setValue(2 if mode=='two' else 0)
+        if mode=='two' and self.palette_has_transparency():self.manual_palette=self.palette_for(2)
         self.go('palette') if mode=='fixed' else self.begin_trace()
+    def palette_has_transparency(self):return transparency_slot(self)
     def palette_for(self,n):
-        if n==len(self.analysis.get('palette',[])):return list(self.analysis['palette'])
         with Image.open(self.file) as im:im=im.convert('RGBA');im.thumbnail((500,500));arr=np.array(im)
-        return ['#%02x%02x%02x'%tuple(c) for c in find_palette(arr,n)]
+        return ['#%02x%02x%02x'%tuple(c) for c in find_palette(arr,max(1,n-int(self.palette_has_transparency())))]
     def build_palette(self):
-        candidates=self.group('Предлагаемые Палитры');lst=QListWidget();lst.setMinimumHeight(255);candidates.addWidget(lst);recommended=max(2,min(24,len(self.analysis.get('palette',[]))));self.palette_candidates=[]
-        for n in range(2,min(13,max(7,recommended+2))):
-            palette=self.palette_for(n);self.palette_candidates.append(palette);item=QListWidgetItem();item.setSizeHint(QSize(275,27));lst.addItem(item);row=QWidget();rl=QHBoxLayout(row);rl.setContentsMargins(3,3,3,3);rl.setSpacing(2);arrow=QLabel('▶▶' if n==recommended else '');arrow.setFixedWidth(23);arrow.setStyleSheet('color:#318b98;');rl.addWidget(arrow)
-            for color in palette[:15]:sw=QLabel();sw.setFixedSize(18,19);sw.setStyleSheet(f'background:{color};border:1px solid black;');rl.addWidget(sw)
+        candidates=self.group('Предлагаемые Палитры');lst=QListWidget();lst.setObjectName('paletteCandidates');lst.setMinimumHeight(255);lst.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff);candidates.addWidget(lst)
+        transparent=self.palette_has_transparency();recommended=max(2,min(12,len(self.analysis.get('palette',[]))+int(transparent)));self.palette_candidates=[];seen=set();selected=-1;recommended_row=0
+        for n in range(2,13):
+            palette=self.palette_for(n);key=tuple(sorted(palette))
+            if key in seen:continue
+            seen.add(key);index=len(self.palette_candidates);self.palette_candidates.append(palette)
+            if n<=recommended:recommended_row=index
+            item=QListWidgetItem();item.setSizeHint(QSize(0,27));lst.addItem(item);row=QWidget();rl=QHBoxLayout(row);rl.setContentsMargins(3,3,3,3);rl.setSpacing(2);arrow=QLabel('▶▶' if n==recommended else '');arrow.setFixedWidth(20);arrow.setStyleSheet('color:#318b98;');rl.addWidget(arrow)
+            if transparent:rl.addWidget(transparent_swatch())
+            for color in palette:
+                sw=QLabel();sw.setFixedSize(18,19);sw.setStyleSheet(f'background:{color};border:1px solid black;');rl.addWidget(sw)
             rl.addStretch();lst.setItemWidget(item,row)
-            if self.manual_palette==palette or self.manual_palette is None and n==recommended:lst.setCurrentRow(n-2)
-        lst.currentRowChanged.connect(self.select_palette_row);lst.itemDoubleClicked.connect(lambda _:self.palette_next());candidates.addWidget(QLabel('Для выбора кликните по палитре дважды.'))
-        if self.manual_palette is None:self.manual_palette=list(self.analysis.get('palette') or self.palette_candidates[max(0,lst.currentRow())])
+            if self.manual_palette and tuple(sorted(self.manual_palette))==key:selected=index
+        if self.manual_palette is None:
+            selected=recommended_row;self.manual_palette=list(self.palette_candidates[selected])
+        lst.setCurrentRow(selected)
         box=self.group('Пользовательские Палитры');self.palette_swatch_widget=QWidget();self.palette_swatches=QHBoxLayout(self.palette_swatch_widget);self.palette_swatches.setContentsMargins(0,0,0,0);self.palette_swatches.setSpacing(2);box.addWidget(self.palette_swatch_widget);self.draw_palette();tools=QHBoxLayout();add=QPushButton('＋');add.clicked.connect(self.add_color);tools.addWidget(add);remove=QPushButton('−');remove.clicked.connect(self.remove_color);tools.addWidget(remove);box.addLayout(tools)
-        if self.wizard_mode=='advanced':box.addWidget(QLabel('Число цветов:'));spin=QSpinBox();spin.setRange(2,24);spin.setValue(len(self.manual_palette));spin.valueChanged.connect(self.generate_palette);box.addWidget(spin)
+        lst.currentRowChanged.connect(self.select_palette_row);lst.itemDoubleClicked.connect(lambda _:self.palette_next());candidates.addWidget(QLabel('Для выбора кликните по палитре дважды.'))
+        if self.wizard_mode=='advanced':
+            box.addWidget(QLabel('Число цветов:'));spin=QSpinBox();spin.setRange(2,24);spin.setValue(len(self.manual_palette)+int(transparent));spin.valueChanged.connect(self.generate_palette);box.addWidget(spin)
     def select_palette_row(self,index):
         if index>=0:self.manual_palette=list(self.palette_candidates[index]);self.draw_palette();self.invalidate()
     def draw_palette(self):
         while self.palette_swatches.count():
             item=self.palette_swatches.takeAt(0)
             if item.widget():item.widget().deleteLater()
+        slots=len(self.manual_palette or [])+int(self.palette_has_transparency());width=min(23,max(8,(260-2*max(0,slots-1))//max(1,slots)))
+        if self.palette_has_transparency():self.palette_swatches.addWidget(transparent_swatch(width,28))
         for i,color in enumerate(self.manual_palette or []):
-            b=QPushButton();b.setFixedSize(23,28);b.setStyleSheet(f'background:{color};border:1px solid black;');b.setToolTip(color);b.clicked.connect(lambda checked,j=i:self.change_palette_color(j));self.palette_swatches.addWidget(b)
+            b=QPushButton();b.setProperty('paletteIndex',i);b.setFixedSize(width,28);b.setStyleSheet(f'background:{color};border:1px solid black;');b.setToolTip(color);b.clicked.connect(lambda checked,j=i:self.change_palette_color(j));self.palette_swatches.addWidget(b)
         self.palette_swatches.addStretch()
+        container=self.scroll.widget();lst=container.findChild(QListWidget,'paletteCandidates') if container else None
+        if lst is not None:
+            key=tuple(sorted(self.manual_palette or []));index=next((i for i,p in enumerate(self.palette_candidates) if tuple(sorted(p))==key),-1)
+            blocked=lst.blockSignals(True);lst.setCurrentRow(index);lst.blockSignals(blocked)
     def change_palette_color(self,index):
         col=QColorDialog.getColor(QColor(self.manual_palette[index]),self,'Цвет палитры')
         if col.isValid():self.manual_palette[index]=col.name();self.draw_palette();self.invalidate()
     def add_color(self):
         col=QColorDialog.getColor(Qt.black,self,'Добавить цвет')
-        if col.isValid() and len(self.manual_palette)<24:self.manual_palette.append(col.name());self.draw_palette();self.invalidate()
+        if col.isValid() and len(self.manual_palette)<24-int(self.palette_has_transparency()):self.manual_palette.append(col.name());self.draw_palette();self.invalidate()
     def remove_color(self):
-        if len(self.manual_palette)>2:self.manual_palette.pop();self.draw_palette();self.invalidate()
+        if len(self.manual_palette)>2-int(self.palette_has_transparency()):self.manual_palette.pop();self.draw_palette();self.invalidate()
     def generate_palette(self,n):self.manual_palette=self.palette_for(n);self.draw_palette();self.invalidate()
     def palette_next(self):
         self.color_mode='fixed'
@@ -258,10 +227,14 @@ class WizardWindow(ServiceWindow):
     def build_review(self):
         self.choice('Рецензия Сделанного','• Кликните здесь для продолжения.\n• Далее можно сохранить результат.','review',lambda:self.go('export'),True);improve=self.group('Улучшение Результата');improve.addWidget(QLabel('Уровень Детализации'))
         for n,name in [(2,'Высокое Качество'),(1,'Среднее Качество'),(0,'Низкое Качество')]:self.small_button(improve,'↪ '+name,lambda checked=False,j=n:self.retrace_detail(j),self.detail.currentIndex()==n)
-        self.line(improve);improve.addWidget(QLabel('Цвета'));self.small_button(improve,'🌈 Цвета Без Ограничений',lambda:self.choose_color('flex'),self.color_mode=='flex');self.small_button(improve,'🎨 Настраиваемые Цвета',lambda:self.go('palette'),self.color_mode=='fixed');improve.addWidget(QLabel('Текущая Палитра (изменить):'));row=QWidget();sw=QHBoxLayout(row);sw.setContentsMargins(0,0,0,0);sw.setSpacing(2)
-        for color in list(dict.fromkeys(re.findall(r'fill="(#[0-9A-Fa-f]{6})"',self.svg_text or '')))[:12]:
-            b=QPushButton();b.setFixedSize(19,20);b.setStyleSheet(f'background:{color};border:1px solid black;');b.clicked.connect(lambda checked,c=color:self.edit_result_color(c));sw.addWidget(b)
-        sw.addStretch();improve.addWidget(row);self.line(improve);improve.addWidget(QLabel('Расширенный'));self.small_button(improve,'✂ Удаление Фона',lambda:self.go('background'));self.small_button(improve,'✎ Редактирование Результата',self.open_editor);self.small_button(improve,'↩ Вернуться к Настройкам',lambda:self.go('mode'));self.small_button(improve,'◧ Сравнить Bitmap / Вектор',self.compare_view)
+        self.line(improve);improve.addWidget(QLabel('Цвета'));self.small_button(improve,'🌈 Цвета Без Ограничений',lambda:self.choose_color('flex'),self.color_mode=='flex');self.small_button(improve,'🎨 Настраиваемые Цвета',lambda:self.go('palette'),self.color_mode=='fixed');
+        if self.color_mode=='fixed':
+            improve.addWidget(QLabel('Текущая Палитра (изменить):'));row=QWidget();sw=QHBoxLayout(row);sw.setContentsMargins(0,0,0,0);sw.setSpacing(2)
+            if self.palette_has_transparency():sw.addWidget(transparent_swatch(19,20))
+            for color in list(dict.fromkeys(re.findall(r'fill="(#[0-9A-Fa-f]{6})"',self.svg_text or '')))[:12]:
+                b=QPushButton();b.setFixedSize(19,20);b.setStyleSheet(f'background:{color};border:1px solid black;');b.clicked.connect(lambda checked,c=color:self.edit_result_color(c));sw.addWidget(b)
+            sw.addStretch();improve.addWidget(row);
+        self.line(improve);improve.addWidget(QLabel('Расширенный'));self.small_button(improve,'✂ Удаление Фона',lambda:self.go('background'));self.small_button(improve,'✎ Редактирование Результата',self.open_editor);self.small_button(improve,'↩ Вернуться к Настройкам',lambda:self.go('mode'));self.small_button(improve,'◧ Сравнить Bitmap / Вектор',self.compare_view)
     def line(self,lay):f=QFrame();f.setFrameShape(QFrame.HLine);lay.addWidget(f)
     def retrace_detail(self,n):self.detail.setCurrentIndex(n);self.denoise.setChecked(n==0);self.begin_trace()
     def compare_view(self):self.canvas.mode='Сравнение' if self.canvas.mode!='Сравнение' else 'Вектор';self.canvas.update()
@@ -311,7 +284,7 @@ class WizardWindow(ServiceWindow):
         self.manual_palette=['#%02x%02x%02x'%tuple(c) for c in inks[:64]];self.color_mode='fixed'
         cfg=self.config();cfg['colors']=0;cfg['remove_bg']=False;self.trace_return='review';self.history.append('edit');self.page='processing';self.render_page();self.start_job(str(path),cfg)
     def build_processing(self):
-        label=QLabel();label.setPixmap(icon('gears').scaled(200,180,Qt.KeepAspectRatio,Qt.SmoothTransformation));label.setAlignment(Qt.AlignCenter);self.page_layout.addWidget(label);self.page_layout.addSpacing(20);self.page_layout.addWidget(QLabel('Обработка Изображения...'));progress=QProgressBar();progress.setRange(0,0);self.page_layout.addWidget(progress)
+        label=QLabel();label.setPixmap(icon('gears').scaled(200,180,Qt.KeepAspectRatio,Qt.SmoothTransformation));label.setAlignment(Qt.AlignCenter);self.page_layout.addWidget(label);self.page_layout.addSpacing(20);self.processing_label=QLabel('Обработка изображения: 0%');self.processing_label.setWordWrap(True);self.page_layout.addWidget(self.processing_label);self.processing_progress=QProgressBar();self.processing_progress.setRange(0,100);self.processing_progress.setValue(0);self.processing_progress.setFormat('%p%');self.page_layout.addWidget(self.processing_progress)
     def begin_trace(self,target='review'):
         if self.process or not self.file:return
         if isinstance(target,bool):target='review'
@@ -339,7 +312,7 @@ class WizardWindow(ServiceWindow):
     def load(self,path):
         super().load(path)
         if self.file!=str(path):return
-        self.manual_palette=None;self.trace_input=None;self.edit_dirty=False;self.color_mode='fixed';self.colors.setValue(0);self.detail.setCurrentIndex(2);self.analysis=analyze_image(path);self.category=self.analysis['category'];self.recent=[str(path)]+[p for p in self.recent if p!=str(path)];self.history=['load'];self.page='mode';self.setWindowTitle(Path(path).name+' - DoctorTracer');self.render_page()
+        self.manual_palette=None;self.trace_input=None;self.edit_dirty=False;self.color_mode='fixed';self.colors.setValue(0);self.detail.setCurrentIndex(2);self.analysis=analyze_image(path);self.source_has_transparency=bool(self.analysis.get('transparent'));self.category=self.analysis['category'];self.recent=[str(path)]+[p for p in self.recent if p!=str(path)];self.history=['load'];self.page='mode';self.setWindowTitle(Path(path).name+' - DoctorTracer');self.render_page()
     def home(self):
         if self.process:self.cancel();return
         if self.page=='load':self.file=None;self.svg_text=None;self.canvas.pix=None;self.canvas.svg=None;self.canvas.seg_image=None;self.canvas.refresh_tools();self.canvas.update()

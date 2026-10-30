@@ -1,0 +1,4 @@
+import fs from'node:fs/promises';import assert from'node:assert/strict';import createTracer from'../web/rust-tracer.mjs';import{auditNative}from'../web/geometry.mjs';import{regularizeResult}from'../web/regularize.mjs';
+const root='build/regularize/',jobs=JSON.parse(await fs.readFile(root+'jobs.json'));await auditNative('<svg/>',{wasmBinary:await fs.readFile('web/vendor/audit.wasm')});const runtime=await createTracer({wasmBinary:await fs.readFile('web/doctortracer.wasm')});
+for(const j of jobs){const source=await fs.readFile(root+j.name+'-input.svg','utf8');const result=await regularizeResult(runtime,source,j.tolerance,j.straight,j.curved,j.protect);assert.equal(result.svg,await fs.readFile(root+j.name+'-native.svg','utf8'),j.name);console.log(j.name,result.nodes_before,result.nodes_after,result.straightened,result.curves_fitted);}
+console.log('PASS: byte-identical Windows/WASM regularization and independent audits');

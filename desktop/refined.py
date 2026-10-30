@@ -6,8 +6,8 @@ from PySide6.QtCore import Qt, QSize, QSizeF, QRectF, QByteArray, QTimer, QMimeD
 from PySide6.QtGui import QPainter, QImage, QColor, QDrag, QPdfWriter, QPageSize, QIcon, QPixmap
 from PySide6.QtWidgets import (QApplication,QWidget,QVBoxLayout,QHBoxLayout,QLabel,
     QPushButton,QCheckBox,QRadioButton,QButtonGroup,QSpinBox,QSlider,QLineEdit,
-    QComboBox,QFileDialog,QMessageBox,QMenu,QFrame,QListWidget,QListWidgetItem)
-from PySide6.QtSvg import QSvgRenderer
+    QComboBox,QFileDialog,QMessageBox,QMenu,QFrame,QListWidget,QListWidgetItem,QSizePolicy)
+from vector_render import QSvgRenderer
 import wizard
 from engine import to_eps
 
@@ -51,7 +51,7 @@ class Canvas(wizard.ClassicCanvas):
                 if e.modifiers()&Qt.ControlModifier:
                     colors=[im.pixelColor(xx,yy) for xx in range(max(0,x-2),min(im.width(),x+3)) for yy in range(max(0,y-2),min(im.height(),y+3))];color=QColor(*[sum(getattr(c,k)() for c in colors)//len(colors) for k in ['red','green','blue']])
                 else:color=im.pixelColor(x,y)
-                owner.manual_palette[min(owner.selected_color,len(owner.manual_palette)-1)]=color.name();owner.draw_palette();owner.invalidate();return
+                owner.palette_auto=False;owner.manual_palette[min(owner.selected_color,len(owner.manual_palette)-1)]=color.name();owner.draw_palette();owner.invalidate();return
         if self.mode=='Сегменты' and self.tool=='adapt' and self.seg_image is not None:
             pos=self.coords(e.position())
             if pos is not None:
@@ -75,8 +75,17 @@ class Canvas(wizard.ClassicCanvas):
         self.zoom_slider.move(32,y+83);self.layers.move(7,y+184)
         if hasattr(self,'editor_tools'):self.editor_tools.move(max(90,self.width()-116),max(20,self.height()//2-130))
     def wheelEvent(self,e):
-        super().wheelEvent(e)
+        if self.pix is None:
+            e.ignore();return
+        delta=e.pixelDelta().y() if not e.pixelDelta().isNull() else e.angleDelta().y()
+        old=self.zoom
+        target=max(1.12**-20,min(1.12**30,old*math.exp(delta*.001)))
+        ratio=target/old
+        x=e.position().x()-self.width()/2;y=e.position().y()-self.height()/2
+        self.pan=[x-(x-self.pan[0])*ratio,y-(y-self.pan[1])*ratio]
+        self.zoom=target
         self.zoom_slider.blockSignals(True);self.zoom_slider.setValue(round(math.log(self.zoom,1.12)));self.zoom_slider.blockSignals(False)
+        self.zoom_changed.emit(self.zoom);self.update();e.accept()
 
 
 wizard.ClassicCanvas=Canvas
@@ -100,14 +109,14 @@ class Window(wizard.WizardWindow):
     def __init__(self):
         self.adv={'complexity':5,'smoothness':6,'nodes':6,'corners':True,'palette_aa':True,'contour_aa':True,'color_threshold':1,'artifact':2,'auto_palette':True,'auto_segment':True,'auto_trace':True}
         self.default_adv=dict(self.adv)
-        self.compute_backend='auto';self.flatten_mode='preserve';self.flatten_color='#ffffff';self.palette_cache={}
+        self.palette_auto=True;self.compute_backend='gpu';self.photo_spatial=True;self.photo_regions=True;self.flatten_mode='preserve';self.flatten_color='#ffffff';self.palette_cache={}
         self.selected_color=0;self.skip_review=False;self.quick_dir='';self.quick_name='';self.png_scale=100;self.batch_files=[];self.recent_settings=[]
         super().__init__()
         self.canvas.owner=self
         self.canvas.layer_buttons['Сегменты'].setText('Сегменты')
         for button in self.canvas.nav.findChildren(QPushButton):button.setStyleSheet('padding:0px;');button.setFixedSize(19,19)
         for label in self.statusBar().findChildren(QLabel):
-            if label.text()=='v2.0':label.setText('v0.6')
+            if label.text()=='v2.0':label.setText('v0.18.1 preview')
         self.auto_timer=QTimer(self);self.auto_timer.setSingleShot(True);self.auto_timer.timeout.connect(self.apply_pending)
         for key,fn in [('A',lambda:self.set_background_tool('drag') if self.page=='background' else self.set_tool('drag')),('D',lambda:self.set_background_tool('cut') if self.page=='background' else self.set_tool('adapt')),('F',lambda:self.set_tool('fill')),('X',lambda:self.set_tool('pencil')),('C',lambda:self.set_tool('color')),('Z',lambda:self.undo_background() if self.page=='background' else self.undo_edit()),('Y',lambda:self.redo_background() if self.page=='background' else self.redo_edit()),('T',lambda:self.reset_background() if self.page=='background' else self.update_segmentation())]:
             action=wizard.QAction(self);action.setShortcut(key);action.triggered.connect(fn);self.addAction(action)
@@ -119,13 +128,14 @@ class Window(wizard.WizardWindow):
         if self.page=='review':
             b.setStyleSheet('text-align:left;padding-left:5px;')
             if any(word in text for word in ['Удаление Фона','Редактирование Результата','Вернуться к Настройкам']):b.setFixedWidth(190)
-            if 'Качество' in text:b.setText(text.removeprefix('↪ '));b.setIcon(arrow_icon('reset'));b.setIconSize(QSize(16,16))
+            if 'Качество' in text:
+                b.setText(text.removeprefix('↪ '));kind='high' if 'Высокое' in text else 'medium' if 'Среднее' in text else 'low';b.setIcon(QIcon(wizard.icon(kind)));b.setIconSize(QSize(16,16))
             elif 'Цвета Без Ограничений' in text or 'Настраиваемые Цвета' in text:
                 b.setText(text.removeprefix('🌈 ').removeprefix('🎨 '));b.setIcon(QIcon(wizard.icon('flex' if 'Без Ограничений' in text else 'fixed')));b.setIconSize(QSize(16,16))
         return b
     def choose_type(self,category):
         super().choose_type(category)
-        if self.analysis.get('transparent'):
+        if getattr(self,'source_has_transparency',self.analysis.get('transparent')):
             self.page='transparency';self.render_page()
     def build_transparency(self):
         self.paragraph(self.page_layout,'Иногда границы прозрачных регионов смешиваются с цветом фона. Выберите, оставить прозрачность или свести изображение с цветом.')
@@ -137,9 +147,8 @@ class Window(wizard.WizardWindow):
         if color.isValid():self.flatten_color=color.name();self.render_page()
     def choose_transparency(self,mode):
         self.flatten_mode=mode;self.manual_palette=None
-        if mode!='preserve':
-            from engine import analyze_image
-            self.analysis=analyze_image(self.file,{'flatten':True,'flatten_color':'#ffffff' if mode=='white' else self.flatten_color})
+        from engine import analyze_image
+        self.analysis=analyze_image(self.file,{'flatten':mode!='preserve','flatten_color':'#ffffff' if mode=='white' else self.flatten_color})
         self.go('quality')
     def collapsible(self,title):
         button=QPushButton('▶ '+title);button.setCheckable(True);self.page_layout.addWidget(button,0,Qt.AlignLeft)
@@ -163,7 +172,9 @@ class Window(wizard.WizardWindow):
         if not self.recent_settings:menu.addAction('Нет недавних настроек').setEnabled(False)
         menu.exec(self.mapToGlobal(self.right.pos()))
     def apply_settings(self,cfg):
-        self.category=cfg.get('category','aa');self.manual_palette=cfg.get('palette');self.color_mode='fixed' if self.manual_palette else 'flex';self.detail.setCurrentIndex(int(cfg.get('detail',2)));self.colors.setValue(int(cfg.get('colors',0)));self.speckle.setValue(int(cfg.get('speckle',2)));self.curve_tolerance=float(cfg.get('curve_tolerance',.12));self.adv.update(cfg.get('advanced_ui',{}));self.invalidate();self.render_page()
+        self.photo_spatial=bool(cfg.get('photo_spatial',True));self.photo_regions=bool(cfg.get('photo_regions',True))
+        if cfg.get('compute') in ('auto','cpu','gpu'):self.compute_backend=cfg['compute']
+        self.category=cfg.get('category','aa');self.manual_palette=cfg.get('palette');self.palette_auto=cfg.get('palette_generated',False);self.color_mode='fixed' if self.manual_palette else 'flex';self.detail.setCurrentIndex(int(cfg.get('detail',2)));self.colors.setValue(int(cfg.get('colors',0)));self.speckle.setValue(int(cfg.get('speckle',2)));self.curve_tolerance=float(cfg.get('curve_tolerance',.12));self.adv.update(cfg.get('advanced_ui',{}));self.invalidate();self.render_page()
     def save_preset(self):
         p,_=QFileDialog.getSaveFileName(self,'Сохранение Настроек','vector-settings.json','Настройки (*.json)')
         if p:Path(p).write_text(json.dumps({**self.config(),'advanced_ui':self.adv},ensure_ascii=False,indent=2),encoding='utf-8')
@@ -176,10 +187,18 @@ class Window(wizard.WizardWindow):
         menu=QMenu(self);menu.addAction('Паспорт DoctorTracer',self.about);menu.addAction('Восстановить Настройки по Умолчанию',self.restore_defaults);menu.addAction('Изменить Язык',lambda:QMessageBox.information(self,'Язык интерфейса','Русский'));compute=menu.addMenu('Вычисления')
         for title,key in [('Автоматически (GPU при наличии)','auto'),('CPU','cpu'),('OpenCL GPU','gpu')]:
             action=compute.addAction(title);action.setCheckable(True);action.setChecked(self.compute_backend==key);action.triggered.connect(lambda checked=False,k=key:setattr(self,'compute_backend',k))
+        action=menu.addAction('Экспериментальная сегментация фото с палитрой')
+        action.setCheckable(True);action.setChecked(self.photo_spatial)
+        action.setToolTip('Для фотографий с ограниченной палитрой; может менять мелкие детали. После переключения пересчитайте результат.')
+        action.toggled.connect(self.set_photo_spatial)
         menu.exec(self.mapToGlobal(self.right.pos()))
+    def set_photo_spatial(self,enabled):
+        self.photo_spatial=enabled
+        self.invalidate()
+        self.statusBar().showMessage('Сегментация изменена. Пересчитайте результат с выбранными настройками.')
     def restore_defaults(self):
         self.adv=dict(self.default_adv);self.skip_review=False
-        self.compute_backend='auto';self.flatten_mode='preserve';self.flatten_color='#ffffff'
+        self.compute_backend='gpu';self.photo_spatial=True;self.photo_regions=True;self.flatten_mode='preserve';self.flatten_color='#ffffff'
         self.category='aa';self.color_mode='fixed';self.manual_palette=None;self.detail.setCurrentIndex(2);self.colors.setValue(0);self.speckle.setValue(2);self.denoise.setChecked(False);self.curve_tolerance=.12;self.alphamax=1.;self.remove_bg.setChecked(False);self.invalidate();self.render_page()
     def batch(self):self.go('batchfiles')
     def build_batchfiles(self):
@@ -221,6 +240,7 @@ class Window(wizard.WizardWindow):
         p,_=QFileDialog.getOpenFileName(self,'Импорт из Папки',folder,'Изображения (*.png *.jpg *.jpeg *.bmp *.gif *.tif *.tiff *.webp)')
         if p:self.load(p)
     def build_palette(self):
+        if self.manual_palette is None:self.palette_auto=True
         if self.wizard_mode!='advanced':
             super().build_palette();return
         g=self.group('Цветовой Режим');self.radios(g,[('Подбор Цветов','fixed'),('Гибкие Цвета','flex')],self.color_mode,lambda v:self.set_palette_mode(v))
@@ -230,13 +250,13 @@ class Window(wizard.WizardWindow):
             for label,fn in [('＋',self.add_color),('×',self.remove_color),('▥',lambda:self.change_palette_color(min(self.selected_color,len(self.manual_palette)-1)))]:
                 b=QPushButton(label);b.setFixedSize(24,24);b.clicked.connect(fn);tools.addWidget(b)
             row.addLayout(tools);g.addLayout(row);self.draw_palette();self.paragraph(g,'Выберите сверху цвет для его изменения.\nДля установки цвета — клик на изображении.');self.small_button(g,'Сравнить',self.compare_view)
-            g=self.group('Создание Палитры');row=QHBoxLayout();row.addWidget(QLabel('Количество Цветов:'));spin=QSpinBox();spin.setFixedWidth(52);spin.setRange(2,24);spin.setValue(len(self.manual_palette));spin.valueChanged.connect(self.palette_count);row.addWidget(spin);row.addStretch();g.addLayout(row)
+            g=self.group('Создание Палитры');row=QHBoxLayout();row.addWidget(QLabel('Количество Цветов:'));spin=QSpinBox();spin.setFixedWidth(52);spin.setRange(2,24);spin.setValue(len(self.manual_palette)+int(self.palette_has_transparency()));spin.valueChanged.connect(self.palette_count);row.addWidget(spin);row.addStretch();g.addLayout(row)
             self.paragraph(g,'Высокий порог цвета скрывает мелкие цветовые различия, но более склонен к ошибкам.')
             self.radios(g,[('Низкий',0),('Средний',1),('Высокий',2)],self.adv['color_threshold'],lambda v:self.change_advanced('color_threshold',v,'palette'))
             self.paragraph(g,'Включайте сглаживание при смешанном цветовом крае изображения. Этот факт имеет огромное влияние на определение цвета.')
             self.check(g,'Использовать Сглаживание','palette_aa','palette')
         g=self.group('Авто Обновление');self.check(g,'Авто Обновление Палитры','auto_palette')
-        if not self.adv['auto_palette']:self.small_button(g,'Обновить Палитру',lambda:self.palette_count(getattr(self,'pending_count',len(self.manual_palette or [0,0,0])),True))
+        if not self.adv['auto_palette']:self.small_button(g,'Обновить Палитру',lambda:self.palette_count(getattr(self,'pending_count',len(self.manual_palette or [0,0,0])+int(self.palette_has_transparency())),True))
     def radios(self,lay,items,value,callback):
         row=QHBoxLayout();group=QButtonGroup(self)
         for text,key in items:
@@ -253,7 +273,16 @@ class Window(wizard.WizardWindow):
         p=getattr(self,'pending',None)
         if p=='segment' and self.page=='segment' and self.adv['auto_segment']:self.update_segmentation()
         elif p=='smooth' and self.page=='smooth' and self.adv['auto_trace']:self.begin_trace('smooth')
-        elif p=='palette' and self.page=='palette' and self.adv['auto_palette']:self.generate_palette(len(self.manual_palette or [0,0,0]))
+        elif p=='palette' and self.page=='palette' and self.adv['auto_palette']:self.generate_palette(len(self.manual_palette or [0,0,0])+int(self.palette_has_transparency()))
+    def generate_palette(self,n):
+        super().generate_palette(n);self.palette_auto=True
+    def select_palette_row(self,index):
+        super().select_palette_row(index)
+        if index>=0:self.palette_auto=True
+    def change_palette_color(self,index):
+        super().change_palette_color(index);self.palette_auto=False
+    def add_color(self):
+        super().add_color();self.palette_auto=False
     def palette_count(self,n,force=False):
         self.pending_count=n
         if force or self.adv['auto_palette']:self.generate_palette(n)
@@ -268,19 +297,20 @@ class Window(wizard.WizardWindow):
         if self.flatten_mode!='preserve':
             color=QColor('#ffffff' if self.flatten_mode=='white' else self.flatten_color);bg=np.array([color.red(),color.green(),color.blue()]);alpha=a[:,:,3:4]/255.;a[:,:,:3]=np.round(a[:,:,:3]*alpha+bg*(1-alpha));a[:,:,3]=255
         threshold=[14,24,42][self.adv['color_threshold']] if self.wizard_mode=='advanced' else 24
-        result=['#%02x%02x%02x'%tuple(c) for c in find_palette(a,n,merge_distance=threshold)];self.palette_cache[key]=result;return list(result)
+        result=['#%02x%02x%02x'%tuple(c) for c in find_palette(a,max(1,n-int(self.palette_has_transparency())),merge_distance=threshold)];self.palette_cache[key]=result;return list(result)
     def set_palette_mode(self,v):self.color_mode=v;self.invalidate();self.render_page()
     def draw_palette(self):
         super().draw_palette()
         for i in range(self.palette_swatches.count()):
             b=self.palette_swatches.itemAt(i).widget()
             if isinstance(b,QPushButton):
-                b.setFixedWidth(min(23,max(9,240//max(1,len(self.manual_palette)))))
+                i=int(b.property('paletteIndex'))
                 b.clicked.disconnect();b.clicked.connect(lambda checked=False,j=i:self.select_swatch(j));b.setStyleSheet(b.styleSheet()+('border:3px solid #7066b4;' if i==self.selected_color else ''))
                 b.mouseDoubleClickEvent=lambda e,j=i:self.change_palette_color(j)
     def select_swatch(self,i):self.selected_color=i;self.draw_palette()
     def remove_color(self):
-        if len(self.manual_palette or [])>2:self.manual_palette.pop(min(self.selected_color,len(self.manual_palette)-1));self.selected_color=max(0,min(self.selected_color,len(self.manual_palette)-1));self.draw_palette();self.invalidate()
+        self.palette_auto=False
+        if len(self.manual_palette or [])>2-int(self.palette_has_transparency()):self.manual_palette.pop(min(self.selected_color,len(self.manual_palette)-1));self.selected_color=max(0,min(self.selected_color,len(self.manual_palette)-1));self.draw_palette();self.invalidate()
     def build_segment(self):
         self.canvas.layer('Сегменты');self.paragraph(self.page_layout,'Сегментация — это разбиение изображения на мелкие части, которые затем послужат для создания векторной графики.')
         g=self.group('Настройка Сегментации');self.level_slider(g,'complexity','Меньше Сегментов','Больше Сегментов','segment')
@@ -296,17 +326,37 @@ class Window(wizard.WizardWindow):
         g=self.group('Применение Сглаживания');self.paragraph(g,'Включайте сглаживание при смешанном цветовом крае изображения. Этот факт имеет огромное влияние на конечные формы.');self.check(g,'Использовать Сглаживание','contour_aa','smooth')
         g=self.group('Количество Узлов');self.level_slider(g,'nodes','Меньше Узлов','Больше Узлов','smooth');g=self.group('Авто Обновление');self.check(g,'Авто Обновление Векторизации','auto_trace');self.small_button(g,'Обновить',lambda:self.begin_trace('smooth'));self.next_button.setEnabled(bool(self.svg_text) and self.export_button.isEnabled())
     def config(self):
-        cfg=super().config()
-        cfg.update({'compute':self.compute_backend,'flatten':self.flatten_mode!='preserve','flatten_color':'#ffffff' if self.flatten_mode=='white' else self.flatten_color})
+        cfg=super().config();cfg['palette_generated']=bool(getattr(self,'palette_auto',False))
+        cfg.update({'compute':self.compute_backend,'photo_spatial':self.photo_spatial,'photo_regions':self.photo_regions,'flatten':self.flatten_mode!='preserve','flatten_color':'#ffffff' if self.flatten_mode=='white' else self.flatten_color})
         if self.wizard_mode=='advanced':
             cfg['curve_tolerance']=.12*2**((6-self.adv['nodes'])/2)*2**((self.adv['smoothness']-6)/4)
             cfg['alphamax']=1. if self.adv['corners'] else 1.34
             cfg['denoise']=self.adv['artifact']>0;cfg['artifact_strength']=self.adv['artifact'];cfg['segmentation_complexity']=self.adv['complexity'];cfg['color_threshold']=self.adv['color_threshold']
-            cfg['category']='aa' if self.adv['contour_aa'] else 'hard'
+            if self.category!='photo':cfg['category']='aa' if self.adv['contour_aa'] else 'hard'
             cfg['palette_aa']=self.adv['palette_aa']
         return cfg
+    def post_smooth_tools(self):
+        row=QHBoxLayout();b=self.small_button(row,'Сглаживание результата…',self.open_post_smooth);b.setFixedWidth(190)
+        undo=self.small_button(row,'Отменить',self.undo_post_smooth);undo.setFixedWidth(80);undo.setEnabled(bool(getattr(self,'post_smooth_undo',[])));self.page_layout.addLayout(row)
+        self.small_button(self.page_layout,'Очистка и упрощение…',self.open_post_clean).setFixedWidth(190)
+        self.small_button(self.page_layout,'Выравнивание контуров…',self.open_regularizer).setFixedWidth(190)
+    def open_regularizer(self):
+        from regularize_dialog import open_regularizer
+        open_regularizer(self);self.render_page()
+    def open_post_clean(self):
+        from post_smooth_dialog import open_cleaner
+        open_cleaner(self);self.render_page()
+    def open_post_smooth(self):
+        from post_smooth_dialog import open_smoother
+        open_smoother(self);self.render_page()
+    def undo_post_smooth(self):
+        history=getattr(self,'post_smooth_undo',[])
+        if history:
+            self.svg_text=history.pop();self.background_original=self.svg_text;self.removed_shapes=set();self.background_undo=[];self.background_redo=[]
+            self.canvas.svg=QSvgRenderer(QByteArray(self.svg_text.encode('utf8')));self.set_contours();self.canvas.update();self.render_page()
     def build_review(self):
         super().build_review()
+        self.post_smooth_tools()
         # The original has no extra Compare button in this group.
         for b in self.scroll.widget().findChildren(QPushButton):
             if 'Сравнить Bitmap' in b.text():b.hide()
@@ -318,10 +368,10 @@ class Window(wizard.WizardWindow):
         super().job_finished(code,status)
         if self.result_file.exists() and not self.process:
             try:
-                stats=json.loads(self.result_file.read_text(encoding='utf-8'));compute=stats.get('compute','CPU');self.statusBar().showMessage(f"Готово за {stats.get('seconds','?')} с · {compute}"+(f" · {stats['device']}" if stats.get('device') else ''))
+                stats=json.loads(self.result_file.read_text(encoding='utf-8'));compute=stats.get('compute','CPU');compute+=(' · контуры GPU' if stats.get('contour_compute')=='OpenCL GPU FP64' and not stats.get('smoothing_fallback') else '');self.statusBar().showMessage(f"Готово за {float(stats.get('seconds',0)):.2f} с · {compute}"+(f" · {stats['device']}" if stats.get('device') else ''))
             except (ValueError,OSError):pass
         if not self.process and self.page!='processing' and self.svg_text:
-            self.background_original=self.svg_text;self.removed_shapes=set();self.background_undo=[];self.background_redo=[]
+            self.background_original=self.svg_text;self.removed_shapes=set();self.background_undo=[];self.background_redo=[];self.post_smooth_undo=[]
         if self.skip_review and self.page=='review':self.go('export')
     def begin_trace(self,target='review'):
         cfg=self.config()
@@ -329,7 +379,7 @@ class Window(wizard.WizardWindow):
         super().begin_trace(target)
     def start_job(self,path,config):
         if self.process:return
-        self.cancelled=False;self.active_config=dict(config)
+        self.cancelled=False;self.trace_name=Path(path).name;self.active_config=dict(config)
         self.job_out=Path(self.temp.name)/'result.svg';self.result_file=Path(self.temp.name)/'result.json'
         self.job_out.unlink(missing_ok=True);self.result_file.unlink(missing_ok=True)
         job_path=Path(self.temp.name)/'job.json';job_path.write_text(json.dumps({'input':path,'output':str(self.job_out),'result':str(self.result_file),'config':config}),encoding='utf-8')
@@ -344,15 +394,28 @@ class Window(wizard.WizardWindow):
         self.process=worker
         self.run_button.setEnabled(True);self.export_button.setEnabled(False)
         for control in self.settings_widgets:control.setEnabled(False)
-        self.progress.setRange(0,0);self.progress.show();self.statusBar().showMessage('Обработка: '+Path(path).name)
-        worker.write((json.dumps({'job':str(job_path)},ensure_ascii=False)+'\n').encode('utf-8'))
+        self.progress.setRange(0,100);self.progress.setValue(0);self.progress.show();self.update_trace_progress(0,'Начало обработки')
+        worker.write((json.dumps({'job':str(job_path),'progress':True},ensure_ascii=False)+'\n').encode('utf-8'))
     def worker_response(self):
         worker=self.resident_worker
         while worker and worker.canReadLine():
             line=bytes(worker.readLine()).decode('utf-8',errors='replace')
-            try:code=int(json.loads(line)['exit_code'])
+            try:
+                message=json.loads(line)
+                if 'progress' in message:
+                    if self.process is worker:self.update_trace_progress(message['progress'],message.get('stage','Обработка'))
+                    continue
+                code=int(message['exit_code'])
             except (ValueError,KeyError,TypeError):continue
             if self.process is worker:self.job_finished(code,QProcess.NormalExit)
+    def update_trace_progress(self,value,stage):
+        value=max(getattr(self,'trace_percent',0),min(100,int(value))) if value else 0
+        self.trace_percent=value
+        self.progress.setValue(value)
+        if self.page=='processing' and hasattr(self,'processing_progress'):
+            self.processing_progress.setValue(value)
+            self.processing_label.setText(f'{stage}: {value}%')
+        self.statusBar().showMessage(f'Обработка: {value}% · {stage} · {self.trace_name}')
     def worker_exit(self,worker,code,status):
         if self.process is worker:self.job_finished(code if code else -1,status)
         if getattr(self,'resident_worker',None) is worker:self.resident_worker=None
@@ -386,6 +449,7 @@ class Window(wizard.WizardWindow):
                 else:self.removed_shapes.add(index)
                 self.apply_background();break
     def apply_background(self):
+        self.post_smooth_undo=[]
         root=ET.fromstring(self.background_original);paths=[p for p in root.iter() if p.tag.endswith('path')]
         for parent in root.iter():
             for child in list(parent):
@@ -444,23 +508,25 @@ class Window(wizard.WizardWindow):
         elif self.page=='background':self.go('export')
         else:super().next_page()
     def load(self,path):
+        self.palette_auto=True
         self.flatten_mode='preserve';self.selected_color=0
         super().load(path)
     def about(self):
-        QMessageBox.information(self,'Паспорт DoctorTracer','DoctorTracer 0.6\n\nЛокальная трассировка SVG / EPS / PDF / PNG.\nВычисления: OpenCL GPU или CPU.\n\nGPU ускоряет распределение пикселей по цветам.\nПостроение кривых выполняется параллельно на CPU.\n\nНастройки вычислений находятся в меню «Дополнительные Параметры».')
+        QMessageBox.information(self,'Паспорт DoctorTracer','DoctorTracer 0.18.1 preview\n\nЛокальная трассировка SVG / EPS / PDF / PNG.\nSVG: группы по цветам, устранение наложений геометрии.\n\nGPU ускоряет фильтрацию фотографий, назначение цветов, пространственную сегментацию, сглаживание общих границ, упрощение цепочек и расчёт контрольных точек Безье.\nСвязность графа, объединение областей и проверка геометрии выполняются на CPU.\n\nНастройки находятся в меню «Дополнительные Параметры».')
     def build_export(self):
+        self.post_smooth_tools()
         self.choice('Сохранение Результата','• Совет: Попробуйте перетащить изображение в нужное вам место.\n• Клавиши быстрого доступа: Ctrl-S.','save',self.export)
-        g=self.group('Перетаскивание Файла');row=QHBoxLayout();fmt=QComboBox();fmt.addItems(['.svg','.eps','.pdf']);mini=QCheckBox('Минимизировать при перетаскивании');mini.setChecked(True);row.addWidget(DragFile(self,fmt,mini));right=QVBoxLayout();right.addWidget(fmt,0,Qt.AlignLeft);self.paragraph(right,'Перетащите файл в нужную директорию.');right.addWidget(mini);row.addLayout(right);g.addLayout(row)
+        g=self.group('Перетаскивание Файла');row=QHBoxLayout();fmt=QComboBox();fmt.addItems(['.pdf','.svg','.eps']);mini=QCheckBox('Минимизировать окно');mini.setChecked(True);row.addWidget(DragFile(self,fmt,mini));right=QVBoxLayout();right.addWidget(fmt,0,Qt.AlignLeft);self.paragraph(right,'Перетащите файл в нужную директорию.');row.addLayout(right);g.addLayout(row);g.addWidget(mini)
         q=self.collapsible('Быстрое Сохранение');self.export_fields(q,False)
         q=self.collapsible('Экспорт Bitmap');self.export_fields(q,True)
         q=self.collapsible('Параметры Экспорта');self.paragraph(q,'SVG / EPS / PDF: кривые Безье и составные контуры.\nPNG: прозрачный фон, заданный размер.\nAI, EMF и DXF в этой версии не поддерживаются.')
         q=self.collapsible('Сохранение Настроек');self.small_button(q,'Сохранить Настройки...',self.save_preset)
     def export_fields(self,g,bitmap):
-        folder=QLineEdit(self.quick_dir or (str(Path(self.file).parent) if self.file else ''));row=QHBoxLayout();row.addWidget(folder);browse=QPushButton('Обзор ▾');row.addWidget(browse);g.addLayout(row)
+        folder=QLineEdit(self.quick_dir or (str(Path(self.file).parent) if self.file else ''));folder.setMinimumWidth(0);folder.setSizePolicy(QSizePolicy.Ignored,QSizePolicy.Fixed);row=QHBoxLayout();row.addWidget(folder);browse=QPushButton('Обзор ▾');row.addWidget(browse);g.addLayout(row)
         def choose():
             p=QFileDialog.getExistingDirectory(self,'Папка экспорта',folder.text())
             if p:folder.setText(p)
-        browse.clicked.connect(choose);row=QHBoxLayout();row.addWidget(QLabel('Имя:'));name=QLineEdit((self.quick_name or Path(self.file).stem)+('_vectorized' if bitmap else ''));row.addWidget(name);fmt=QComboBox();fmt.addItems(['.png'] if bitmap else ['.svg','.eps','.pdf']);row.addWidget(fmt);g.addLayout(row)
+        browse.clicked.connect(choose);row=QHBoxLayout();row.addWidget(QLabel('Имя:'));name=QLineEdit((self.quick_name or Path(self.file).stem)+('_vectorized' if bitmap else ''));name.setMinimumWidth(0);name.setSizePolicy(QSizePolicy.Ignored,QSizePolicy.Fixed);row.addWidget(name);fmt=QComboBox();fmt.addItems(['.png'] if bitmap else ['.pdf','.svg','.eps']);row.addWidget(fmt);g.addLayout(row)
         width=height=None
         if bitmap:
             width=QSpinBox();height=QSpinBox()
@@ -480,13 +546,14 @@ class Window(wizard.WizardWindow):
         b.clicked.connect(save)
     def write_export(self,target,size=None):
         if not self.svg_text or not self.export_button.isEnabled():raise ValueError('Сначала обновите результат.')
-        target=Path(target);ext=target.suffix.lower();renderer=QSvgRenderer(QByteArray(self.svg_text.encode()))
+        target=Path(target);ext=target.suffix.lower()
         if ext=='.svg':target.write_text(self.svg_text,encoding='utf-8')
         elif ext=='.eps':target.write_text(to_eps(self.svg_text),encoding='ascii')
         elif ext=='.pdf':
-            writer=QPdfWriter(str(target));writer.setResolution(72);writer.setPageSize(QPageSize(QSizeF(self.canvas.image_size),QPageSize.Point));writer.setPageMargins(QMarginsF(0,0,0,0))
-            painter=QPainter(writer);renderer.render(painter,QRectF(writer.pageLayout().paintRectPixels(72)));painter.end()
+            from color_objects import pdf_bytes
+            target.write_bytes(pdf_bytes(self.svg_text))
         elif ext=='.png':
+            renderer=QSvgRenderer(QByteArray(self.svg_text.encode()))
             size=size or self.canvas.image_size
             if size.width()*size.height()>80_000_000:raise ValueError('Размер PNG превышает 80 миллионов пикселей.')
             im=QImage(size,QImage.Format_ARGB32_Premultiplied);im.fill(Qt.transparent);p=QPainter(im);renderer.render(p,QRectF(0,0,size.width(),size.height()));p.end()
@@ -495,7 +562,7 @@ class Window(wizard.WizardWindow):
         self.statusBar().showMessage(f'Сохранено: {target}')
     def export(self):
         if not self.svg_text or not self.export_button.isEnabled():return
-        p,fmt=QFileDialog.getSaveFileName(self,'Сохранение Результата',str(Path(self.file).with_suffix('.svg')),'SVG (*.svg);;EPS (*.eps);;PDF (*.pdf);;PNG (*.png)')
+        p,fmt=QFileDialog.getSaveFileName(self,'Сохранение Результата',str(Path(self.file).with_suffix('.pdf')),'PDF (*.pdf);;SVG (*.svg);;EPS (*.eps);;PNG (*.png)')
         if not p:return
         ext={ 'SVG (*.svg)':'.svg','EPS (*.eps)':'.eps','PDF (*.pdf)':'.pdf','PNG (*.png)':'.png'}[fmt];target=Path(p)
         if target.suffix.lower()!=ext:

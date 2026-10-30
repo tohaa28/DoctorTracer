@@ -17,7 +17,7 @@ from PySide6.QtGui import (QColor, QPainter, QPixmap, QImage, QFont, QAction, QK
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QLabel, QPushButton, QComboBox, QSpinBox, QSlider, QCheckBox, QFileDialog, QMessageBox,
     QFrame, QProgressBar, QScrollArea, QButtonGroup, QColorDialog)
-from PySide6.QtSvg import QSvgRenderer
+from vector_render import QSvgRenderer
 from PIL import Image, ImageOps, ImageDraw
 from engine import to_eps
 

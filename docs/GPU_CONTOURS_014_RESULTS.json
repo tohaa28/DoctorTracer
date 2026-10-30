@@ -1,0 +1,302 @@
+{
+  "baseline": "02373c0",
+  "device": "NVIDIA GeForce GTX 1080",
+  "native": [
+    {
+      "image_id": 0,
+      "mode": "fixed",
+      "samples_seconds": {
+        "before": [
+          8.74252820003312,
+          8.551665000035428,
+          8.950899000046775
+        ],
+        "after": [
+          6.922655600006692,
+          6.914046799996868,
+          6.992595399962738
+        ]
+      },
+      "median_seconds": {
+        "before": 8.74252820003312,
+        "after": 6.922655600006692
+      },
+      "speedup": 1.2628864853575368,
+      "boundary_samples": {
+        "before": [
+          8.63868679990992,
+          8.453512199921533,
+          8.846250900067389
+        ],
+        "after": [
+          6.787079299916513,
+          6.779534799978137,
+          6.8550831999164075
+        ]
+      },
+      "svg_byte_identical": true,
+      "audit": {
+        "pairs_checked": 28,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      },
+      "device": "NVIDIA GeForce GTX 1080",
+      "contour_compute": "OpenCL GPU FP64",
+      "curve_compute": "OpenCL GPU FP64"
+    },
+    {
+      "image_id": 0,
+      "mode": "unlimited",
+      "samples_seconds": {
+        "before": [
+          12.090856700087897,
+          11.092451800010167,
+          11.408496399992146
+        ],
+        "after": [
+          11.070604200009257,
+          10.457871199934743,
+          10.403775700018741
+        ]
+      },
+      "median_seconds": {
+        "before": 11.408496399992146,
+        "after": 10.457871199934743
+      },
+      "speedup": 1.0909004501856299,
+      "boundary_samples": {
+        "before": [
+          6.706457199994475,
+          6.0178357999539,
+          6.320202199975029
+        ],
+        "after": [
+          5.594954500091262,
+          5.156338399974629,
+          5.201992200105451
+        ]
+      },
+      "svg_byte_identical": true,
+      "audit": {
+        "pairs_checked": 15103,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      },
+      "device": "NVIDIA GeForce GTX 1080",
+      "contour_compute": "OpenCL GPU FP64",
+      "curve_compute": "OpenCL GPU FP64"
+    },
+    {
+      "image_id": 1,
+      "mode": "fixed",
+      "samples_seconds": {
+        "before": [
+          2.172821699990891,
+          2.337964600068517,
+          2.305627299938351
+        ],
+        "after": [
+          1.7107667999807745,
+          1.6898165999446064,
+          1.9099972000112757
+        ]
+      },
+      "median_seconds": {
+        "before": 2.305627299938351,
+        "after": 1.7107667999807745
+      },
+      "speedup": 1.3477157143593512,
+      "boundary_samples": {
+        "before": [
+          2.1196494000032544,
+          2.281583399977535,
+          2.245690600015223
+        ],
+        "after": [
+          1.6462773999664932,
+          1.629792100051418,
+          1.8458686000667512
+        ]
+      },
+      "svg_byte_identical": true,
+      "audit": {
+        "pairs_checked": 32,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      },
+      "device": "NVIDIA GeForce GTX 1080",
+      "contour_compute": "OpenCL GPU FP64",
+      "curve_compute": "OpenCL GPU FP64"
+    },
+    {
+      "image_id": 1,
+      "mode": "unlimited",
+      "samples_seconds": {
+        "before": [
+          3.960259500076063,
+          3.936917299986817,
+          4.286296800011769
+        ],
+        "after": [
+          3.738366900011897,
+          3.754459400079213,
+          3.682700900011696
+        ]
+      },
+      "median_seconds": {
+        "before": 3.960259500076063,
+        "after": 3.738366900011897
+      },
+      "speedup": 1.0593554902445397,
+      "boundary_samples": {
+        "before": [
+          2.1785723000066355,
+          2.0603623999049887,
+          2.2850011000409722
+        ],
+        "after": [
+          1.8310839000623673,
+          1.8245218999218196,
+          1.7939318999415264
+        ]
+      },
+      "svg_byte_identical": true,
+      "audit": {
+        "pairs_checked": 2673,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      },
+      "device": "NVIDIA GeForce GTX 1080",
+      "contour_compute": "OpenCL GPU FP64",
+      "curve_compute": "OpenCL GPU FP64"
+    }
+  ],
+  "wasm_shared_finish": {
+    "ok": true,
+    "rows": [
+      {
+        "id": 0,
+        "unlimited": false,
+        "beforeMs": [
+          505.60000002384186,
+          484.3000000715256,
+          472.60000002384186
+        ],
+        "afterMs": [
+          501.89999997615814,
+          492.2999999523163,
+          488.7999999523163
+        ],
+        "gpuTransferAndDiffusionMs": [
+          22.399999976158142,
+          18.799999952316284,
+          18.09999990463257
+        ],
+        "medianBeforeMs": 484.3000000715256,
+        "medianAfterMs": 492.2999999523163,
+        "speedup": 0.9837497463303563,
+        "exactSvg": true,
+        "audit": {
+          "pairs": 28,
+          "max_intersection_area_px2": 0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      {
+        "id": 1,
+        "unlimited": true,
+        "beforeMs": [
+          728.3999999761581,
+          681.6999999284744,
+          692.5
+        ],
+        "afterMs": [
+          643.1000000238419,
+          621.3000000715256,
+          684.5
+        ],
+        "gpuTransferAndDiffusionMs": [
+          25.399999976158142,
+          25.09999990463257,
+          28.100000023841858
+        ],
+        "medianBeforeMs": 692.5,
+        "medianAfterMs": 643.1000000238419,
+        "speedup": 1.0768154252438606,
+        "exactSvg": true,
+        "audit": {
+          "pairs": 15103,
+          "max_intersection_area_px2": 0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      {
+        "id": 2,
+        "unlimited": false,
+        "beforeMs": [
+          161.60000002384186,
+          163.20000004768372,
+          157.79999995231628
+        ],
+        "afterMs": [
+          169.89999997615814,
+          173.5,
+          167.80000007152557
+        ],
+        "gpuTransferAndDiffusionMs": [
+          13.700000047683716,
+          13.599999904632568,
+          13.900000095367432
+        ],
+        "medianBeforeMs": 161.60000002384186,
+        "medianAfterMs": 169.89999997615814,
+        "speedup": 0.9511477342349558,
+        "exactSvg": true,
+        "audit": {
+          "pairs": 32,
+          "max_intersection_area_px2": 0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      {
+        "id": 3,
+        "unlimited": true,
+        "beforeMs": [
+          324.1999999284744,
+          317,
+          323.1999999284744
+        ],
+        "afterMs": [
+          322.3000000715256,
+          320.5,
+          308.10000002384186
+        ],
+        "gpuTransferAndDiffusionMs": [
+          18.799999952316284,
+          18.399999976158142,
+          19.100000023841858
+        ],
+        "medianBeforeMs": 323.1999999284744,
+        "medianAfterMs": 320.5,
+        "speedup": 1.0084243367503103,
+        "exactSvg": true,
+        "audit": {
+          "pairs": 2673,
+          "max_intersection_area_px2": 0,
+          "tolerance_px2": 0.0001
+        }
+      }
+    ]
+  },
+  "quality": {
+    "native_synthetic_exact_svg": 168,
+    "real_images": 2,
+    "profiles_per_image": 2,
+    "webgpu_synthetic_exact_svg": 24
+  },
+  "policy": {
+    "wasm_gpu_contours": "unlimited photo, detail 0/1, at least 700000 pixels; forced route available to diagnostics",
+    "native_gpu_contours": "OpenCL FP64, CPU fallback on unavailable GPU or long chain"
+  },
+  "timing_note": "3 warm samples per route; native interleaved, preprocessing/assignment GPU in both before and after; WASM timings cover shared finish with segmentation prepared."
+}

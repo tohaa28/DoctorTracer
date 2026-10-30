@@ -1,0 +1,46 @@
+// SPDX-License-Identifier: MIT
+// Direct shared grid/chain smoothing port from desktop/shared_regions.py and boundary_smoothing.py.
+use std::collections::{BTreeMap,HashMap};use std::fmt::Write;
+fn neighbor(v:usize,d:usize,stride:usize)->usize{match d{0=>v+1,1=>v+stride,2=>v-1,_=>v-stride}}
+fn degree(v:u8)->u32{v.count_ones()}
+fn midpoint(a:[f64;2],b:[f64;2])->[f64;2]{[(a[0]+b[0])*0.5,(a[1]+b[1])*0.5]}
+fn simplify(chain:&[usize],coords:&[[f64;2]],keep:&mut[bool],tol:f64){if chain.len()<2{return;}keep[chain[0]]=true;keep[*chain.last().unwrap()]=true;let mut stack=vec![(0,chain.len()-1)];while let Some((left,right))=stack.pop(){if right-left<2{continue;}let a=coords[chain[left]];let b=coords[chain[right]];let d=[b[0]-a[0],b[1]-a[1]];let den=d[0]*d[0]+d[1]*d[1];let mut best=-1.;let mut split=left;for j in left+1..right{let p=coords[chain[j]];let t=if den>0.{(((p[0]-a[0])*d[0]+(p[1]-a[1])*d[1])/den).clamp(0.,1.)}else{0.};let error=(p[0]-a[0]-t*d[0]).powi(2)+(p[1]-a[1]-t*d[1]).powi(2);if error>best{best=error;split=j;}}if best>tol*tol{keep[chain[split]]=true;stack.push((left,split));stack.push((split,right));}}}
+pub fn trace(labels:&[i32],palette:&[[u8;3]],w:usize,h:usize,detail:usize,smooth:bool,polygon:bool,fixed:bool)->String{
+ trace_external(labels,palette,w,h,detail,smooth,polygon,fixed,None)
+}
+pub fn trace_external(labels:&[i32],palette:&[[u8;3]],w:usize,h:usize,detail:usize,smooth:bool,polygon:bool,fixed:bool,external:Option<(&[u32],u32)>)->String{
+ trace_quality(labels,palette,w,h,detail,smooth,polygon,fixed,external,None)
+}
+pub fn trace_quality(labels:&[i32],palette:&[[u8;3]],w:usize,h:usize,detail:usize,smooth:bool,polygon:bool,fixed:bool,external:Option<(&[u32],u32)>,source:Option<&[u8]>)->String{
+ let tolerance=[0.75,0.5,0.3][detail]*if fixed{0.5}else{1.};
+ let stride=w+1;let n=stride*(h+1);let mut unique=Vec::new();let mut lookup=HashMap::new();let remap:Vec<i32>=palette.iter().map(|p|*lookup.entry(*p).or_insert_with(||{unique.push(*p);(unique.len()-1) as i32})).collect();let labels:Vec<i32>=labels.iter().map(|&v|if v<0{-1}else{remap[v as usize]}).collect();
+ let mut graph=vec![0u8;n];let mut vertices=Vec::new();let mut edges:BTreeMap<i32,BTreeMap<usize,u8>>=BTreeMap::new();
+ let mut add=|color:i32,a:usize,d:usize|{*edges.entry(color).or_default().entry(a).or_default()|=1<<d;};
+ for y in 0..=h{for x in 0..w{let above=if y>0{labels[(y-1)*w+x]}else{-1};let below=if y<h{labels[y*w+x]}else{-1};if above==below{continue;}let a=y*stride+x;let b=a+1;add(below,a,0);add(above,b,2);for(v,d)in[(a,0),(b,2)]{if graph[v]==0{vertices.push(v);}graph[v]|=1<<d;}}}
+ for y in 0..h{for x in 0..=w{let left=if x>0{labels[y*w+x-1]}else{-1};let right=if x<w{labels[y*w+x]}else{-1};if left==right{continue;}let a=y*stride+x;let b=a+stride;add(left,a,1);add(right,b,3);for(v,d)in[(a,1),(b,3)]{if graph[v]==0{vertices.push(v);}graph[v]|=1<<d;}}}
+ let mut loops:BTreeMap<i32,Vec<Vec<usize>>>=BTreeMap::new();
+ for(color,mut out)in edges{while let Some((&start,_))=out.first_key_value(){let mut a=start;let mut previous=None;let mut path=Vec::new();loop{path.push(a);let choices=out[&a];let dirs:Vec<_>=[0usize,2,1,3].into_iter().filter(|d|choices&(1<<d)!=0).collect();let d=if dirs.len()==1||previous.is_none(){dirs[0]}else{let p:usize=previous.unwrap();let dx=(a%stride) as i32-(p%stride) as i32;let dy=(a/stride) as i32-(p/stride) as i32;let mut chosen=dirs[0];let mut score=-1;for &d in &dirs{let b=neighbor(a,d,stride);let bx=(b%stride) as i32-(a%stride) as i32;let by=(b/stride) as i32-(a/stride) as i32;let cross=dx*by-dy*bx;let dot=dx*bx+dy*by;let s=if cross>0{2}else if dot>0{1}else{0};if s>score{score=s;chosen=d;}}chosen};let mask=out.get_mut(&a).unwrap();*mask&=!(1<<d);if *mask==0{out.remove(&a);}previous=Some(a);a=neighbor(a,d,stride);if a==start{break;}}loops.entry(color).or_default().push(path);}}
+ let mut coords:Vec<[f64;2]>=if let Some((values,scale))=external{values.chunks_exact(2).map(|p|[p[0] as f64/scale as f64,p[1] as f64/scale as f64]).collect()}else{(0..n).map(|v|[(v%stride) as f64,(v/stride) as f64]).collect()};let mut keep=vec![false;n];
+ if smooth{
+  if external.is_none(){let mut pinned=vec![false;n];for paths in loops.values(){for path in paths{if path.len()<=8&&path.iter().all(|&v|degree(graph[v])==2){for &v in path{pinned[v]=true;}}}}
+  let active:Vec<_>=vertices.iter().copied().filter(|&v|!pinned[v]&&degree(graph[v])==2&&v%stride>0&&v%stride<w&&v/stride>0&&v/stride<h).collect();let mut next=coords.clone();
+  for _ in 0..if fixed{[4,2,1][detail]}else{[10,8,5][detail]}{for &v in &active{let ns:Vec<_>=(0..4).filter(|d|graph[v]&(1<<d)!=0).map(|d|neighbor(v,d,stride)).collect();next[v]=std::array::from_fn(|c|0.5*coords[v][c]+0.25*(coords[ns[0]][c]+coords[ns[1]][c]));}std::mem::swap(&mut coords,&mut next);}}
+
+  for &v in &vertices{keep[v]=degree(graph[v])!=2;}let mut seen=vec![0u8;n];
+  for &start in &vertices{if degree(graph[start])==2{continue;}for d in 0..4{if graph[start]&(1<<d)==0||seen[start]&(1<<d)!=0{continue;}let mut chain=vec![start];let(mut a,mut dir)=(start,d);loop{let b=neighbor(a,dir,stride);seen[a]|=1<<dir;seen[b]|=1<<((dir+2)%4);chain.push(b);if degree(graph[b])!=2{break;}let back=(dir+2)%4;dir=(0..4).find(|&d|graph[b]&(1<<d)!=0&&d!=back).unwrap();a=b;}simplify(&chain,&coords,&mut keep,tolerance);}}
+  for &start in &vertices{for d in 0..4{if graph[start]&(1<<d)==0||seen[start]&(1<<d)!=0{continue;}let mut chain=vec![start];let(mut a,mut dir)=(start,d);loop{let b=neighbor(a,dir,stride);seen[a]|=1<<dir;seen[b]|=1<<((dir+2)%4);if b==start{break;}chain.push(b);let back=(dir+2)%4;dir=(0..4).find(|&d|graph[b]&(1<<d)!=0&&d!=back).unwrap();a=b;}let half=chain.len()/2;simplify(&chain[..half+1],&coords,&mut keep,tolerance);let mut tail=chain[half..].to_vec();tail.push(start);simplify(&tail,&coords,&mut keep,tolerance);}}
+  for paths in loops.values(){for path in paths{if path.iter().filter(|&&v|keep[v]).count()<3{for i in 0..4{keep[path[i*path.len()/4]]=true;}}}}
+ }else{for paths in loops.values(){for path in paths{for(i,&v)in path.iter().enumerate(){let u=path[(i+path.len()-1)%path.len()];let t=path[(i+1)%path.len()];keep[v]=degree(graph[v])!=2||v as isize-u as isize!=t as isize-v as isize;}}}}
+ let radii=if smooth{source.map(|a|crate::edge_fit::fit(&mut coords,&graph,&loops,&keep,&labels,&unique,a,w,h))}else{None};
+ let mut svg=format!("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{w}\" height=\"{h}\" viewBox=\"0 0 {w} {h}\" data-color-objects=\"merged\" data-shared-boundaries=\"true\"><g id=\"image\">");
+ let mut contract_faces=Vec::new();
+ for(color,paths)in loops{let mut data=String::new();for path in paths{if path.len()<=8&&path.iter().all(|&v|degree(graph[v])==2){for(i,&v)in path.iter().enumerate(){write!(data,"{}{:.4} {:.4} ",if i==0{'M'}else{'L'},coords[v][0],coords[v][1]).unwrap();}data.push_str("Z ");continue;}let points:Vec<_>=path.into_iter().filter(|&v|keep[v]).collect();if points.len()<3{continue;}for(i,&v)in points.iter().enumerate(){let corner=coords[v];let before=midpoint(coords[points[(i+points.len()-1)%points.len()]],corner);let after=midpoint(corner,coords[points[(i+1)%points.len()]]);let near=|p:[f64;2]|{let delta=[p[0]-corner[0],p[1]-corner[1]];let len=delta[0].abs().max(delta[1].abs());let radius=if smooth&&corner[0]>0.&&corner[0]<w as f64&&corner[1]>0.&&corner[1]<h as f64{radii.as_ref().map(|r|r[v]).unwrap_or(1.5)}else{0.5};let f=if len>0.{(radius/len).min(1.)}else{0.};[corner[0]+delta[0]*f,corner[1]+delta[1]*f]};let enter=near(before);let leave=near(after);if i==0{let p=if degree(graph[v])==2&&!polygon&&corner[0]>0.&&corner[0]<w as f64&&corner[1]>0.&&corner[1]<h as f64{enter}else{corner};write!(data,"M{:.4} {:.4} ",p[0],p[1]).unwrap();}if degree(graph[v])==2&&!polygon&&corner[0]>0.&&corner[0]<w as f64&&corner[1]>0.&&corner[1]<h as f64{let c1=std::array::from_fn::<_,2,_>(|j|(enter[j]+2.*corner[j])/3.);let c2=std::array::from_fn::<_,2,_>(|j|(leave[j]+2.*corner[j])/3.);write!(data,"L{:.4} {:.4} C{:.4} {:.4} {:.4} {:.4} {:.4} {:.4} ",enter[0],enter[1],c1[0],c1[1],c2[0],c2[1],leave[0],leave[1]).unwrap();}else{write!(data,"L{:.4} {:.4} ",corner[0],corner[1]).unwrap();}}data.push_str("Z ");}
+  contract_faces.push((color,data.clone()));
+  if color>=0&&!data.is_empty(){let ink=unique[color as usize];write!(svg,"<g id=\"color-{:02x}{:02x}{:02x}\" fill=\"#{:02x}{:02x}{:02x}\" fill-rule=\"nonzero\"><path fill=\"#{:02x}{:02x}{:02x}\" d=\"{}\"/></g>",ink[0],ink[1],ink[2],ink[0],ink[1],ink[2],ink[0],ink[1],ink[2],data).unwrap();}
+ }
+ if !crate::shared_contract::verify(&contract_faces){
+  if !polygon{return trace_quality(labels.as_slice(),&unique,w,h,detail,false,true,fixed,None,None);}
+  return String::new();
+ }
+ svg.push_str("</g></svg>");svg.replace("data-shared-boundaries=\"true\"","data-shared-boundaries=\"true\" data-boundary-contract=\"paired\"")
+}

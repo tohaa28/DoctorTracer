@@ -1,0 +1,546 @@
+{
+  "automatic": [
+    {
+      "case": "synthetic-0-0",
+      "algorithm": "desktop-shared",
+      "initial_regions": 0,
+      "region_target": 128,
+      "regions": 0,
+      "geometry": {
+        "pairs": 0,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 0.0127564,
+      "rgba_mae": 0.0,
+      "desktop_geometry_audit": {
+        "pairs_checked": 0,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "synthetic-0-1",
+      "algorithm": "desktop-shared",
+      "initial_regions": 0,
+      "region_target": 128,
+      "regions": 0,
+      "geometry": {
+        "pairs": 0,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 0.004165800000000004,
+      "rgba_mae": 0.0,
+      "desktop_geometry_audit": {
+        "pairs_checked": 0,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "synthetic-0-2",
+      "algorithm": "desktop-shared",
+      "initial_regions": 0,
+      "region_target": 128,
+      "regions": 0,
+      "geometry": {
+        "pairs": 0,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 0.0023503000000000044,
+      "rgba_mae": 0.0,
+      "desktop_geometry_audit": {
+        "pairs_checked": 0,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "synthetic-1-0",
+      "algorithm": "desktop-shared",
+      "initial_regions": 85,
+      "region_target": 128,
+      "regions": 85,
+      "geometry": {
+        "pairs": 30,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 0.04586160000000001,
+      "rgba_mae": 0.0,
+      "desktop_geometry_audit": {
+        "pairs_checked": 30,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "synthetic-1-1",
+      "algorithm": "desktop-shared",
+      "initial_regions": 91,
+      "region_target": 128,
+      "regions": 91,
+      "geometry": {
+        "pairs": 15,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 0.023339399999999982,
+      "rgba_mae": 0.0,
+      "desktop_geometry_audit": {
+        "pairs_checked": 15,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "synthetic-1-2",
+      "algorithm": "desktop-shared",
+      "initial_regions": 86,
+      "region_target": 128,
+      "regions": 86,
+      "geometry": {
+        "pairs": 25,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 0.011948399999999993,
+      "rgba_mae": 0.0,
+      "desktop_geometry_audit": {
+        "pairs_checked": 25,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "synthetic-2-0",
+      "algorithm": "desktop-shared",
+      "initial_regions": 210,
+      "region_target": 128,
+      "regions": 128,
+      "geometry": {
+        "pairs": 64,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 0.025012799999999998,
+      "rgba_mae": 0.0,
+      "desktop_geometry_audit": {
+        "pairs_checked": 64,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "synthetic-2-1",
+      "algorithm": "desktop-shared",
+      "initial_regions": 222,
+      "region_target": 128,
+      "regions": 128,
+      "geometry": {
+        "pairs": 66,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 0.02349509999999998,
+      "rgba_mae": 0.0,
+      "desktop_geometry_audit": {
+        "pairs_checked": 66,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "synthetic-2-2",
+      "algorithm": "desktop-shared",
+      "initial_regions": 213,
+      "region_target": 185,
+      "regions": 185,
+      "geometry": {
+        "pairs": 71,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 0.027636400000000037,
+      "rgba_mae": 0.0,
+      "desktop_geometry_audit": {
+        "pairs_checked": 71,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "alpha-hole-0",
+      "algorithm": "desktop-shared",
+      "initial_regions": 2,
+      "region_target": 128,
+      "regions": 2,
+      "geometry": {
+        "pairs": 0,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 0.02294659999999999,
+      "rgba_mae": 0.0,
+      "desktop_geometry_audit": {
+        "pairs_checked": 0,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "alpha-hole-1",
+      "algorithm": "desktop-shared",
+      "initial_regions": 2,
+      "region_target": 128,
+      "regions": 2,
+      "geometry": {
+        "pairs": 0,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 0.01400630000000001,
+      "rgba_mae": 0.0,
+      "desktop_geometry_audit": {
+        "pairs_checked": 0,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "alpha-hole-2",
+      "algorithm": "desktop-shared",
+      "initial_regions": 2,
+      "region_target": 128,
+      "regions": 2,
+      "geometry": {
+        "pairs": 0,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 0.009583199999999976,
+      "rgba_mae": 0.0,
+      "desktop_geometry_audit": {
+        "pairs_checked": 0,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "private-0-0",
+      "algorithm": "desktop-shared",
+      "initial_regions": 2636,
+      "region_target": 151,
+      "regions": 151,
+      "geometry": {
+        "pairs": 637,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 10.203510199999998,
+      "rgba_mae": 0.0,
+      "desktop_geometry_audit": {
+        "pairs_checked": 637,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "private-0-1",
+      "algorithm": "desktop-shared",
+      "initial_regions": 3449,
+      "region_target": 518,
+      "regions": 518,
+      "geometry": {
+        "pairs": 2546,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 8.029246299999999,
+      "rgba_mae": 0.0,
+      "desktop_geometry_audit": {
+        "pairs_checked": 2546,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "private-0-2",
+      "algorithm": "desktop-shared",
+      "initial_regions": 4279,
+      "region_target": 1871,
+      "regions": 1871,
+      "geometry": {
+        "pairs": 14836,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 9.3990115,
+      "rgba_mae": 1.9256161971830987e-05,
+      "desktop_geometry_audit": {
+        "pairs_checked": 14836,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "private-1-0",
+      "algorithm": "desktop-shared",
+      "initial_regions": 14010,
+      "region_target": 810,
+      "regions": 810,
+      "geometry": {
+        "pairs": 3154,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 12.297188300000002,
+      "rgba_mae": 0.0,
+      "desktop_geometry_audit": {
+        "pairs_checked": 3154,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "private-1-1",
+      "algorithm": "desktop-shared",
+      "initial_regions": 18459,
+      "region_target": 2713,
+      "regions": 2713,
+      "geometry": {
+        "pairs": 12140,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 10.7115458,
+      "rgba_mae": 5.6014150943396226e-05,
+      "desktop_geometry_audit": {
+        "pairs_checked": 12140,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "private-1-2",
+      "algorithm": "desktop-shared",
+      "initial_regions": 20902,
+      "region_target": 8691,
+      "regions": 8691,
+      "geometry": {
+        "pairs": 47462,
+        "max_intersection_area_px2": 0,
+        "tolerance_px2": 0.0001
+      },
+      "fallback": false,
+      "rust_seconds": 13.804208199999994,
+      "rgba_mae": 7.534067085953879e-05,
+      "desktop_geometry_audit": {
+        "pairs_checked": 47462,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    }
+  ],
+  "limited": [
+    {
+      "case": "opaque-photo-0",
+      "rgba_mae": 0.0007957175925925925,
+      "audit": {
+        "pairs_checked": 3,
+        "max_intersection_area_px2": 2.61553e-08,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "opaque-photo-1",
+      "rgba_mae": 0.0007595486111111111,
+      "audit": {
+        "pairs_checked": 3,
+        "max_intersection_area_px2": 1.7145685e-08,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "opaque-photo-2",
+      "rgba_mae": 0.0007957175925925925,
+      "audit": {
+        "pairs_checked": 3,
+        "max_intersection_area_px2": 6.93843e-09,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "opaque-aa-0",
+      "rgba_mae": 0.12141927083333333,
+      "audit": {
+        "pairs_checked": 3,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "opaque-aa-1",
+      "rgba_mae": 0.12141927083333333,
+      "audit": {
+        "pairs_checked": 3,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "opaque-aa-2",
+      "rgba_mae": 0.12141927083333333,
+      "audit": {
+        "pairs_checked": 3,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "opaque-hard-0",
+      "rgba_mae": 0.0007957175925925925,
+      "audit": {
+        "pairs_checked": 3,
+        "max_intersection_area_px2": 2.61553e-08,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "opaque-hard-1",
+      "rgba_mae": 0.0007595486111111111,
+      "audit": {
+        "pairs_checked": 3,
+        "max_intersection_area_px2": 1.7145685e-08,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "opaque-hard-2",
+      "rgba_mae": 0.0007957175925925925,
+      "audit": {
+        "pairs_checked": 3,
+        "max_intersection_area_px2": 6.93843e-09,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "alpha-photo-0",
+      "rgba_mae": 0.0008680555555555555,
+      "audit": {
+        "pairs_checked": 1,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "alpha-photo-1",
+      "rgba_mae": 0.0008680555555555555,
+      "audit": {
+        "pairs_checked": 1,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "alpha-photo-2",
+      "rgba_mae": 0.0,
+      "audit": {
+        "pairs_checked": 1,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "alpha-aa-0",
+      "rgba_mae": 0.0,
+      "audit": {
+        "pairs_checked": 1,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "alpha-aa-1",
+      "rgba_mae": 0.0,
+      "audit": {
+        "pairs_checked": 1,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "alpha-aa-2",
+      "rgba_mae": 0.0,
+      "audit": {
+        "pairs_checked": 1,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "alpha-hard-0",
+      "rgba_mae": 0.0008680555555555555,
+      "audit": {
+        "pairs_checked": 1,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "alpha-hard-1",
+      "rgba_mae": 0.0008680555555555555,
+      "audit": {
+        "pairs_checked": 1,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "alpha-hard-2",
+      "rgba_mae": 0.0,
+      "audit": {
+        "pairs_checked": 1,
+        "max_intersection_area_px2": 0.0,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "private-0",
+      "rgba_mae": 0.0273570459213615,
+      "audit": {
+        "pairs_checked": 32,
+        "max_intersection_area_px2": 4.72795005e-07,
+        "tolerance_px2": 0.0001
+      }
+    },
+    {
+      "case": "private-1",
+      "rgba_mae": 0.14418173480083857,
+      "audit": {
+        "pairs_checked": 36,
+        "max_intersection_area_px2": 2.119043655e-06,
+        "tolerance_px2": 0.0001
+      }
+    }
+  ]
+}
