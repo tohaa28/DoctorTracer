@@ -15,6 +15,7 @@ import cv2
 from geometry import absolute_path
 
 from trace_progress import report
+from input_raster import open_raster
 
 NS='http://www.w3.org/2000/svg'
 
@@ -24,8 +25,7 @@ def spatial_photo(cfg):
 
 
 def load_source(path,cfg):
-    with Image.open(path) as src:
-        im=ImageOps.exif_transpose(src).convert('RGBA')
+    im = open_raster(path)
     original=im.size
     im.thumbnail((cfg.get('max_size',2400),)*2,Image.Resampling.LANCZOS)
     a=np.array(im)
@@ -214,8 +214,7 @@ def trace_graphic(path,cfg):
 
 
 def prepare(path, cfg):
-    with Image.open(path) as src:
-        im = ImageOps.exif_transpose(src).convert('RGBA')
+    im = open_raster(path)
     original = im.size
     limit = cfg.get('max_size', 2400)
     im.thumbnail((limit, limit), Image.Resampling.LANCZOS)

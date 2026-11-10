@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QApplication,QWidget,QPushButton,QLabel,QFrame,QVB
 from vector_render import QSvgRenderer
 from legacy import MainWindow as ServiceWindow,Canvas as BaseCanvas
 from engine import analyze_image,segment,find_palette
+from input_raster import open_raster
 from palette_ui import transparency_slot,transparent_swatch
 
 STYLE='''
@@ -173,7 +174,7 @@ class WizardWindow(ServiceWindow):
         self.go('palette') if mode=='fixed' else self.begin_trace()
     def palette_has_transparency(self):return transparency_slot(self)
     def palette_for(self,n):
-        with Image.open(self.file) as im:im=im.convert('RGBA');im.thumbnail((500,500));arr=np.array(im)
+        im=open_raster(self.file);im.thumbnail((500,500));arr=np.array(im)
         return ['#%02x%02x%02x'%tuple(c) for c in find_palette(arr,max(1,n-int(self.palette_has_transparency())))]
     def build_palette(self):
         candidates=self.group('Предлагаемые Палитры');lst=QListWidget();lst.setObjectName('paletteCandidates');lst.setMinimumHeight(255);lst.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff);candidates.addWidget(lst)

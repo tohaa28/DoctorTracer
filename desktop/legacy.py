@@ -18,7 +18,8 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QHBoxLayout, 
     QLabel, QPushButton, QComboBox, QSpinBox, QSlider, QCheckBox, QFileDialog, QMessageBox,
     QFrame, QProgressBar, QScrollArea, QButtonGroup, QColorDialog)
 from vector_render import QSvgRenderer
-from PIL import Image, ImageOps, ImageDraw
+from PIL import Image, ImageDraw
+from input_raster import open_raster
 from engine import to_eps
 
 ROOT = Path(getattr(sys, '_MEIPASS', Path(__file__).parent))
@@ -43,12 +44,10 @@ class Canvas(QWidget):
         self.setMouseTracking(True)
 
     def load(self, path):
-        # Decode through Pillow for EXIF orientation and uniform TIFF/WebP support.
-        with Image.open(path) as im:
-            im = ImageOps.exif_transpose(im).convert('RGBA')
-            self.image_size = QSize(*im.size)
-            data = im.tobytes()
-            self.pix = QPixmap.fromImage(QImage(data, im.width, im.height, im.width*4, QImage.Format_RGBA8888).copy())
+        im = open_raster(path)
+        self.image_size = QSize(*im.size)
+        data = im.tobytes()
+        self.pix = QPixmap.fromImage(QImage(data, im.width, im.height, im.width*4, QImage.Format_RGBA8888).copy())
         self.svg = None
         self.fit()
 
@@ -267,7 +266,7 @@ class MainWindow(QMainWindow):
     def error(self,text): QMessageBox.warning(self,'DoctorTracer',str(text))
     def open_dialog(self):
         if self.process:return
-        path,_=QFileDialog.getOpenFileName(self,'Открыть изображение','','Изображения (*.png *.jpg *.jpeg *.bmp *.tif *.tiff *.webp *.gif);;Все файлы (*)')
+        path,_=QFileDialog.getOpenFileName(self,'Открыть изображение','','Изображения (*.png *.jpg *.jpeg *.bmp *.tif *.tiff *.webp *.gif *.pdf);;Все файлы (*)')
         if path:self.load(path)
     def load(self,path):
         if self.process:return
@@ -373,7 +372,7 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage('Цвет изменён · Ctrl+S — экспорт результата')
     def batch(self):
         if self.process:return
-        paths,_=QFileDialog.getOpenFileNames(self,'Изображения для пакетной обработки','','Изображения (*.png *.jpg *.jpeg *.bmp *.tif *.tiff *.webp *.gif)')
+        paths,_=QFileDialog.getOpenFileNames(self,'Изображения для пакетной обработки','','Изображения (*.png *.jpg *.jpeg *.bmp *.tif *.tiff *.webp *.gif *.pdf)')
         if not paths:return
         folder=QFileDialog.getExistingDirectory(self,'Папка для SVG')
         if not folder:return

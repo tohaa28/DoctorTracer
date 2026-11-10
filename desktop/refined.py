@@ -1,8 +1,8 @@
 """UI corrections from the step-by-step Desktop 1.15 walkthrough."""
-import sys, math, json, copy
+import sys, math, json
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from PySide6.QtCore import Qt, QSize, QSizeF, QRectF, QByteArray, QTimer, QMimeData, QUrl, QMarginsF, QProcess
+from PySide6.QtCore import Qt, QSize, QSizeF, QRectF, QByteArray, QTimer, QMimeData, QUrl, QMarginsF, QProcess, QPointF
 from PySide6.QtGui import QPainter, QImage, QColor, QDrag, QPdfWriter, QPageSize, QIcon, QPixmap
 from PySide6.QtWidgets import (QApplication,QWidget,QVBoxLayout,QHBoxLayout,QLabel,
     QPushButton,QCheckBox,QRadioButton,QButtonGroup,QSpinBox,QSlider,QLineEdit,
@@ -10,6 +10,8 @@ from PySide6.QtWidgets import (QApplication,QWidget,QVBoxLayout,QHBoxLayout,QLab
 from vector_render import QSvgRenderer
 import wizard
 from engine import to_eps
+from input_raster import open_raster
+from background_regions import split_regions, hit_paths, filter_regions
 
 def arrow_icon(direction,color='#269cab'):
     paths={'next':'M9 4 L23 16 L9 28 Z','back':'M23 4 L9 16 L23 28 Z','home':'M5 5 H9 V27 H5 Z M24 4 L11 16 L24 28 Z','reset':'M24 9 A11 11 0 1 0 26 22 L22 20 A7 7 0 1 1 21 12 L16 16 H29 V3 Z','cancel':'M8 5 L16 13 L24 5 L27 8 L19 16 L27 24 L24 27 L16 19 L8 27 L5 24 L13 16 L5 8 Z'}
@@ -28,13 +30,11 @@ class Canvas(wizard.ClassicCanvas):
             return
         super().paintEvent(e)
         if owner and owner.page=='background' and getattr(owner,'removed_shapes',None):
-            doc=ET.fromstring(owner.background_original);paths=[p for p in doc.iter() if p.tag.endswith('path')]
-            for parent in doc.iter():
-                for child in list(parent):
-                    if child in paths:
-                        if paths.index(child) not in owner.removed_shapes:parent.remove(child)
-                        else:child.set('fill','none');child.set('stroke','#df3030');child.set('stroke-width','1');child.set('stroke-dasharray','4 3')
-            renderer=QSvgRenderer(QByteArray(ET.tostring(doc)));p=QPainter(self);renderer.render(p,self.image_rect());p.end()
+            outline = filter_regions(owner.background_original, owner.removed_shapes, outline=True)
+            renderer = QSvgRenderer(QByteArray(outline.encode()))
+            p = QPainter(self)
+            renderer.render(p, self.image_rect())
+            p.end()
     def dropEvent(self,e):
         owner=getattr(self,'owner',None)
         if owner and owner.page=='batchfiles' and e.mimeData().hasUrls():
@@ -42,7 +42,7 @@ class Canvas(wizard.ClassicCanvas):
         super().dropEvent(e)
     def mousePressEvent(self,e):
         owner=getattr(self,'owner',None)
-        if owner and owner.page=='background' and getattr(owner,'background_tool','cut')=='cut':
+        if owner and owner.page=='background' and e.button()==Qt.LeftButton and getattr(owner,'background_tool','cut')=='cut':
             owner.toggle_shape(e.position());return
         if owner and owner.page=='palette' and owner.manual_palette:
             r=self.image_rect()
@@ -116,7 +116,7 @@ class Window(wizard.WizardWindow):
         self.canvas.layer_buttons['Сегменты'].setText('Сегменты')
         for button in self.canvas.nav.findChildren(QPushButton):button.setStyleSheet('padding:0px;');button.setFixedSize(19,19)
         for label in self.statusBar().findChildren(QLabel):
-            if label.text()=='v2.0':label.setText('v0.18.1 preview')
+            if label.text()=='v2.0':label.setText('v0.19.0 preview')
         self.auto_timer=QTimer(self);self.auto_timer.setSingleShot(True);self.auto_timer.timeout.connect(self.apply_pending)
         for key,fn in [('A',lambda:self.set_background_tool('drag') if self.page=='background' else self.set_tool('drag')),('D',lambda:self.set_background_tool('cut') if self.page=='background' else self.set_tool('adapt')),('F',lambda:self.set_tool('fill')),('X',lambda:self.set_tool('pencil')),('C',lambda:self.set_tool('color')),('Z',lambda:self.undo_background() if self.page=='background' else self.undo_edit()),('Y',lambda:self.redo_background() if self.page=='background' else self.redo_edit()),('T',lambda:self.reset_background() if self.page=='background' else self.update_segmentation())]:
             action=wizard.QAction(self);action.setShortcut(key);action.triggered.connect(fn);self.addAction(action)
@@ -212,7 +212,7 @@ class Window(wizard.WizardWindow):
         for label,fn in [('Очистить всё',clear),('Удалить выбранное',remove)]:b=QPushButton(label);b.clicked.connect(fn);row.addWidget(b)
         g.addLayout(row);self.next_button.setEnabled(bool(self.batch_files))
     def add_batch_files(self):
-        files,_=QFileDialog.getOpenFileNames(self,'Добавление Изображений','','Изображения (*.png *.jpg *.jpeg *.bmp *.tif *.tiff *.gif *.webp)')
+        files,_=QFileDialog.getOpenFileNames(self,'Добавление Изображений','','Изображения (*.png *.jpg *.jpeg *.bmp *.tif *.tiff *.gif *.webp *.pdf)')
         self.batch_files=list(dict.fromkeys(self.batch_files+files));self.render_page()
     def build_batchsettings(self):
         self.title.setText('Настройки Обработки');g=self.group('Настройки Векторизации');self.batch_options={}
@@ -237,7 +237,7 @@ class Window(wizard.WizardWindow):
         if not self.recent:menu.addAction('Нет недавних папок').setEnabled(False)
         menu.exec(self.mapToGlobal(self.right.pos()))
     def open_folder(self,folder):
-        p,_=QFileDialog.getOpenFileName(self,'Импорт из Папки',folder,'Изображения (*.png *.jpg *.jpeg *.bmp *.gif *.tif *.tiff *.webp)')
+        p,_=QFileDialog.getOpenFileName(self,'Импорт из Папки',folder,'Изображения (*.png *.jpg *.jpeg *.bmp *.gif *.tif *.tiff *.webp *.pdf)')
         if p:self.load(p)
     def build_palette(self):
         if self.manual_palette is None:self.palette_auto=True
@@ -289,11 +289,9 @@ class Window(wizard.WizardWindow):
     def palette_for(self,n):
         from engine import find_palette
         import numpy as np
-        from PIL import Image
         key=(self.file,Path(self.file).stat().st_mtime_ns,n,self.adv['color_threshold'],self.flatten_mode,self.flatten_color)
         if key in self.palette_cache:return list(self.palette_cache[key])
-        with Image.open(self.file) as im:
-            im=im.convert('RGBA');im.thumbnail((500,500));a=np.array(im)
+        im=open_raster(self.file);im.thumbnail((500,500));a=np.array(im)
         if self.flatten_mode!='preserve':
             color=QColor('#ffffff' if self.flatten_mode=='white' else self.flatten_color);bg=np.array([color.red(),color.green(),color.blue()]);alpha=a[:,:,3:4]/255.;a[:,:,:3]=np.round(a[:,:,:3]*alpha+bg*(1-alpha));a[:,:,3]=255
         threshold=[14,24,42][self.adv['color_threshold']] if self.wizard_mode=='advanced' else 24
@@ -439,28 +437,35 @@ class Window(wizard.WizardWindow):
     def toggle_shape(self,pos):
         r=self.canvas.image_rect()
         if not r.contains(pos) or not self.background_original:return
-        root=ET.fromstring(self.background_original);view=list(map(float,root.get('viewBox',f'0 0 {self.canvas.image_size.width()} {self.canvas.image_size.height()}').split()));x=view[0]+(pos.x()-r.x())/r.width()*view[2];y=view[1]+(pos.y()-r.y())/r.height()*view[3]
-        paths=[p for p in root.iter() if p.tag.endswith('path')]
-        for index in range(len(paths)-1,-1,-1):
-            doc=ET.Element(root.tag,dict(root.attrib));doc.set('viewBox',f'{x-1} {y-1} 2 2');doc.append(copy.deepcopy(paths[index]));renderer=QSvgRenderer(QByteArray(ET.tostring(doc)));im=QImage(3,3,QImage.Format_ARGB32_Premultiplied);im.fill(Qt.transparent);p=QPainter(im);renderer.render(p,QRectF(0,0,3,3));p.end()
-            if im.pixelColor(1,1).alpha()>127:
-                self.background_undo.append(set(self.removed_shapes));self.background_redo=[]
-                if index in self.removed_shapes:self.removed_shapes.remove(index)
-                else:self.removed_shapes.add(index)
-                self.apply_background();break
+        if getattr(self, '_background_prepared', None) != self.background_original:
+            self.background_original = split_regions(self.background_original)
+            self._background_prepared = self.background_original
+        (left, top, width, height), paths = hit_paths(self.background_original)
+        point = QPointF(left + (pos.x()-r.x())/r.width()*width,
+                        top + (pos.y()-r.y())/r.height()*height)
+        for index in reversed(range(len(paths))):
+            bounds, path = paths[index]
+            if bounds.contains(point) and path.contains(point):
+                self.background_undo.append(set(self.removed_shapes))
+                self.background_redo.clear()
+                self.removed_shapes.symmetric_difference_update({index})
+                self.apply_background()
+                return
+
     def apply_background(self):
-        self.post_smooth_undo=[]
-        root=ET.fromstring(self.background_original);paths=[p for p in root.iter() if p.tag.endswith('path')]
-        for parent in root.iter():
-            for child in list(parent):
-                if child in paths and paths.index(child) in self.removed_shapes:parent.remove(child)
-        self.svg_text=ET.tostring(root,encoding='unicode');self.canvas.svg=QSvgRenderer(QByteArray(self.svg_text.encode()));self.export_button.setEnabled(True);self.set_contours();self.canvas.update()
+        self.post_smooth_undo = []
+        self.svg_text = filter_regions(self.background_original, self.removed_shapes)
+        self.canvas.svg = QSvgRenderer(QByteArray(self.svg_text.encode()))
+        self.export_button.setEnabled(True)
+        self.set_contours()
+        self.canvas.update()
     def undo_background(self):
         if self.background_undo:self.background_redo.append(set(self.removed_shapes));self.removed_shapes=self.background_undo.pop();self.apply_background()
     def redo_background(self):
         if self.background_redo:self.background_undo.append(set(self.removed_shapes));self.removed_shapes=self.background_redo.pop();self.apply_background()
     def reset_background(self):
-        self.background_undo.append(set(self.removed_shapes));self.removed_shapes=set();self.apply_background()
+        if self.removed_shapes:
+            self.background_undo.append(set(self.removed_shapes));self.background_redo.clear();self.removed_shapes=set();self.apply_background()
     def build_edit(self):
         self.canvas.layer('Сегменты');self.paragraph(self.page_layout,'На этой странице вы можете вручную исправить ошибки сегментации.\n\nСделайте прыжок между исходным растровым и выходным векторным изображениями, чтобы увидеть, где есть ошибки.\n\nЧасто мелкие детали не восстанавливаются автоматически. Необходимо отредактировать пиксели так, чтобы в нужном месте имелся чёткий путь.\n\nПопробуйте! Вы всегда можете отменить / сбросить изменения.\n\nВнимание! В случае повторной векторизации потеряются сделанные на этой странице изменения.')
         self.editor_toolbar();self.next_button.setText('▶  Вперёд')
@@ -512,7 +517,7 @@ class Window(wizard.WizardWindow):
         self.flatten_mode='preserve';self.selected_color=0
         super().load(path)
     def about(self):
-        QMessageBox.information(self,'Паспорт DoctorTracer','DoctorTracer 0.18.1 preview\n\nЛокальная трассировка SVG / EPS / PDF / PNG.\nSVG: группы по цветам, устранение наложений геометрии.\n\nGPU ускоряет фильтрацию фотографий, назначение цветов, пространственную сегментацию, сглаживание общих границ, упрощение цепочек и расчёт контрольных точек Безье.\nСвязность графа, объединение областей и проверка геометрии выполняются на CPU.\n\nНастройки находятся в меню «Дополнительные Параметры».')
+        QMessageBox.information(self,'Паспорт DoctorTracer','DoctorTracer 0.19.0 preview\n\nЛокальная трассировка SVG / EPS / PDF / PNG.\nSVG: группы по цветам, устранение наложений геометрии.\n\nGPU ускоряет фильтрацию фотографий, назначение цветов, пространственную сегментацию, сглаживание общих границ, упрощение цепочек и расчёт контрольных точек Безье.\nСвязность графа, объединение областей и проверка геометрии выполняются на CPU.\n\nНастройки находятся в меню «Дополнительные Параметры».')
     def build_export(self):
         self.post_smooth_tools()
         self.choice('Сохранение Результата','• Совет: Попробуйте перетащить изображение в нужное вам место.\n• Клавиши быстрого доступа: Ctrl-S.','save',self.export)
