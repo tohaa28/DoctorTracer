@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import {icon} from './icons.js?v=0.21.0';
-import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs?v=0.21.0';
-import {zip} from './zip.mjs?v=0.21.0';
-import {opaqueCount,paletteKey,paintPalette,transparentSwatch,latestSelection} from './palette-ui.mjs?v=0.21.0';
-import {partitionPreview} from './preview.mjs?v=0.21.0';
-import {decodeImage,acceptedImages} from './input-image.mjs?v=0.21.0';
+import {icon} from './icons.js?v=0.21.1';
+import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs?v=0.21.1';
+import {zip} from './zip.mjs?v=0.21.1';
+import {opaqueCount,paletteKey,paintPalette,transparentSwatch,latestSelection} from './palette-ui.mjs?v=0.21.1';
+import {partitionPreview} from './preview.mjs?v=0.21.1';
+import {decodeImage,acceptedImages} from './input-image.mjs?v=0.21.1';
 const $=id=>document.getElementById(id);
 const hasTransparentSlot=()=>sourceHasAlpha&&!config.flatten;
 const defaults=()=>({mode:'basic',category:'photo',detail:2,colors:0,speckle:2,flatten:false,polygon:false,gpu:true});
@@ -91,7 +91,7 @@ async function run(){
  if(config.colors>0&&!config.palette?.length&&hasTransparentSlot()){try{const generation=loadToken,palette=await requestPalette(config.colors);if(generation!==loadToken||!busy)return;config.palette=palette;config.palette_generated=true;}catch(error){busy=false;step=pageHistory.pop()??4;show();status(error.message);return;}}
  const canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;const context=canvas.getContext('2d',{willReadFrequently:true});
  if(config.flatten){context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);}context.drawImage(source,0,0);const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
- worker??=new Worker(new URL('./worker.js?v=0.21.0',import.meta.url),{type:'module'});
+ worker??=new Worker(new URL('./worker.js?v=0.21.1',import.meta.url),{type:'module'});
  worker.onmessage=({data})=>{
   if(data.progress!==undefined){progress=data.progress;stage=data.stage;updateProgress();return;}
   busy=false;if(data.error){worker?.terminate();worker=null;status(data.error);step=pageHistory.pop()??0;show();return;}svg=data.svg;vectorUndo=[];vectorRedo=[];elapsed=data.seconds;backend=data.backend;panX=0;panY=0;if(data.segments)awaitSegments(data.segments);$('segments').hidden=!data.segments;
@@ -120,7 +120,28 @@ async function load(file){
 $('file').onchange=e=>{if(e.target.files[0])load(e.target.files[0]);e.target.value='';};
 $('demo').onclick=async()=>{const blob=await (await fetch(new URL('./demo.png',import.meta.url))).blob();await load(new File([blob],'Пример.png',{type:'image/png'}));};
 $('next').onclick=()=>{if(step===6)save();else if(step===5){go(6);}else if(config.mode==='auto'||step===7)run();else if(step===8||step===9){go(5);}else if(step===4){config.colors=0;run();}else go(step===1?(sourceHasAlpha?2:3):step+1);};
-$('back').onclick=()=>{if(busy){cancel();status('Трассировка отменена');return;}if(readConfig()){step=pageHistory.pop()??(step===7?4:Math.max(0,step-1));show();}};$('home').onclick=()=>{pageHistory=[];step=source?0:-1;show();};
+$('back').onclick=()=>{if(busy){cancel();status('Трассировка отменена');return;}if(readConfig()){step=pageHistory.pop()??(step===7?4:Math.max(0,step-1));show();}};$('home').onclick=()=>{
+ if(step===-1){
+  ++loadToken;
+  source?.close();
+  source=null;
+  for(const url of [sourceUrl,vectorUrl,outlineUrl,segmentUrl]){
+   if(url) URL.revokeObjectURL(url);
+  }
+  sourceUrl=vectorUrl=outlineUrl=segmentUrl=svg='';
+  vectorUndo=[];vectorRedo=[];
+  config=defaults();
+  $('filename').textContent='Локальная обработка';
+  $('segments').hidden=true;
+  $('vector').disabled=true;
+  $('outlines').checked=false;
+  display(false);
+  status('Готово');
+ }
+ pageHistory=[];
+ step=-1;
+ show();
+};
 $('bitmap').onclick=()=>display(false);$('vector').onclick=()=>display(true);$('zoom').oninput=()=>{const ratio=Number($('zoom').value)/previousZoom;panX*=ratio;panY*=ratio;refreshView();};$('fit').onclick=fit;$('outlines').onchange=()=>{if(!svg)$('outlines').checked=false;display(!!svg);};
 $('help').onclick=()=>$('helpDialog').showModal();$('closeHelp').onclick=()=>$('helpDialog').close();
 $('viewport').ondragover=e=>e.preventDefault();$('viewport').ondrop=e=>{e.preventDefault();if(e.dataTransfer.files[0])load(e.dataTransfer.files[0]);};
@@ -180,7 +201,7 @@ new ResizeObserver(()=>{if(source)refreshView();}).observe(viewport);
 
 let batchAbort=null;
 async function runBatch(files){
- if(!files.length||busy)return;const options=structuredClone(config),result=[];busy=true;step=5;progress=0;stage='Пакетная Обработка';show();const batchWorker=new Worker(new URL('./worker.js?v=0.21.0',import.meta.url),{type:'module'});let aborted=false,rejectJob;
+ if(!files.length||busy)return;const options=structuredClone(config),result=[];busy=true;step=5;progress=0;stage='Пакетная Обработка';show();const batchWorker=new Worker(new URL('./worker.js?v=0.21.1',import.meta.url),{type:'module'});let aborted=false,rejectJob;
  batchAbort=()=>{aborted=true;batchWorker.terminate();rejectJob?.(Error('Трассировка отменена'));};
  try{for(const [index,file] of files.entries()){if(aborted)break;const image=await decodeImage(file);if(aborted){image.close();break;}const scale=Math.min(1,2400/Math.max(image.width,image.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(image.width*scale));c.height=Math.max(1,Math.round(image.height*scale));const ctx=c.getContext('2d');if(options.flatten){ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);}ctx.drawImage(image,0,0,c.width,c.height);image.close();const pixels=ctx.getImageData(0,0,c.width,c.height).data;
  const traced=await new Promise((resolve,reject)=>{rejectJob=reject;batchWorker.onerror=e=>reject(Error(e.message));batchWorker.onmessage=({data})=>{if(data.progress!==undefined){progress=Math.floor((index+data.progress/100)/files.length*100);stage=(index+1)+' / '+files.length+' · '+data.stage;updateProgress();}else if(data.error)reject(Error(data.error));else resolve(data.svg);};batchWorker.postMessage({pixels:pixels.buffer,width:c.width,height:c.height,...options},[pixels.buffer]);});
@@ -238,7 +259,7 @@ function buildVectorEditor(parent){
 }
 
 function paletteService(){
- if(!paletteWorker){paletteWorker=new Worker(new URL('./worker.js?v=0.21.0',import.meta.url),{type:'module'});paletteWorker.onmessage=({data})=>{if(data.requestId!==undefined&&(data.palette||data.analysis||data.error)){const resolve=pendingPalettes.get(data.requestId);pendingPalettes.delete(data.requestId);resolve?.(data.palette||data.analysis||null);}};}return paletteWorker;
+ if(!paletteWorker){paletteWorker=new Worker(new URL('./worker.js?v=0.21.1',import.meta.url),{type:'module'});paletteWorker.onmessage=({data})=>{if(data.requestId!==undefined&&(data.palette||data.analysis||data.error)){const resolve=pendingPalettes.get(data.requestId);pendingPalettes.delete(data.requestId);resolve?.(data.palette||data.analysis||null);}};}return paletteWorker;
 }
 async function analyzeSource(){
  const c=document.createElement('canvas'),scale=Math.min(1,900/Math.max(source.width,source.height));c.width=Math.max(1,Math.round(source.width*scale));c.height=Math.max(1,Math.round(source.height*scale));const ctx=c.getContext('2d');ctx.drawImage(source,0,0,c.width,c.height);const pixels=ctx.getImageData(0,0,c.width,c.height).data,id=++requestId,promise=new Promise(resolve=>pendingPalettes.set(id,resolve));paletteService().postMessage({operation:'analyze',requestId:id,pixels:pixels.buffer,width:c.width,height:c.height},[pixels.buffer]);return promise;
@@ -260,7 +281,7 @@ function openPostSmooth(cleanup=false,regularize=false){
  if(regularize){dialog.querySelector('h3').textContent='Выравнивание контуров';dialog.querySelector('p').textContent='Подгонка длинных общих участков целиком. Более высокий допуск сильнее меняет форму.';dialog.querySelector('#postStrength').max=200;dialog.querySelector('#postStrength').value=15;const options=document.createElement('p');options.innerHTML='<label><input id="postStraight" type="checkbox" checked> Выпрямлять почти прямые участки</label><br><label><input id="postCurved" type="checkbox" checked> Выравнивать плавные кривые</label>';dialog.querySelector('#postSharp').closest('p').before(options);dialog.querySelector('#postSharp').parentElement.lastChild.textContent=' Сохранять углы и мелкие детали';}
  document.body.append(dialog);const range=dialog.querySelector('#postStrength'),sharp=dialog.querySelector('#postSharp'),preview=dialog.querySelector('#postPreview'),info=dialog.querySelector('#postInfo'),apply=dialog.querySelector('#postApply');
  const area=dialog.querySelector('#postArea');if(cleanup||regularize){range.parentElement.firstChild.textContent=regularize?'Допуск изменения формы: ':'Допуск упрощения: ';range.setAttribute('aria-label',regularize?'Допуск изменения формы':'Допуск упрощения');}
- const service=new Worker(new URL('./worker.js?v=0.21.0',import.meta.url),{type:'module'});
+ const service=new Worker(new URL('./worker.js?v=0.21.1',import.meta.url),{type:'module'});
  function paint(value){svg=value;if(vectorUrl)URL.revokeObjectURL(vectorUrl);if(outlineUrl)URL.revokeObjectURL(outlineUrl);outlineUrl='';vectorUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));display(true);}
  function draw(){paint(preview.checked?candidate:base);}
  function schedule(){token++;apply.disabled=true;dialog.querySelector('output').textContent=(cleanup||regularize)?(Number(range.value)/100).toFixed(2)+' пкс':range.value+'%';info.textContent='Расчёт предпросмотра…';clearTimeout(timer);timer=setTimeout(()=>service.postMessage({operation:regularize?'regularize':cleanup?'postClean':'postSmooth',svg:base,strength:Number(range.value),sharp:sharp.checked,minArea:area?Math.max(0,Math.min(10000,Number(area.value))):0,tolerance:Number(range.value)/100,protect:sharp.checked,straight:dialog.querySelector('#postStraight')?.checked,curved:dialog.querySelector('#postCurved')?.checked,requestId:token}),180);}
