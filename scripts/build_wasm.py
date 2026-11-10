@@ -54,9 +54,9 @@ subprocess.run(['node',str(modules/'esbuild/bin/esbuild'),str(deps/'tiff-entry.m
 for path in site.rglob('*'):
  if '.git' in path.parts or 'pdfjs' in path.parts or path.name=='tiff.mjs' or path.suffix not in ('.js','.mjs','.html'):continue
  text=path.read_text(encoding='utf8')
- text=re.sub(r"(['\"])(\./[^'\"]+\.(?:m?js|wasm|css))\1",lambda m:m[1]+m[2]+'?v=0.21.0'+m[1],text)
- text=re.sub(r'(src|href)="([^"?]+\.(?:m?js|css))"',lambda m:m[1]+'="'+m[2]+'?v=0.21.0"',text)
- text=text.replace("frame.src='./'","frame.src='./?v=0.21.0'")
+ text=re.sub(r"(['\"])(\./[^'\"]+\.(?:m?js|wasm|css))\1",lambda m:m[1]+m[2]+'?v=0.21.1'+m[1],text)
+ text=re.sub(r'(src|href)="([^"?]+\.(?:m?js|css))"',lambda m:m[1]+'="'+m[2]+'?v=0.21.1"',text)
+ text=text.replace("frame.src='./'","frame.src='./?v=0.21.1'")
  path.write_text(text,encoding='utf8')
 (site/'.nojekyll').write_text('')
 print('Built Rust WASM and build/site static artifact')

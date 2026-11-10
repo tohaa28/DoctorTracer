@@ -120,7 +120,28 @@ async function load(file){
 $('file').onchange=e=>{if(e.target.files[0])load(e.target.files[0]);e.target.value='';};
 $('demo').onclick=async()=>{const blob=await (await fetch(new URL('./demo.png',import.meta.url))).blob();await load(new File([blob],'Пример.png',{type:'image/png'}));};
 $('next').onclick=()=>{if(step===6)save();else if(step===5){go(6);}else if(config.mode==='auto'||step===7)run();else if(step===8||step===9){go(5);}else if(step===4){config.colors=0;run();}else go(step===1?(sourceHasAlpha?2:3):step+1);};
-$('back').onclick=()=>{if(busy){cancel();status('Трассировка отменена');return;}if(readConfig()){step=pageHistory.pop()??(step===7?4:Math.max(0,step-1));show();}};$('home').onclick=()=>{pageHistory=[];step=source?0:-1;show();};
+$('back').onclick=()=>{if(busy){cancel();status('Трассировка отменена');return;}if(readConfig()){step=pageHistory.pop()??(step===7?4:Math.max(0,step-1));show();}};$('home').onclick=()=>{
+ if(step===-1){
+  ++loadToken;
+  source?.close();
+  source=null;
+  for(const url of [sourceUrl,vectorUrl,outlineUrl,segmentUrl]){
+   if(url) URL.revokeObjectURL(url);
+  }
+  sourceUrl=vectorUrl=outlineUrl=segmentUrl=svg='';
+  vectorUndo=[];vectorRedo=[];
+  config=defaults();
+  $('filename').textContent='Локальная обработка';
+  $('segments').hidden=true;
+  $('vector').disabled=true;
+  $('outlines').checked=false;
+  display(false);
+  status('Готово');
+ }
+ pageHistory=[];
+ step=-1;
+ show();
+};
 $('bitmap').onclick=()=>display(false);$('vector').onclick=()=>display(true);$('zoom').oninput=()=>{const ratio=Number($('zoom').value)/previousZoom;panX*=ratio;panY*=ratio;refreshView();};$('fit').onclick=fit;$('outlines').onchange=()=>{if(!svg)$('outlines').checked=false;display(!!svg);};
 $('help').onclick=()=>$('helpDialog').showModal();$('closeHelp').onclick=()=>$('helpDialog').close();
 $('viewport').ondragover=e=>e.preventDefault();$('viewport').ondrop=e=>{e.preventDefault();if(e.dataTransfer.files[0])load(e.dataTransfer.files[0]);};
