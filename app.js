@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import {icon} from './icons.js?v=0.20.1';
-import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs?v=0.20.1';
-import {zip} from './zip.mjs?v=0.20.1';
-import {opaqueCount,paletteKey,paintPalette,transparentSwatch,latestSelection} from './palette-ui.mjs?v=0.20.1';
-import {partitionPreview} from './preview.mjs?v=0.20.1';
+import {icon} from './icons.js?v=0.21.0';
+import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs?v=0.21.0';
+import {zip} from './zip.mjs?v=0.21.0';
+import {opaqueCount,paletteKey,paintPalette,transparentSwatch,latestSelection} from './palette-ui.mjs?v=0.21.0';
+import {partitionPreview} from './preview.mjs?v=0.21.0';
+import {decodeImage,acceptedImages} from './input-image.mjs?v=0.21.0';
 const $=id=>document.getElementById(id);
 const hasTransparentSlot=()=>sourceHasAlpha&&!config.flatten;
 const defaults=()=>({mode:'basic',category:'photo',detail:2,colors:0,speckle:2,flatten:false,polygon:false,gpu:true});
@@ -90,7 +91,7 @@ async function run(){
  if(config.colors>0&&!config.palette?.length&&hasTransparentSlot()){try{const generation=loadToken,palette=await requestPalette(config.colors);if(generation!==loadToken||!busy)return;config.palette=palette;config.palette_generated=true;}catch(error){busy=false;step=pageHistory.pop()??4;show();status(error.message);return;}}
  const canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;const context=canvas.getContext('2d',{willReadFrequently:true});
  if(config.flatten){context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);}context.drawImage(source,0,0);const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
- worker??=new Worker(new URL('./worker.js?v=0.20.1',import.meta.url),{type:'module'});
+ worker??=new Worker(new URL('./worker.js?v=0.21.0',import.meta.url),{type:'module'});
  worker.onmessage=({data})=>{
   if(data.progress!==undefined){progress=data.progress;stage=data.stage;updateProgress();return;}
   busy=false;if(data.error){worker?.terminate();worker=null;status(data.error);step=pageHistory.pop()??0;show();return;}svg=data.svg;vectorUndo=[];vectorRedo=[];elapsed=data.seconds;backend=data.backend;panX=0;panY=0;if(data.segments)awaitSegments(data.segments);$('segments').hidden=!data.segments;
@@ -111,10 +112,10 @@ async function save(){
 
 async function load(file){
  const token=++loadToken;cancel();status('Открытие изображения…');
- try{const original=await createImageBitmap(file);if(token!==loadToken){original.close();return;}const scale=Math.min(1,2400/Math.max(original.width,original.height),Math.sqrt(8e6/(original.width*original.height)));const width=Math.max(1,Math.round(original.width*scale)),height=Math.max(1,Math.round(original.height*scale));
+ try{const original=await decodeImage(file);if(token!==loadToken){original.close();return;}const scale=Math.min(1,2400/Math.max(original.width,original.height),Math.sqrt(8e6/(original.width*original.height)));const width=Math.max(1,Math.round(original.width*scale)),height=Math.max(1,Math.round(original.height*scale));
   const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;canvas.getContext('2d').drawImage(original,0,0,width,height);original.close();const next=await createImageBitmap(canvas),blob=await new Promise(resolve=>canvas.toBlob(resolve));if(token!==loadToken){next.close();return;}
   source?.close();source=next;for(const url of [sourceUrl,vectorUrl,outlineUrl])if(url)URL.revokeObjectURL(url);vectorUrl='';outlineUrl='';sourceUrl=URL.createObjectURL(blob);const rgba=canvas.getContext('2d').getImageData(0,0,width,height).data;sourceHasAlpha=rgba.some((v,i)=>i%4===3&&v<255);paletteCache.clear();config.palette=null;name=(file.name||'image').replace(/\.[^.]+$/,'');svg='';$('outlines').checked=false;$('vector').disabled=true;config=defaults();pageHistory=[];step=0;display();busy=true;progress=0;stage='Анализ изображения';show();fit();const analysis=await analyzeSource();if(token!==loadToken)return;config.category=analysis?.category||'photo';recommendedPaletteCount=Math.max(2,Math.min(12,(analysis?.palette?.length||8)+Number(hasTransparentSlot())));busy=false;show();$('filename').textContent=file.name||'Пример';status(width+'×'+height+' · '+(file.name||'Пример')+(scale<1?' · уменьшено для обработки':''));
- }catch(error){busy=false;show();status('Не удалось открыть изображение: '+error.message);}
+ }catch(error){if(token!==loadToken)return;busy=false;show();status('Не удалось открыть изображение: '+error.message);}
 }
 $('file').onchange=e=>{if(e.target.files[0])load(e.target.files[0]);e.target.value='';};
 $('demo').onclick=async()=>{const blob=await (await fetch(new URL('./demo.png',import.meta.url))).blob();await load(new File([blob],'Пример.png',{type:'image/png'}));};
@@ -169,7 +170,7 @@ function buildExport(parent,add){
  const settings=section('Сохранение Настроек','<button id="saveSettings">Сохранить Настройки...</button>');$('saveSettings').onclick=()=>download(JSON.stringify(config,null,2),'application/json','json','vector-settings');
 }
 async function pasteImage(){try{for(const item of await navigator.clipboard.read()){const type=item.types.find(t=>t.startsWith('image/'));if(type){const blob=await item.getType(type);await load(new File([blob],'clipboard.png',{type}));return;}}status('В буфере обмена нет изображения.');}catch(error){status('Вставка из буфера: '+error.message);}}
-const batchInput=document.createElement('input');batchInput.type='file';batchInput.multiple=true;batchInput.accept='image/png,image/jpeg,image/webp,image/bmp';batchInput.hidden=true;document.body.append(batchInput);batchInput.onchange=()=>runBatch(Array.from(batchInput.files));
+const batchInput=document.createElement('input');batchInput.type='file';batchInput.multiple=true;batchInput.accept=acceptedImages;batchInput.hidden=true;document.body.append(batchInput);batchInput.onchange=()=>runBatch(Array.from(batchInput.files));
 $('about').onclick=()=>$('helpDialog').showModal();$('more').onclick=()=>{$('computeGpu').checked=config.gpu;$('computeCpu').checked=!config.gpu;$('advancedSettings').disabled=!source;$('settingsDialog').showModal();};$('closeSettings').onclick=()=>$('settingsDialog').close();$('computeGpu').onchange=()=>{config.gpu=true;if($('gpu'))$('gpu').checked=true;};$('computeCpu').onchange=()=>{config.gpu=false;if($('gpu'))$('gpu').checked=false;};$('advancedSettings').onclick=()=>{$('settingsDialog').close();config.mode='advanced';config.colors=config.colors||recommendedPaletteCount;go(7);};
 $('segments').onclick=()=>{if(!segmentUrl)return;view='segments';previewToken++;jointCanvas.hidden=true;$('preview').hidden=false;$('preview').classList.remove('joint-preview');$('preview').src=segmentUrl;$('preview').style.transform='translate('+panX+'px,'+panY+'px)';$('bitmap').setAttribute('aria-pressed','false');$('vector').setAttribute('aria-pressed','false');};
 for(const b of document.querySelectorAll('[data-pan]'))b.onclick=()=>{if(b.dataset.pan==='fit'){fit();return;}const [x,y]=b.dataset.pan.split(',').map(Number);panX+=x;panY+=y;refreshView();};
@@ -179,9 +180,9 @@ new ResizeObserver(()=>{if(source)refreshView();}).observe(viewport);
 
 let batchAbort=null;
 async function runBatch(files){
- if(!files.length||busy)return;const options=structuredClone(config),result=[];busy=true;step=5;progress=0;stage='Пакетная Обработка';show();const batchWorker=new Worker(new URL('./worker.js?v=0.20.1',import.meta.url),{type:'module'});let aborted=false,rejectJob;
+ if(!files.length||busy)return;const options=structuredClone(config),result=[];busy=true;step=5;progress=0;stage='Пакетная Обработка';show();const batchWorker=new Worker(new URL('./worker.js?v=0.21.0',import.meta.url),{type:'module'});let aborted=false,rejectJob;
  batchAbort=()=>{aborted=true;batchWorker.terminate();rejectJob?.(Error('Трассировка отменена'));};
- try{for(const [index,file] of files.entries()){if(aborted)break;const image=await createImageBitmap(file),scale=Math.min(1,2400/Math.max(image.width,image.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(image.width*scale));c.height=Math.max(1,Math.round(image.height*scale));const ctx=c.getContext('2d');if(options.flatten){ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);}ctx.drawImage(image,0,0,c.width,c.height);image.close();const pixels=ctx.getImageData(0,0,c.width,c.height).data;
+ try{for(const [index,file] of files.entries()){if(aborted)break;const image=await decodeImage(file);if(aborted){image.close();break;}const scale=Math.min(1,2400/Math.max(image.width,image.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(image.width*scale));c.height=Math.max(1,Math.round(image.height*scale));const ctx=c.getContext('2d');if(options.flatten){ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);}ctx.drawImage(image,0,0,c.width,c.height);image.close();const pixels=ctx.getImageData(0,0,c.width,c.height).data;
  const traced=await new Promise((resolve,reject)=>{rejectJob=reject;batchWorker.onerror=e=>reject(Error(e.message));batchWorker.onmessage=({data})=>{if(data.progress!==undefined){progress=Math.floor((index+data.progress/100)/files.length*100);stage=(index+1)+' / '+files.length+' · '+data.stage;updateProgress();}else if(data.error)reject(Error(data.error));else resolve(data.svg);};batchWorker.postMessage({pixels:pixels.buffer,width:c.width,height:c.height,...options},[pixels.buffer]);});
  const base=String(index+1).padStart(3,'0')+'-'+file.name.replace(/\.[^.]+$/,'');result.push({name:base+'.svg',data:traced},{name:base+'.pdf',data:pdfBytes(traced)});}
  if(!aborted){await download(zip(result),'application/zip','zip','DoctorTracer-batch');status('Пакетная обработка завершена: '+files.length+' файлов');}
@@ -190,8 +191,44 @@ async function runBatch(files){
 
 function expandedDocument(){const doc=new DOMParser().parseFromString(svg,'image/svg+xml');for(const p of Array.from(doc.querySelectorAll('path'))){const pieces=connectedPaths(p.getAttribute('d'));if(pieces.length>1){for(const d of pieces){const copy=p.cloneNode(true);copy.setAttribute('d',d);p.before(copy);}p.remove();}}return doc;}
 function applyVector(value,remember=true){if(remember){vectorUndo.push(svg);vectorUndo=vectorUndo.slice(-20);vectorRedo=[];}svg=value;if(vectorUrl)URL.revokeObjectURL(vectorUrl);if(outlineUrl)URL.revokeObjectURL(outlineUrl);outlineUrl='';vectorUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));display(true);show();status('Результат обновлён');}
-function removeVectorAt(clientX,clientY){
- const r=$('viewport').getBoundingClientRect(),zoom=Number($('zoom').value)/100;const x=(clientX-r.left-(r.width-source.width*zoom)/2-panX)/zoom,y=(clientY-r.top-(r.height-source.height*zoom)/2-panY)/zoom,doc=expandedDocument();const ctx=document.createElement('canvas').getContext('2d');for(const p of Array.from(doc.querySelectorAll('path')).reverse()){const t=/translate\(([-\d.eE]+)[, ]+([-\d.eE]+)\)/.exec(p.getAttribute('transform')||'');if(ctx.isPointInPath(new Path2D(p.getAttribute('d')),x-Number(t?.[1]??0),y-Number(t?.[2]??0),'nonzero')){p.remove();for(const g of Array.from(doc.querySelectorAll('g[fill]')))if(!g.querySelector('path'))g.remove();applyVector(new XMLSerializer().serializeToString(doc));return;}}
+function removeVectorAt(clientX, clientY) {
+ const viewport = $('viewport');
+ const bounds = viewport.getBoundingClientRect();
+ const zoom = Number($('zoom').value) / 100;
+ const width = source.width * zoom, height = source.height * zoom;
+ const u = (clientX - bounds.left - (viewport.clientWidth - width) / 2 - panX) / width;
+ const v = (clientY - bounds.top - (viewport.clientHeight - height) / 2 - panY) / height;
+ if (u < 0 || u > 1 || v < 0 || v > 1) return;
+
+ const doc = expandedDocument();
+ const root = doc.documentElement;
+ const viewBox = root.getAttribute('viewBox');
+ const [left, top, spanX, spanY] = viewBox
+  ? viewBox.trim().split(/[,\s]+/).map(Number)
+  : [0, 0, Number(root.getAttribute('width')), Number(root.getAttribute('height'))];
+ const x = left + u * spanX, y = top + v * spanY;
+ const ctx = document.createElement('canvas').getContext('2d');
+ const paths = Array.from(root.querySelectorAll('path')).reverse();
+
+ for (const path of paths) {
+  let dx = 0, dy = 0, rule;
+  for (let element = path; element; element = element.parentElement) {
+   const translation = /^translate\(\s*([-+\d.eE]+)[,\s]+([-+\d.eE]+)\s*\)$/.exec(element.getAttribute('transform') || '');
+   if (translation) {
+    dx += Number(translation[1]);
+    dy += Number(translation[2]);
+   }
+   rule ??= element.getAttribute('fill-rule');
+  }
+  if (!ctx.isPointInPath(new Path2D(path.getAttribute('d')), x - dx, y - dy,
+                         rule === 'evenodd' ? 'evenodd' : 'nonzero')) continue;
+  path.remove();
+  for (const group of root.querySelectorAll('g[fill]')) {
+   if (!group.querySelector('path')) group.remove();
+  }
+  applyVector(new XMLSerializer().serializeToString(doc));
+  return;
+ }
  status('В этой точке нет векторного объекта.');
 }
 function buildVectorEditor(parent){
@@ -201,7 +238,7 @@ function buildVectorEditor(parent){
 }
 
 function paletteService(){
- if(!paletteWorker){paletteWorker=new Worker(new URL('./worker.js?v=0.20.1',import.meta.url),{type:'module'});paletteWorker.onmessage=({data})=>{if(data.requestId!==undefined&&(data.palette||data.analysis||data.error)){const resolve=pendingPalettes.get(data.requestId);pendingPalettes.delete(data.requestId);resolve?.(data.palette||data.analysis||null);}};}return paletteWorker;
+ if(!paletteWorker){paletteWorker=new Worker(new URL('./worker.js?v=0.21.0',import.meta.url),{type:'module'});paletteWorker.onmessage=({data})=>{if(data.requestId!==undefined&&(data.palette||data.analysis||data.error)){const resolve=pendingPalettes.get(data.requestId);pendingPalettes.delete(data.requestId);resolve?.(data.palette||data.analysis||null);}};}return paletteWorker;
 }
 async function analyzeSource(){
  const c=document.createElement('canvas'),scale=Math.min(1,900/Math.max(source.width,source.height));c.width=Math.max(1,Math.round(source.width*scale));c.height=Math.max(1,Math.round(source.height*scale));const ctx=c.getContext('2d');ctx.drawImage(source,0,0,c.width,c.height);const pixels=ctx.getImageData(0,0,c.width,c.height).data,id=++requestId,promise=new Promise(resolve=>pendingPalettes.set(id,resolve));paletteService().postMessage({operation:'analyze',requestId:id,pixels:pixels.buffer,width:c.width,height:c.height},[pixels.buffer]);return promise;
@@ -223,7 +260,7 @@ function openPostSmooth(cleanup=false,regularize=false){
  if(regularize){dialog.querySelector('h3').textContent='Выравнивание контуров';dialog.querySelector('p').textContent='Подгонка длинных общих участков целиком. Более высокий допуск сильнее меняет форму.';dialog.querySelector('#postStrength').max=200;dialog.querySelector('#postStrength').value=15;const options=document.createElement('p');options.innerHTML='<label><input id="postStraight" type="checkbox" checked> Выпрямлять почти прямые участки</label><br><label><input id="postCurved" type="checkbox" checked> Выравнивать плавные кривые</label>';dialog.querySelector('#postSharp').closest('p').before(options);dialog.querySelector('#postSharp').parentElement.lastChild.textContent=' Сохранять углы и мелкие детали';}
  document.body.append(dialog);const range=dialog.querySelector('#postStrength'),sharp=dialog.querySelector('#postSharp'),preview=dialog.querySelector('#postPreview'),info=dialog.querySelector('#postInfo'),apply=dialog.querySelector('#postApply');
  const area=dialog.querySelector('#postArea');if(cleanup||regularize){range.parentElement.firstChild.textContent=regularize?'Допуск изменения формы: ':'Допуск упрощения: ';range.setAttribute('aria-label',regularize?'Допуск изменения формы':'Допуск упрощения');}
- const service=new Worker(new URL('./worker.js?v=0.20.1',import.meta.url),{type:'module'});
+ const service=new Worker(new URL('./worker.js?v=0.21.0',import.meta.url),{type:'module'});
  function paint(value){svg=value;if(vectorUrl)URL.revokeObjectURL(vectorUrl);if(outlineUrl)URL.revokeObjectURL(outlineUrl);outlineUrl='';vectorUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));display(true);}
  function draw(){paint(preview.checked?candidate:base);}
  function schedule(){token++;apply.disabled=true;dialog.querySelector('output').textContent=(cleanup||regularize)?(Number(range.value)/100).toFixed(2)+' пкс':range.value+'%';info.textContent='Расчёт предпросмотра…';clearTimeout(timer);timer=setTimeout(()=>service.postMessage({operation:regularize?'regularize':cleanup?'postClean':'postSmooth',svg:base,strength:Number(range.value),sharp:sharp.checked,minArea:area?Math.max(0,Math.min(10000,Number(area.value))):0,tolerance:Number(range.value)/100,protect:sharp.checked,straight:dialog.querySelector('#postStraight')?.checked,curved:dialog.querySelector('#postCurved')?.checked,requestId:token}),180);}
