@@ -1,0 +1,15 @@
+<!doctype html><meta charset="utf-8"><title>GPU contour performance and quality</title><pre id="result">Running…</pre><script type="module">
+import createTracer from '../web/rust-tracer.mjs';import {gpuPrepare,gpuAssign} from '../web/gpu.js';import {gpuContourCoordinates,contourGpuError} from '../web/gpu-contours.mjs';import {auditNative} from '../web/geometry.mjs';
+const out=document.querySelector('#result'),check=(v,m)=>{if(!v)throw Error(m)},median=a=>[...a].sort((a,b)=>a-b)[Math.floor(a.length/2)];
+try{const runtime=await createTracer(),jobs=await(await fetch('../build/gpu-contours/browser-cases.json')).json(),rows=[];
+for(const job of jobs){out.textContent=JSON.stringify({running:job.id,completed:rows},null,2);const {width:w,height:h,config}=job,unlimited=!config.colors,detail=config.detail;let p=new Uint8Array(await(await fetch('../build/gpu-contours/'+job.rgba)).arrayBuffer());p=await gpuPrepare(p,w,h,config);check(p,'GPU preprocessing unavailable');let palette=config.palette?.map(s=>s.slice(1).match(/../g).map(s=>parseInt(s,16)));if(!palette){const v=runtime.stage(p,w,h,{kind:2,colors:64,extra:1});palette=Array.from({length:v.length/3},(_,i)=>Array.from(v.slice(3*i,3*i+3)))}const labels=await gpuAssign(p,w,h,palette,unlimited?200:700);check(labels,'GPU assignment unavailable');
+let expected=null,gpuMs=[],before=[],after=[];const passes=(unlimited?[10,8,5]:[4,2,1])[detail];
+for(let i=0;i<4;i++){
+ let started=performance.now();const cpu=runtime.finish(p,labels,w,h,{...config,palette,unlimited});if(i)before.push(performance.now()-started);expected??=cpu;check(cpu===expected,'CPU nondeterministic');
+ started=performance.now();runtime.finish(p,labels,w,h,{...config,palette,unlimited,deferShared:true});let t=performance.now();const coords=await gpuContourCoordinates(runtime.sharedInput(),w,h,passes);check(coords,contourGpuError||'GPU contour unavailable');if(i)gpuMs.push(performance.now()-t);const gpu=runtime.sharedFinish(coords,passes,{unlimited});if(i)after.push(performance.now()-started);check(gpu===cpu,'SVG differs '+job.id);
+}
+const audit=await auditNative(expected);rows.push({id:job.id,unlimited,beforeMs:before,afterMs:after,gpuTransferAndDiffusionMs:gpuMs,medianBeforeMs:median(before),medianAfterMs:median(after),speedup:median(before)/median(after),exactSvg:true,audit});
+}
+out.textContent=JSON.stringify({ok:true,rows},null,2);
+}catch(e){out.textContent=JSON.stringify({ok:false,error:String(e),stack:e.stack},null,2)}
+</script>

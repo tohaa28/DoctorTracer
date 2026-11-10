@@ -1,0 +1,150 @@
+{
+  "schema": 1,
+  "selection": "locked before candidate runs; no previous private test images",
+  "sources": [
+    {
+      "id": "photo-astronaut",
+      "repo": "scikit-image/scikit-image",
+      "revision": "e8a42ba85aaf5fd9322ef9ca51bc21063b22fcae",
+      "path": "skimage/data/astronaut.png",
+      "license": "NASA public domain / no known restrictions",
+      "author": "NASA",
+      "category": "photo",
+      "license_url": "https://scikit-image.org/docs/0.25.x/api/skimage.data.html#skimage.data.astronaut",
+      "source_url": "https://github.com/scikit-image/scikit-image/blob/e8a42ba85aaf5fd9322ef9ca51bc21063b22fcae/skimage/data/astronaut.png",
+      "sha256": "88431cd9653ccd539741b555fb0a46b61558b301d4110412b5bc28b5e3ea6cb5"
+    },
+    {
+      "id": "photo-coffee",
+      "repo": "scikit-image/scikit-image",
+      "revision": "e8a42ba85aaf5fd9322ef9ca51bc21063b22fcae",
+      "path": "skimage/data/coffee.png",
+      "license": "CC0-1.0",
+      "author": "Rachel Michetti",
+      "category": "photo",
+      "license_url": "https://scikit-image.org/docs/0.25.x/api/skimage.data.html#skimage.data.coffee",
+      "source_url": "https://github.com/scikit-image/scikit-image/blob/e8a42ba85aaf5fd9322ef9ca51bc21063b22fcae/skimage/data/coffee.png",
+      "sha256": "cc02f8ca188b167c775a7101b5d767d1e71792cf762c33d6fa15a4599b5a8de7"
+    },
+    {
+      "id": "photo-chelsea",
+      "repo": "scikit-image/scikit-image",
+      "revision": "e8a42ba85aaf5fd9322ef9ca51bc21063b22fcae",
+      "path": "skimage/data/chelsea.png",
+      "license": "CC0-1.0",
+      "author": "Stefan van der Walt",
+      "category": "photo",
+      "license_url": "https://scikit-image.org/docs/0.25.x/api/skimage.data.html#skimage.data.chelsea",
+      "source_url": "https://github.com/scikit-image/scikit-image/blob/e8a42ba85aaf5fd9322ef9ca51bc21063b22fcae/skimage/data/chelsea.png",
+      "sha256": "596aa1e7cb875eb79f437e310381d26b338a81c2da23439704a73c4651e8c4bb"
+    },
+    {
+      "id": "photo-rocket",
+      "repo": "scikit-image/scikit-image",
+      "revision": "e8a42ba85aaf5fd9322ef9ca51bc21063b22fcae",
+      "path": "skimage/data/rocket.jpg",
+      "license": "Public domain",
+      "author": "SpaceX",
+      "category": "photo",
+      "license_url": "https://scikit-image.org/docs/0.25.x/api/skimage.data.html#skimage.data.rocket",
+      "source_url": "https://github.com/scikit-image/scikit-image/blob/e8a42ba85aaf5fd9322ef9ca51bc21063b22fcae/skimage/data/rocket.jpg",
+      "sha256": "c2dd0de7c538df8d111e479619b129464d0269d0ae5fd18ca91d33a7fdfea95c"
+    },
+    {
+      "id": "openmoji-fox",
+      "repo": "hfg-gmuend/openmoji",
+      "revision": "aeb8bb3a59e2de39c754ac79180c8131c906acea",
+      "path": "color/svg/1F98A.svg",
+      "license": "CC-BY-SA-4.0",
+      "author": "OpenMoji contributors",
+      "category": "illustration",
+      "license_url": "https://github.com/hfg-gmuend/openmoji/blob/aeb8bb3a59e2de39c754ac79180c8131c906acea/LICENSE.txt",
+      "source_url": "https://github.com/hfg-gmuend/openmoji/blob/aeb8bb3a59e2de39c754ac79180c8131c906acea/color/svg/1F98A.svg",
+      "sha256": "b7fe9b1dce87c5e931d7e58ab77bcde8cc6ee7804e41005f199c3097960e225b"
+    },
+    {
+      "id": "openmoji-butterfly",
+      "repo": "hfg-gmuend/openmoji",
+      "revision": "aeb8bb3a59e2de39c754ac79180c8131c906acea",
+      "path": "color/svg/1F98B.svg",
+      "license": "CC-BY-SA-4.0",
+      "author": "OpenMoji contributors",
+      "category": "illustration",
+      "license_url": "https://github.com/hfg-gmuend/openmoji/blob/aeb8bb3a59e2de39c754ac79180c8131c906acea/LICENSE.txt",
+      "source_url": "https://github.com/hfg-gmuend/openmoji/blob/aeb8bb3a59e2de39c754ac79180c8131c906acea/color/svg/1F98B.svg",
+      "sha256": "47b4971766ec7d4d913142eac844bb33c526b72839209c8acb531483a2f4072d"
+    },
+    {
+      "id": "openmoji-palette",
+      "repo": "hfg-gmuend/openmoji",
+      "revision": "aeb8bb3a59e2de39c754ac79180c8131c906acea",
+      "path": "color/svg/1F3A8.svg",
+      "license": "CC-BY-SA-4.0",
+      "author": "OpenMoji contributors",
+      "category": "illustration",
+      "license_url": "https://github.com/hfg-gmuend/openmoji/blob/aeb8bb3a59e2de39c754ac79180c8131c906acea/LICENSE.txt",
+      "source_url": "https://github.com/hfg-gmuend/openmoji/blob/aeb8bb3a59e2de39c754ac79180c8131c906acea/color/svg/1F3A8.svg",
+      "sha256": "1e440790c0d02486a2dbd061ec465f78e28111d0c778dec08de62df123959cb6"
+    },
+    {
+      "id": "openmoji-rocket",
+      "repo": "hfg-gmuend/openmoji",
+      "revision": "aeb8bb3a59e2de39c754ac79180c8131c906acea",
+      "path": "color/svg/1F680.svg",
+      "license": "CC-BY-SA-4.0",
+      "author": "OpenMoji contributors",
+      "category": "illustration",
+      "license_url": "https://github.com/hfg-gmuend/openmoji/blob/aeb8bb3a59e2de39c754ac79180c8131c906acea/LICENSE.txt",
+      "source_url": "https://github.com/hfg-gmuend/openmoji/blob/aeb8bb3a59e2de39c754ac79180c8131c906acea/color/svg/1F680.svg",
+      "sha256": "2403e0a305f931cf8c2ebd1a06de994c08733d0554eda8c0e52d1b8fe1be7001"
+    },
+    {
+      "id": "twemoji-flower",
+      "repo": "twitter/twemoji",
+      "revision": "bad3bceeafc901ace42a3dfe0421db6388daafb9",
+      "path": "assets/svg/1f338.svg",
+      "license": "CC-BY-4.0",
+      "author": "Twitter and Twemoji contributors",
+      "category": "illustration",
+      "license_url": "https://github.com/twitter/twemoji/blob/bad3bceeafc901ace42a3dfe0421db6388daafb9/LICENSE-GRAPHICS",
+      "source_url": "https://github.com/twitter/twemoji/blob/bad3bceeafc901ace42a3dfe0421db6388daafb9/assets/svg/1f338.svg",
+      "sha256": "ff7f12f30aa1e6821bbbd96871fcda9b7f581bd30dad075171a82a328b111fe7"
+    },
+    {
+      "id": "twemoji-unicorn",
+      "repo": "twitter/twemoji",
+      "revision": "bad3bceeafc901ace42a3dfe0421db6388daafb9",
+      "path": "assets/svg/1f984.svg",
+      "license": "CC-BY-4.0",
+      "author": "Twitter and Twemoji contributors",
+      "category": "illustration",
+      "license_url": "https://github.com/twitter/twemoji/blob/bad3bceeafc901ace42a3dfe0421db6388daafb9/LICENSE-GRAPHICS",
+      "source_url": "https://github.com/twitter/twemoji/blob/bad3bceeafc901ace42a3dfe0421db6388daafb9/assets/svg/1f984.svg",
+      "sha256": "6063b1ca7021881784eb5a8110997357026fb7376785e639850335a9c422a639"
+    },
+    {
+      "id": "bootstrap-qr-code",
+      "repo": "twbs/icons",
+      "revision": "e568465481c0c541f63a78f6452d09387711d489",
+      "path": "icons/qr-code.svg",
+      "license": "MIT",
+      "author": "The Bootstrap Authors",
+      "category": "line-art",
+      "license_url": "https://github.com/twbs/icons/blob/e568465481c0c541f63a78f6452d09387711d489/LICENSE",
+      "source_url": "https://github.com/twbs/icons/blob/e568465481c0c541f63a78f6452d09387711d489/icons/qr-code.svg",
+      "sha256": "9450a30688becd6b8c351a58b3bf52196aaf7c99dfbaa50604288ffb4b5dcbd8"
+    },
+    {
+      "id": "bootstrap-diagram-3",
+      "repo": "twbs/icons",
+      "revision": "e568465481c0c541f63a78f6452d09387711d489",
+      "path": "icons/diagram-3.svg",
+      "license": "MIT",
+      "author": "The Bootstrap Authors",
+      "category": "line-art",
+      "license_url": "https://github.com/twbs/icons/blob/e568465481c0c541f63a78f6452d09387711d489/LICENSE",
+      "source_url": "https://github.com/twbs/icons/blob/e568465481c0c541f63a78f6452d09387711d489/icons/diagram-3.svg",
+      "sha256": "d48107b77d139e2c6f71354a3a0bb9b9a9314c51e2b606932082ee51d580a9ae"
+    }
+  ]
+}

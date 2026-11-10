@@ -1,0 +1,232 @@
+{
+  "versions": {
+    "windows": "0.16.0-preview",
+    "wasm": "0.18.0-wasm-preview"
+  },
+  "native_wasm_byte_identical": true,
+  "cases": [
+    {
+      "name": "shared-circle",
+      "area": 0,
+      "tolerance": 0.25,
+      "protect": true,
+      "stats": {
+        "nodes_before": 20,
+        "nodes_after": 12,
+        "removed_elements": 0,
+        "protected_elements": 0,
+        "applied_tolerance": 0.25,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 1,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.2617953000590205
+    },
+    {
+      "name": "scaled-islands",
+      "area": 1,
+      "tolerance": 0,
+      "protect": true,
+      "stats": {
+        "nodes_before": 12,
+        "nodes_after": 4,
+        "removed_elements": 1,
+        "protected_elements": 0,
+        "applied_tolerance": 0.0,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.0012650999706238508
+    },
+    {
+      "name": "circle",
+      "area": 0,
+      "tolerance": 0.25,
+      "protect": true,
+      "stats": {
+        "nodes_before": 8,
+        "nodes_after": 4,
+        "removed_elements": 0,
+        "protected_elements": 0,
+        "applied_tolerance": 0.25,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.0013996000634506345
+    },
+    {
+      "name": "islands",
+      "area": 4,
+      "tolerance": 0,
+      "protect": true,
+      "stats": {
+        "nodes_before": 12,
+        "nodes_after": 4,
+        "removed_elements": 1,
+        "protected_elements": 0,
+        "applied_tolerance": 0.0,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.00036079995334148407
+    },
+    {
+      "name": "disabled",
+      "area": 0,
+      "tolerance": 0,
+      "protect": true,
+      "stats": {
+        "nodes_before": 12,
+        "nodes_after": 12,
+        "removed_elements": 0,
+        "protected_elements": 0,
+        "applied_tolerance": 0.0,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 1,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.00038670003414154053
+    },
+    {
+      "name": "lines",
+      "area": 0,
+      "tolerance": 0.25,
+      "protect": true,
+      "stats": {
+        "nodes_before": 106,
+        "nodes_after": 8,
+        "removed_elements": 0,
+        "protected_elements": 0,
+        "applied_tolerance": 0.25,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.0006899000145494938
+    },
+    {
+      "name": "thin-protected",
+      "area": 30,
+      "tolerance": 0,
+      "protect": true,
+      "stats": {
+        "nodes_before": 4,
+        "nodes_after": 4,
+        "removed_elements": 0,
+        "protected_elements": 1,
+        "applied_tolerance": 0.0,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.0003128999378532171
+    },
+    {
+      "name": "thin-delete",
+      "area": 30,
+      "tolerance": 0,
+      "protect": false,
+      "stats": {
+        "nodes_before": 4,
+        "nodes_after": 0,
+        "removed_elements": 1,
+        "protected_elements": 0,
+        "applied_tolerance": 0.0,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.0003344999859109521
+    },
+    {
+      "name": "junction",
+      "area": 100,
+      "tolerance": 0,
+      "protect": true,
+      "stats": {
+        "nodes_before": 15,
+        "nodes_after": 15,
+        "removed_elements": 0,
+        "protected_elements": 1,
+        "applied_tolerance": 0.0,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 1,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      },
+      "seconds": 0.0004902000073343515
+    },
+    {
+      "name": "real",
+      "area": 4,
+      "tolerance": 0.25,
+      "protect": true,
+      "stats": {
+        "nodes_before": 11106,
+        "nodes_after": 4419,
+        "removed_elements": 30,
+        "protected_elements": 280,
+        "applied_tolerance": 0.25,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 6,
+          "tile_pair_checks": 38,
+          "audit_tiles": 30,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001,
+          "audit_compute": "tiled integer CPU"
+        }
+      },
+      "seconds": 0.5892564000096172
+    }
+  ],
+  "real_render_comparison": {
+    "width": 1024,
+    "height": 1536,
+    "changed_pixel_fraction": 0.002974828084309896,
+    "rgba_mae": 0.030086676279703777
+  },
+  "ui_tests": [
+    "preview",
+    "apply",
+    "cancel",
+    "undo snapshot",
+    "reset",
+    "shared worker lifetime"
+  ],
+  "regressions": [
+    "post_smooth",
+    "shared_contract",
+    "aa_support",
+    "pdf_color_groups"
+  ]
+}

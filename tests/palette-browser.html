@@ -1,0 +1,25 @@
+<!doctype html><meta charset="utf-8"><title>Palette regression</title><pre id="result">Running…</pre><div id="frames"></div><script type="module">
+import {paintPalette} from '../web/palette-ui.mjs';
+const out=document.querySelector('#result'),check=(v,m)=>{if(!v)throw Error(m)},wait=async fn=>{const end=performance.now()+30000;while(!fn()){if(performance.now()>end)throw Error('timeout');await new Promise(r=>setTimeout(r,25))}};
+try{
+const cases=[];
+for(const width of [390,820,1280]){
+ const frame=document.createElement('iframe');frame.style.cssText='border:1px solid #999;width:'+width+'px;height:820px';frame.src='../web/';document.querySelector('#frames').replaceChildren(frame);await new Promise(r=>frame.onload=r);const d=frame.contentDocument;
+ const c=document.createElement('canvas');c.width=120;c.height=80;const ctx=c.getContext('2d');for(let i=0;i<12;i++){ctx.fillStyle=`rgb(${i*67%256},${i*101%256},${i*149%256})`;ctx.fillRect(i*10,4,10,72)}
+ const blob=await new Promise(r=>c.toBlob(r));const dt=new DataTransfer();dt.items.add(new File([blob],'palette-alpha.png',{type:'image/png'}));d.querySelector('#file').files=dt.files;d.querySelector('#file').dispatchEvent(new Event('change'));
+ const click=title=>{const b=[...d.querySelectorAll('.card')].find(b=>b.querySelector('strong').textContent===title);check(b,'missing '+title);b.click()};
+ await wait(()=>[...d.querySelectorAll('.card strong')].some(e=>e.textContent==='Базовый'));click('Базовый');click('Смешанные Края');click('Оставить Прозрачность');click('Среднее Качество');click('Настраиваемые Цвета');await wait(()=>d.querySelectorAll('#paletteList button').length>=10);
+ const rows=[...d.querySelectorAll('#paletteList button')];check(rows.length<=11,'duplicate rows');
+ for(const b of rows){const samples=[...b.querySelectorAll('.palette > *')];check(samples.filter(e=>e.classList.contains('transparent-swatch')).length===1,'alpha marker');check(samples.length===Number(b.dataset.count),'total count');const r=b.getBoundingClientRect();for(const sw of samples){const s=sw.getBoundingClientRect();check(s.width>=8&&s.right<=r.right+1&&s.top>=r.top&&s.bottom<=r.bottom+1,'swatch overflow '+width)}}
+ const count=d.querySelector('#colors');count.value='9';count.dispatchEvent(new Event('input'));await wait(()=>d.querySelectorAll('#editablePalette input').length===8);check(d.querySelector('#paletteList [aria-pressed="true"]').dataset.count==='9','typed count not selected');
+ rows[0].click();rows.at(-1).click();await wait(()=>d.querySelector('#colors').value==='12'&&d.querySelectorAll('#editablePalette input').length===11);check(d.querySelectorAll('#paletteList [aria-pressed="true"]').length===1,'selection');
+ const input=d.querySelector('#editablePalette input');input.value='#abcdef';input.dispatchEvent(new Event('input'));check(!d.querySelector('#paletteList [aria-pressed="true"]'),'custom selection stale');
+ check(d.documentElement.scrollWidth<=width+1,'page overflow');
+ const editor=d.querySelector('#editablePalette');paintPalette(editor,Array.from({length:63},(_,i)=>[i*4,i*3,i*2]),{transparent:true,editable:true});check(editor.children.length===64,'64 slots');const bounds=editor.getBoundingClientRect();for(const sw of editor.children){const r=sw.getBoundingClientRect();check(r.width>=20&&r.right<=bounds.right+1,'64 slot overflow')}
+ rows[0].click();await wait(()=>d.querySelector('#colors').value==='2'&&d.querySelectorAll('#editablePalette input').length===1);d.querySelector('#next').click();await wait(()=>!d.querySelector('#vector').disabled);check(d.querySelector('#page .transparent-swatch'),'review transparency');
+ d.querySelector('#home').click();click('Базовый');click('Смешанные Края');click('Свести в Белый Цвет');click('Среднее Качество');click('Настраиваемые Цвета');await wait(()=>d.querySelectorAll('#paletteList button').length>=10);check(!d.querySelector('#paletteList .transparent-swatch'),'flatten marker');check(d.querySelector('#paletteList button .palette').children.length===2,'opaque two colours');
+ cases.push({width,rows:rows.length,transparent:true,latestSelection:true,editing:true});
+}
+out.textContent=JSON.stringify({ok:true,cases},null,2);
+}catch(e){out.textContent=JSON.stringify({ok:false,error:String(e),stack:e.stack},null,2)}
+</script>

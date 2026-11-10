@@ -1,0 +1,4 @@
+import assert from 'node:assert/strict';import fs from 'node:fs/promises';import createTracer from '../web/rust-tracer.mjs';
+const r=await createTracer({wasmBinary:await fs.readFile('web/doctortracer.wasm')}),w=39,h=27,p=new Uint8Array(w*h*4);for(let y=3;y<24;y++)for(let x=3;x<36;x++)p.set(x<20?[20,80,140,255]:[200,70,40,255],4*(y*w+x));p.fill(0,4*(13*w+17),4*(13*w+17+1));
+let cases=0;for(const detail of [0,1,2])for(const unlimited of [false,true]){const cfg={detail,colors:unlimited?0:2,speckle:0},expected=r.trace(p,w,h,cfg);assert.equal(r.trace(p,w,h,{...cfg,deferShared:true}),'');assert.equal(r.sharedInput().length,w*h);const passes=(unlimited?[10,8,5]:[4,2,1])[detail];assert.throws(()=>r.sharedFinish(new Uint32Array(2),passes,{unlimited}));assert.equal(r.sharedFinish(null,passes,{unlimited}),expected);cases++;}
+console.log(JSON.stringify({ok:true,deferredCpuCases:cases,invalidCoordinateLength:true}));

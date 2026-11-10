@@ -1,0 +1,1024 @@
+{
+  "versions": {
+    "desktop": "0.14.0-preview",
+    "wasm": "0.16.0-wasm-preview"
+  },
+  "reference": "Vector Magic Desktop 1.15",
+  "algorithm_freeze": "88d2263",
+  "notice": "Six new inputs selected before tuning; quality parameters frozen before their evaluation. Performance/robustness fixes followed evaluation. No full old-WASM holdout aggregate: that run was interrupted. Full-image refit searches three shared tensions against the filtered working raster, not every control point. Metrics do not establish equivalence to Vector Magic.",
+  "sets": {
+    "development": {
+      "desktop": {
+        "cases": 48,
+        "verified_reference_cases": 48,
+        "missing_or_unverified": 0,
+        "regressions": [],
+        "errors": [],
+        "baseline_missing": [],
+        "proposal_comparison": true,
+        "coverage_complete": true,
+        "baseline": "desktop-quality-final",
+        "run": "desktop-joint-release-016",
+        "generated": "2026-10-27T04:07:19.774459+00:00",
+        "regression_thresholds": {
+          "white_mae_increase": 0.1,
+          "alpha_iou_decrease": 0.001,
+          "boundary_f1_decrease": 0.01
+        },
+        "notice": "Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.",
+        "mean_rgb_mae_white": 2.913746383710237,
+        "by_profile": {
+          "graphic-medium-9": {
+            "cases": 12,
+            "mean_rgb_mae_white": 3.7964377663317244
+          },
+          "photo-high-auto": {
+            "cases": 12,
+            "mean_rgb_mae_white": 2.0529858399389598
+          },
+          "photo-medium-9": {
+            "cases": 12,
+            "mean_rgb_mae_white": 3.3043581677252143
+          },
+          "photo-medium-auto": {
+            "cases": 12,
+            "mean_rgb_mae_white": 2.50120376084505
+          }
+        },
+        "by_split": {
+          "external-holdout": {
+            "cases": 48,
+            "mean_rgb_mae_white": 2.913746383710237
+          }
+        },
+        "by_category": {
+          "illustration": {
+            "cases": 24,
+            "mean_rgb_mae_white": 1.247332266680815
+          },
+          "line-art": {
+            "cases": 8,
+            "mean_rgb_mae_white": 1.0221900939941406
+          },
+          "photo": {
+            "cases": 16,
+            "mean_rgb_mae_white": 6.359145704112419
+          }
+        },
+        "schema": 2,
+        "palette_policy": "ui-total-slots-v2",
+        "source_families": [
+          "hfg-gmuend/openmoji",
+          "scikit-image/scikit-image",
+          "twbs/icons",
+          "twitter/twemoji"
+        ],
+        "recommended_domain_cases": 20,
+        "stress_domain_cases": 28,
+        "by_profile_category": {
+          "graphic-medium-9/illustration": {
+            "cases": 6,
+            "mean_rgb_mae_white": 0.7161762910730699,
+            "mean_region_boundary_f1": 0.9999489644112846
+          },
+          "graphic-medium-9/line-art": {
+            "cases": 2,
+            "mean_rgb_mae_white": 0.22560882568359375,
+            "mean_region_boundary_f1": 1.0
+          },
+          "graphic-medium-9/photo": {
+            "cases": 4,
+            "mean_rgb_mae_white": 10.202244449543773,
+            "mean_region_boundary_f1": 0.7409419383461278
+          },
+          "photo-high-auto/illustration": {
+            "cases": 6,
+            "mean_rgb_mae_white": 1.2428692055164081,
+            "mean_region_boundary_f1": 0.9241097123290286
+          },
+          "photo-high-auto/line-art": {
+            "cases": 2,
+            "mean_rgb_mae_white": 1.0780105590820312,
+            "mean_region_boundary_f1": 1.0
+          },
+          "photo-high-auto/photo": {
+            "cases": 4,
+            "mean_rgb_mae_white": 3.755648432001251,
+            "mean_region_boundary_f1": 0.8424301119875041
+          },
+          "photo-medium-9/illustration": {
+            "cases": 6,
+            "mean_rgb_mae_white": 1.5343911231213403,
+            "mean_region_boundary_f1": 0.9995336424230984
+          },
+          "photo-medium-9/line-art": {
+            "cases": 2,
+            "mean_rgb_mae_white": 1.1724090576171875,
+            "mean_region_boundary_f1": 0.9998540997957397
+          },
+          "photo-medium-9/photo": {
+            "cases": 4,
+            "mean_rgb_mae_white": 7.025283289685039,
+            "mean_region_boundary_f1": 0.8851143251369723
+          },
+          "photo-medium-auto/illustration": {
+            "cases": 6,
+            "mean_rgb_mae_white": 1.495892447012442,
+            "mean_region_boundary_f1": 0.9534129375670517
+          },
+          "photo-medium-auto/line-art": {
+            "cases": 2,
+            "mean_rgb_mae_white": 1.61273193359375,
+            "mean_region_boundary_f1": 1.0
+          },
+          "photo-medium-auto/photo": {
+            "cases": 4,
+            "mean_rgb_mae_white": 4.453406645219613,
+            "mean_region_boundary_f1": 0.7748326764935182
+          }
+        }
+      },
+      "wasm": {
+        "cases": 48,
+        "verified_reference_cases": 48,
+        "missing_or_unverified": 0,
+        "regressions": [],
+        "errors": [],
+        "baseline_missing": [],
+        "proposal_comparison": true,
+        "coverage_complete": true,
+        "baseline": "wasm-quality-final",
+        "run": "wasm-joint-release-016",
+        "generated": "2026-10-26T18:26:11.891889+00:00",
+        "regression_thresholds": {
+          "white_mae_increase": 0.1,
+          "alpha_iou_decrease": 0.001,
+          "boundary_f1_decrease": 0.01
+        },
+        "notice": "Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.",
+        "mean_rgb_mae_white": 2.9141093052597618,
+        "by_profile": {
+          "graphic-medium-9": {
+            "cases": 12,
+            "mean_rgb_mae_white": 3.797878538257089
+          },
+          "photo-high-auto": {
+            "cases": 12,
+            "mean_rgb_mae_white": 2.0529858399389598
+          },
+          "photo-medium-9": {
+            "cases": 12,
+            "mean_rgb_mae_white": 3.3043581677252143
+          },
+          "photo-medium-auto": {
+            "cases": 12,
+            "mean_rgb_mae_white": 2.5012146751177826
+          }
+        },
+        "by_split": {
+          "external-holdout": {
+            "cases": 48,
+            "mean_rgb_mae_white": 2.9141093052597618
+          }
+        },
+        "by_category": {
+          "illustration": {
+            "cases": 24,
+            "mean_rgb_mae_white": 1.2473710943151404
+          },
+          "line-art": {
+            "cases": 8,
+            "mean_rgb_mae_white": 1.0222949981689453
+          },
+          "photo": {
+            "cases": 16,
+            "mean_rgb_mae_white": 6.360123775222101
+          }
+        },
+        "schema": 2,
+        "palette_policy": "ui-total-slots-v2",
+        "source_families": [
+          "hfg-gmuend/openmoji",
+          "scikit-image/scikit-image",
+          "twbs/icons",
+          "twitter/twemoji"
+        ],
+        "recommended_domain_cases": 20,
+        "stress_domain_cases": 28,
+        "by_profile_category": {
+          "graphic-medium-9/illustration": {
+            "cases": 6,
+            "mean_rgb_mae_white": 0.7163316016103707,
+            "mean_region_boundary_f1": 0.9999489644112846
+          },
+          "graphic-medium-9/line-art": {
+            "cases": 2,
+            "mean_rgb_mae_white": 0.2260284423828125,
+            "mean_region_boundary_f1": 1.0
+          },
+          "graphic-medium-9/photo": {
+            "cases": 4,
+            "mean_rgb_mae_white": 10.206123991164304,
+            "mean_region_boundary_f1": 0.7412305613878484
+          },
+          "photo-high-auto/illustration": {
+            "cases": 6,
+            "mean_rgb_mae_white": 1.2428692055164081,
+            "mean_region_boundary_f1": 0.9241097123290286
+          },
+          "photo-high-auto/line-art": {
+            "cases": 2,
+            "mean_rgb_mae_white": 1.0780105590820312,
+            "mean_region_boundary_f1": 1.0
+          },
+          "photo-high-auto/photo": {
+            "cases": 4,
+            "mean_rgb_mae_white": 3.755648432001251,
+            "mean_region_boundary_f1": 0.8424301119875041
+          },
+          "photo-medium-9/illustration": {
+            "cases": 6,
+            "mean_rgb_mae_white": 1.5343911231213403,
+            "mean_region_boundary_f1": 0.9995336424230984
+          },
+          "photo-medium-9/line-art": {
+            "cases": 2,
+            "mean_rgb_mae_white": 1.1724090576171875,
+            "mean_region_boundary_f1": 0.9998540997957397
+          },
+          "photo-medium-9/photo": {
+            "cases": 4,
+            "mean_rgb_mae_white": 7.025283289685039,
+            "mean_region_boundary_f1": 0.8851143251369723
+          },
+          "photo-medium-auto/illustration": {
+            "cases": 6,
+            "mean_rgb_mae_white": 1.495892447012442,
+            "mean_region_boundary_f1": 0.9534129375670517
+          },
+          "photo-medium-auto/line-art": {
+            "cases": 2,
+            "mean_rgb_mae_white": 1.61273193359375,
+            "mean_region_boundary_f1": 1.0
+          },
+          "photo-medium-auto/photo": {
+            "cases": 4,
+            "mean_rgb_mae_white": 4.453439388037809,
+            "mean_region_boundary_f1": 0.7748326764935182
+          }
+        }
+      }
+    },
+    "unseen": {
+      "desktop": {
+        "cases": 24,
+        "verified_reference_cases": 24,
+        "missing_or_unverified": 0,
+        "regressions": [
+          "holdout-hubble--graphic-medium-9"
+        ],
+        "errors": [],
+        "baseline_missing": [],
+        "proposal_comparison": true,
+        "coverage_complete": true,
+        "baseline": "desktop-before-016",
+        "run": "desktop-joint-release-016",
+        "generated": "2026-10-27T04:06:54.593245+00:00",
+        "regression_thresholds": {
+          "white_mae_increase": 0.1,
+          "alpha_iou_decrease": 0.001,
+          "boundary_f1_decrease": 0.01
+        },
+        "notice": "Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.",
+        "mean_rgb_mae_white": 2.4947643294354407,
+        "by_profile": {
+          "graphic-medium-9": {
+            "cases": 6,
+            "mean_rgb_mae_white": 2.784338321190564
+          },
+          "photo-high-auto": {
+            "cases": 6,
+            "mean_rgb_mae_white": 2.040202543014837
+          },
+          "photo-medium-9": {
+            "cases": 6,
+            "mean_rgb_mae_white": 2.886596515355343
+          },
+          "photo-medium-auto": {
+            "cases": 6,
+            "mean_rgb_mae_white": 2.267919938181021
+          }
+        },
+        "by_split": {
+          "external-holdout": {
+            "cases": 24,
+            "mean_rgb_mae_white": 2.4947643294354407
+          }
+        },
+        "by_category": {
+          "illustration": {
+            "cases": 16,
+            "mean_rgb_mae_white": 1.4581944359673393
+          },
+          "photo": {
+            "cases": 8,
+            "mean_rgb_mae_white": 4.567904116371643
+          }
+        },
+        "schema": 2,
+        "palette_policy": "ui-total-slots-v2",
+        "source_families": [
+          "hfg-gmuend/openmoji",
+          "scikit-image/scikit-image",
+          "twitter/twemoji"
+        ],
+        "recommended_domain_cases": 10,
+        "stress_domain_cases": 14,
+        "by_profile_category": {
+          "graphic-medium-9/illustration": {
+            "cases": 4,
+            "mean_rgb_mae_white": 0.7672177881976359,
+            "mean_region_boundary_f1": 0.9999274205254753
+          },
+          "graphic-medium-9/photo": {
+            "cases": 2,
+            "mean_rgb_mae_white": 6.8185793871764195,
+            "mean_region_boundary_f1": 0.5011762767223896
+          },
+          "photo-high-auto/illustration": {
+            "cases": 4,
+            "mean_rgb_mae_white": 1.4427774217393665,
+            "mean_region_boundary_f1": 0.8978482354037376
+          },
+          "photo-high-auto/photo": {
+            "cases": 2,
+            "mean_rgb_mae_white": 3.2350527855657765,
+            "mean_region_boundary_f1": 0.6307152883489222
+          },
+          "photo-medium-9/illustration": {
+            "cases": 4,
+            "mean_rgb_mae_white": 1.8278511346555222,
+            "mean_region_boundary_f1": 0.9997089423961367
+          },
+          "photo-medium-9/photo": {
+            "cases": 2,
+            "mean_rgb_mae_white": 5.0040872767549835,
+            "mean_region_boundary_f1": 0.8183539666694779
+          },
+          "photo-medium-auto/illustration": {
+            "cases": 4,
+            "mean_rgb_mae_white": 1.7949313992768334,
+            "mean_region_boundary_f1": 0.9553820769677224
+          },
+          "photo-medium-auto/photo": {
+            "cases": 2,
+            "mean_rgb_mae_white": 3.213897015989395,
+            "mean_region_boundary_f1": 0.6461529496404472
+          }
+        }
+      },
+      "wasm": {
+        "cases": 24,
+        "verified_reference_cases": 24,
+        "missing_or_unverified": 0,
+        "regressions": [],
+        "errors": [],
+        "baseline_missing": [],
+        "proposal_comparison": false,
+        "coverage_complete": true,
+        "baseline": null,
+        "run": "wasm-joint-release-016",
+        "generated": "2026-10-26T18:32:50.651842+00:00",
+        "regression_thresholds": {
+          "white_mae_increase": 0.1,
+          "alpha_iou_decrease": 0.001,
+          "boundary_f1_decrease": 0.01
+        },
+        "notice": "Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.",
+        "mean_rgb_mae_white": 2.479981925874634,
+        "by_profile": {
+          "graphic-medium-9": {
+            "cases": 6,
+            "mean_rgb_mae_white": 2.7621818806456893
+          },
+          "photo-high-auto": {
+            "cases": 6,
+            "mean_rgb_mae_white": 2.040202543014837
+          },
+          "photo-medium-9": {
+            "cases": 6,
+            "mean_rgb_mae_white": 2.886596515355343
+          },
+          "photo-medium-auto": {
+            "cases": 6,
+            "mean_rgb_mae_white": 2.2309467644826673
+          }
+        },
+        "by_split": {
+          "external-holdout": {
+            "cases": 24,
+            "mean_rgb_mae_white": 2.479981925874634
+          }
+        },
+        "by_category": {
+          "illustration": {
+            "cases": 16,
+            "mean_rgb_mae_white": 1.4581550373750576
+          },
+          "photo": {
+            "cases": 8,
+            "mean_rgb_mae_white": 4.523635702873786
+          }
+        },
+        "schema": 2,
+        "palette_policy": "ui-total-slots-v2",
+        "source_families": [
+          "hfg-gmuend/openmoji",
+          "scikit-image/scikit-image",
+          "twitter/twemoji"
+        ],
+        "recommended_domain_cases": 10,
+        "stress_domain_cases": 14,
+        "by_profile_category": {
+          "graphic-medium-9/illustration": {
+            "cases": 4,
+            "mean_rgb_mae_white": 0.767060193828508,
+            "mean_region_boundary_f1": 0.9999274205254753
+          },
+          "graphic-medium-9/photo": {
+            "cases": 2,
+            "mean_rgb_mae_white": 6.752425254280052,
+            "mean_region_boundary_f1": 0.5083320568793567
+          },
+          "photo-high-auto/illustration": {
+            "cases": 4,
+            "mean_rgb_mae_white": 1.4427774217393665,
+            "mean_region_boundary_f1": 0.8978482354037376
+          },
+          "photo-high-auto/photo": {
+            "cases": 2,
+            "mean_rgb_mae_white": 3.2350527855657765,
+            "mean_region_boundary_f1": 0.6307152883489222
+          },
+          "photo-medium-9/illustration": {
+            "cases": 4,
+            "mean_rgb_mae_white": 1.8278511346555222,
+            "mean_region_boundary_f1": 0.9997089423961367
+          },
+          "photo-medium-9/photo": {
+            "cases": 2,
+            "mean_rgb_mae_white": 5.0040872767549835,
+            "mean_region_boundary_f1": 0.8183539666694779
+          },
+          "photo-medium-auto/illustration": {
+            "cases": 4,
+            "mean_rgb_mae_white": 1.7949313992768334,
+            "mean_region_boundary_f1": 0.9553820769677224
+          },
+          "photo-medium-auto/photo": {
+            "cases": 2,
+            "mean_rgb_mae_white": 3.1029774948943336,
+            "mean_region_boundary_f1": 0.6412383395520938
+          }
+        }
+      }
+    }
+  },
+  "parity": [
+    {
+      "set": "development",
+      "case": "photo-astronaut--photo-medium-auto",
+      "rgba_mae": 9.822845458984375e-05,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "photo-astronaut--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "photo-astronaut--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "photo-astronaut--graphic-medium-9",
+      "rgba_mae": 0.013734817504882812,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "photo-coffee--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "photo-coffee--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "photo-coffee--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "photo-coffee--graphic-medium-9",
+      "rgba_mae": 0.01665625,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "photo-chelsea--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "photo-chelsea--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "photo-chelsea--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "photo-chelsea--graphic-medium-9",
+      "rgba_mae": 0.017806725794530673,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "photo-rocket--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "photo-rocket--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "photo-rocket--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "photo-rocket--graphic-medium-9",
+      "rgba_mae": 0.012538422131147541,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "openmoji-fox--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "openmoji-fox--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "openmoji-fox--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "openmoji-fox--graphic-medium-9",
+      "rgba_mae": 0.001674652099609375,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "openmoji-butterfly--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "openmoji-butterfly--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "openmoji-butterfly--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "openmoji-butterfly--graphic-medium-9",
+      "rgba_mae": 0.0015411376953125,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "openmoji-palette--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "openmoji-palette--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "openmoji-palette--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "openmoji-palette--graphic-medium-9",
+      "rgba_mae": 0.00014495849609375,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "openmoji-rocket--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "openmoji-rocket--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "openmoji-rocket--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "openmoji-rocket--graphic-medium-9",
+      "rgba_mae": 0.00038909912109375,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "twemoji-flower--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "twemoji-flower--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "twemoji-flower--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "twemoji-flower--graphic-medium-9",
+      "rgba_mae": 0.00048828125,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "twemoji-unicorn--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "twemoji-unicorn--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "twemoji-unicorn--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "twemoji-unicorn--graphic-medium-9",
+      "rgba_mae": 0.00046539306640625,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "bootstrap-qr-code--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "bootstrap-qr-code--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "bootstrap-qr-code--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "bootstrap-qr-code--graphic-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "bootstrap-diagram-3--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "bootstrap-diagram-3--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "bootstrap-diagram-3--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "development",
+      "case": "bootstrap-diagram-3--graphic-medium-9",
+      "rgba_mae": 0.001079559326171875,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-camera--photo-medium-auto",
+      "rgba_mae": 0.7437229156494141,
+      "limit": 0.02,
+      "passed": false
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-camera--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-camera--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-camera--graphic-medium-9",
+      "rgba_mae": 0.021004676818847656,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-hubble--photo-medium-auto",
+      "rgba_mae": 0.0018971214157706092,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-hubble--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-hubble--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-hubble--graphic-medium-9",
+      "rgba_mae": 0.24103592629928317,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-fish--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-fish--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-fish--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-fish--graphic-medium-9",
+      "rgba_mae": 0.0012054443359375,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-frog--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-frog--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-frog--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-frog--graphic-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-twemoji-fox--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-twemoji-fox--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-twemoji-fox--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-twemoji-fox--graphic-medium-9",
+      "rgba_mae": 0.0002593994140625,
+      "limit": 0.25,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-twemoji-butterfly--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-twemoji-butterfly--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-twemoji-butterfly--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true
+    },
+    {
+      "set": "unseen",
+      "case": "holdout-twemoji-butterfly--graphic-medium-9",
+      "rgba_mae": 0.003490447998046875,
+      "limit": 0.25,
+      "passed": true
+    }
+  ],
+  "parity_failures": [
+    {
+      "set": "unseen",
+      "case": "holdout-camera--photo-medium-auto",
+      "rgba_mae": 0.7437229156494141,
+      "limit": 0.02,
+      "passed": false
+    }
+  ],
+  "performance": {
+    "device": "NVIDIA GeForce GTX 1080",
+    "policy": "Warm alternating full current trace. Background report generation may affect absolute times. No claim of equivalence to VM timing.",
+    "rows": [
+      {
+        "image": "photo-chelsea",
+        "cpu_seconds": 5.9218793999170884,
+        "gpu_seconds": 4.536392800044268,
+        "exact_svg": true,
+        "repeats": 3,
+        "speedup": 1.305415924269014
+      },
+      {
+        "image": "photo-astronaut",
+        "cpu_seconds": 7.618303299997933,
+        "gpu_seconds": 5.250073999981396,
+        "exact_svg": true,
+        "repeats": 3,
+        "speedup": 1.4510849370932541
+      }
+    ]
+  }
+}

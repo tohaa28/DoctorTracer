@@ -1,0 +1,903 @@
+{
+  "versions": {
+    "desktop": "0.13.0-preview",
+    "wasm": "0.15.0-wasm-preview"
+  },
+  "cases_per_engine": 48,
+  "reference": "Vector Magic Desktop 1.15",
+  "before": {
+    "desktop": {
+      "cases": 48,
+      "verified_reference_cases": 48,
+      "missing_or_unverified": 0,
+      "regressions": [],
+      "errors": [],
+      "baseline_missing": [],
+      "coverage_complete": true,
+      "baseline": null,
+      "run": "desktop-public-v2",
+      "generated": "2026-10-26T07:30:38.450111+00:00",
+      "regression_thresholds": {
+        "white_mae_increase": 0.1,
+        "alpha_iou_decrease": 0.001,
+        "boundary_f1_decrease": 0.01
+      },
+      "notice": "Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.",
+      "mean_rgb_mae_white": 3.3276896003341094,
+      "by_profile": {
+        "graphic-medium-9": {
+          "cases": 12,
+          "mean_rgb_mae_white": 4.207083427817868
+        },
+        "photo-high-auto": {
+          "cases": 12,
+          "mean_rgb_mae_white": 2.130522672616464
+        },
+        "photo-medium-9": {
+          "cases": 12,
+          "mean_rgb_mae_white": 4.391188974653306
+        },
+        "photo-medium-auto": {
+          "cases": 12,
+          "mean_rgb_mae_white": 2.581963326248799
+        }
+      },
+      "by_split": {
+        "external-holdout": {
+          "cases": 48,
+          "mean_rgb_mae_white": 3.3276896003341094
+        }
+      },
+      "by_category": {
+        "illustration": {
+          "cases": 24,
+          "mean_rgb_mae_white": 1.351230147617315
+        },
+        "line-art": {
+          "cases": 8,
+          "mean_rgb_mae_white": 1.0566596984863281
+        },
+        "photo": {
+          "cases": 16,
+          "mean_rgb_mae_white": 7.427893730333191
+        }
+      },
+      "schema": 2,
+      "palette_policy": "ui-total-slots-v2",
+      "source_families": [
+        "hfg-gmuend/openmoji",
+        "scikit-image/scikit-image",
+        "twbs/icons",
+        "twitter/twemoji"
+      ],
+      "recommended_domain_cases": 20,
+      "stress_domain_cases": 28,
+      "by_profile_category": {
+        "graphic-medium-9/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 0.8321241590711804,
+          "mean_region_boundary_f1": 0.9984424262320862
+        },
+        "graphic-medium-9/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 0.22560882568359375,
+          "mean_region_boundary_f1": 1.0
+        },
+        "graphic-medium-9/photo": {
+          "cases": 4,
+          "mean_rgb_mae_white": 11.260259632005038,
+          "mean_region_boundary_f1": 0.7123269485104742
+        },
+        "photo-high-auto/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 1.330264425173824,
+          "mean_region_boundary_f1": 0.9245156978954562
+        },
+        "photo-high-auto/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 1.123382568359375,
+          "mean_region_boundary_f1": 1.0
+        },
+        "photo-high-auto/photo": {
+          "cases": 4,
+          "mean_rgb_mae_white": 3.834480095908967,
+          "mean_region_boundary_f1": 0.8404762810357855
+        },
+        "photo-medium-9/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 1.66079004158901,
+          "mean_region_boundary_f1": 0.9997111768070583
+        },
+        "photo-medium-9/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 1.1958847045898438,
+          "mean_region_boundary_f1": 0.9998540997957397
+        },
+        "photo-medium-9/photo": {
+          "cases": 4,
+          "mean_rgb_mae_white": 10.08443950928148,
+          "mean_region_boundary_f1": 0.8068905368055459
+        },
+        "photo-medium-auto/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 1.5817419646352466,
+          "mean_region_boundary_f1": 0.9535533246377295
+        },
+        "photo-medium-auto/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 1.6817626953125,
+          "mean_region_boundary_f1": 1.0
+        },
+        "photo-medium-auto/photo": {
+          "cases": 4,
+          "mean_rgb_mae_white": 4.532395684137278,
+          "mean_region_boundary_f1": 0.7712878005956393
+        }
+      }
+    },
+    "wasm": {
+      "cases": 48,
+      "verified_reference_cases": 48,
+      "missing_or_unverified": 0,
+      "regressions": [],
+      "errors": [],
+      "baseline_missing": [],
+      "coverage_complete": true,
+      "baseline": null,
+      "run": "wasm-public-v2",
+      "generated": "2026-10-26T07:33:30.503428+00:00",
+      "regression_thresholds": {
+        "white_mae_increase": 0.1,
+        "alpha_iou_decrease": 0.001,
+        "boundary_f1_decrease": 0.01
+      },
+      "notice": "Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.",
+      "mean_rgb_mae_white": 3.3275682957372106,
+      "by_profile": {
+        "graphic-medium-9": {
+          "cases": 12,
+          "mean_rgb_mae_white": 4.208630317148006
+        },
+        "photo-high-auto": {
+          "cases": 12,
+          "mean_rgb_mae_white": 2.129105327144828
+        },
+        "photo-medium-9": {
+          "cases": 12,
+          "mean_rgb_mae_white": 4.391413657733272
+        },
+        "photo-medium-auto": {
+          "cases": 12,
+          "mean_rgb_mae_white": 2.581123880922736
+        }
+      },
+      "by_split": {
+        "external-holdout": {
+          "cases": 48,
+          "mean_rgb_mae_white": 3.3275682957372106
+        }
+      },
+      "by_category": {
+        "illustration": {
+          "cases": 24,
+          "mean_rgb_mae_white": 1.3514410023076344
+        },
+        "line-art": {
+          "cases": 8,
+          "mean_rgb_mae_white": 1.0533084869384766
+        },
+        "photo": {
+          "cases": 16,
+          "mean_rgb_mae_white": 7.4288891402809405
+        }
+      },
+      "schema": 2,
+      "palette_policy": "ui-total-slots-v2",
+      "source_families": [
+        "hfg-gmuend/openmoji",
+        "scikit-image/scikit-image",
+        "twbs/icons",
+        "twitter/twemoji"
+      ],
+      "recommended_domain_cases": 20,
+      "stress_domain_cases": 28,
+      "by_profile_category": {
+        "graphic-medium-9/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 0.8324792965824566,
+          "mean_region_boundary_f1": 0.9984426810038395
+        },
+        "graphic-medium-9/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 0.2260284423828125,
+          "mean_region_boundary_f1": 1.0
+        },
+        "graphic-medium-9/photo": {
+          "cases": 4,
+          "mean_rgb_mae_white": 11.264157785378925,
+          "mean_region_boundary_f1": 0.712619056338754
+        },
+        "photo-high-auto/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 1.330264425173824,
+          "mean_region_boundary_f1": 0.9245156978954562
+        },
+        "photo-high-auto/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 1.1148834228515625,
+          "mean_region_boundary_f1": 1.0
+        },
+        "photo-high-auto/photo": {
+          "cases": 4,
+          "mean_rgb_mae_white": 3.8344776322479674,
+          "mean_region_boundary_f1": 0.840472277270293
+        },
+        "photo-medium-9/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 1.66127832283901,
+          "mean_region_boundary_f1": 0.9997111768070583
+        },
+        "photo-medium-9/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 1.1956405639648438,
+          "mean_region_boundary_f1": 0.9998540997957397
+        },
+        "photo-medium-9/photo": {
+          "cases": 4,
+          "mean_rgb_mae_white": 10.08450320695888,
+          "mean_region_boundary_f1": 0.8069175162122958
+        },
+        "photo-medium-auto/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 1.5817419646352466,
+          "mean_region_boundary_f1": 0.9535533246377295
+        },
+        "photo-medium-auto/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 1.6766815185546875,
+          "mean_region_boundary_f1": 1.0
+        },
+        "photo-medium-auto/photo": {
+          "cases": 4,
+          "mean_rgb_mae_white": 4.5324179365379935,
+          "mean_region_boundary_f1": 0.7712878005956393
+        }
+      }
+    }
+  },
+  "after": {
+    "desktop": {
+      "cases": 48,
+      "verified_reference_cases": 48,
+      "missing_or_unverified": 0,
+      "regressions": [
+        "photo-chelsea--photo-medium-9",
+        "photo-chelsea--graphic-medium-9"
+      ],
+      "errors": [],
+      "baseline_missing": [],
+      "proposal_comparison": true,
+      "coverage_complete": true,
+      "baseline": "desktop-public-v2",
+      "run": "desktop-quality-final",
+      "generated": "2026-10-26T17:02:47.974206+00:00",
+      "regression_thresholds": {
+        "white_mae_increase": 0.1,
+        "alpha_iou_decrease": 0.001,
+        "boundary_f1_decrease": 0.01
+      },
+      "notice": "Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.",
+      "mean_rgb_mae_white": 3.04643639261448,
+      "by_profile": {
+        "graphic-medium-9": {
+          "cases": 12,
+          "mean_rgb_mae_white": 3.9589861421307817
+        },
+        "photo-high-auto": {
+          "cases": 12,
+          "mean_rgb_mae_white": 2.061843864626941
+        },
+        "photo-medium-9": {
+          "cases": 12,
+          "mean_rgb_mae_white": 3.6482057339522727
+        },
+        "photo-medium-auto": {
+          "cases": 12,
+          "mean_rgb_mae_white": 2.516709829747923
+        }
+      },
+      "by_split": {
+        "external-holdout": {
+          "cases": 48,
+          "mean_rgb_mae_white": 3.04643639261448
+        }
+      },
+      "by_category": {
+        "illustration": {
+          "cases": 24,
+          "mean_rgb_mae_white": 1.2548857977707142
+        },
+        "line-art": {
+          "cases": 8,
+          "mean_rgb_mae_white": 1.0532035827636719
+        },
+        "photo": {
+          "cases": 16,
+          "mean_rgb_mae_white": 6.730378689805532
+        }
+      },
+      "schema": 2,
+      "palette_policy": "ui-total-slots-v2",
+      "source_families": [
+        "hfg-gmuend/openmoji",
+        "scikit-image/scikit-image",
+        "twbs/icons",
+        "twitter/twemoji"
+      ],
+      "recommended_domain_cases": 20,
+      "stress_domain_cases": 28,
+      "by_profile_category": {
+        "graphic-medium-9/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 0.7161762910730699,
+          "mean_region_boundary_f1": 0.9999489644112846
+        },
+        "graphic-medium-9/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 0.22560882568359375,
+          "mean_region_boundary_f1": 1.0
+        },
+        "graphic-medium-9/photo": {
+          "cases": 4,
+          "mean_rgb_mae_white": 10.689889576940946,
+          "mean_region_boundary_f1": 0.7343730391362072
+        },
+        "photo-high-auto/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 1.2456308435510708,
+          "mean_region_boundary_f1": 0.9242858647610542
+        },
+        "photo-high-auto/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 1.1148834228515625,
+          "mean_region_boundary_f1": 1.0
+        },
+        "photo-high-auto/photo": {
+          "cases": 4,
+          "mean_rgb_mae_white": 3.7596436171284346,
+          "mean_region_boundary_f1": 0.8418212102126905
+        },
+        "photo-medium-9/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 1.554330670392072,
+          "mean_region_boundary_f1": 0.9995679106568383
+        },
+        "photo-medium-9/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 1.1956405639648438,
+          "mean_region_boundary_f1": 0.9998540997957397
+        },
+        "photo-medium-9/photo": {
+          "cases": 4,
+          "mean_rgb_mae_white": 8.01530091428629,
+          "mean_region_boundary_f1": 0.8638054313002403
+        },
+        "photo-medium-auto/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 1.503405386066645,
+          "mean_region_boundary_f1": 0.9535220645508774
+        },
+        "photo-medium-auto/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 1.6766815185546875,
+          "mean_region_boundary_f1": 1.0
+        },
+        "photo-medium-auto/photo": {
+          "cases": 4,
+          "mean_rgb_mae_white": 4.456680650866457,
+          "mean_region_boundary_f1": 0.7742959733279311
+        }
+      }
+    },
+    "wasm": {
+      "cases": 48,
+      "verified_reference_cases": 48,
+      "missing_or_unverified": 0,
+      "regressions": [
+        "photo-chelsea--photo-medium-9",
+        "photo-chelsea--graphic-medium-9"
+      ],
+      "errors": [],
+      "baseline_missing": [],
+      "proposal_comparison": true,
+      "coverage_complete": true,
+      "baseline": "wasm-public-v2",
+      "run": "wasm-quality-final",
+      "generated": "2026-10-26T17:09:00.983992+00:00",
+      "regression_thresholds": {
+        "white_mae_increase": 0.1,
+        "alpha_iou_decrease": 0.001,
+        "boundary_f1_decrease": 0.01
+      },
+      "notice": "Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.",
+      "mean_rgb_mae_white": 3.046630943680457,
+      "by_profile": {
+        "graphic-medium-9": {
+          "cases": 12,
+          "mean_rgb_mae_white": 3.9597534321219583
+        },
+        "photo-high-auto": {
+          "cases": 12,
+          "mean_rgb_mae_white": 2.061843864626941
+        },
+        "photo-medium-9": {
+          "cases": 12,
+          "mean_rgb_mae_white": 3.6482057339522727
+        },
+        "photo-medium-auto": {
+          "cases": 12,
+          "mean_rgb_mae_white": 2.5167207440206547
+        }
+      },
+      "by_split": {
+        "external-holdout": {
+          "cases": 48,
+          "mean_rgb_mae_white": 3.046630943680457
+        }
+      },
+      "by_category": {
+        "illustration": {
+          "cases": 24,
+          "mean_rgb_mae_white": 1.2549525998516542
+        },
+        "line-art": {
+          "cases": 8,
+          "mean_rgb_mae_white": 1.0533084869384766
+        },
+        "photo": {
+          "cases": 16,
+          "mean_rgb_mae_white": 6.73080968779465
+        }
+      },
+      "schema": 2,
+      "palette_policy": "ui-total-slots-v2",
+      "source_families": [
+        "hfg-gmuend/openmoji",
+        "scikit-image/scikit-image",
+        "twbs/icons",
+        "twitter/twemoji"
+      ],
+      "recommended_domain_cases": 20,
+      "stress_domain_cases": 28,
+      "by_profile_category": {
+        "graphic-medium-9/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 0.716443499396829,
+          "mean_region_boundary_f1": 0.9999489644112846
+        },
+        "graphic-medium-9/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 0.2260284423828125,
+          "mean_region_boundary_f1": 1.0
+        },
+        "graphic-medium-9/photo": {
+          "cases": 4,
+          "mean_rgb_mae_white": 10.691580826079225,
+          "mean_region_boundary_f1": 0.7345269005091918
+        },
+        "photo-high-auto/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 1.2456308435510708,
+          "mean_region_boundary_f1": 0.9242858647610542
+        },
+        "photo-high-auto/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 1.1148834228515625,
+          "mean_region_boundary_f1": 1.0
+        },
+        "photo-high-auto/photo": {
+          "cases": 4,
+          "mean_rgb_mae_white": 3.7596436171284346,
+          "mean_region_boundary_f1": 0.8418212102126905
+        },
+        "photo-medium-9/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 1.554330670392072,
+          "mean_region_boundary_f1": 0.9995679106568383
+        },
+        "photo-medium-9/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 1.1956405639648438,
+          "mean_region_boundary_f1": 0.9998540997957397
+        },
+        "photo-medium-9/photo": {
+          "cases": 4,
+          "mean_rgb_mae_white": 8.01530091428629,
+          "mean_region_boundary_f1": 0.8638054313002403
+        },
+        "photo-medium-auto/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 1.503405386066645,
+          "mean_region_boundary_f1": 0.9535220645508774
+        },
+        "photo-medium-auto/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 1.6766815185546875,
+          "mean_region_boundary_f1": 1.0
+        },
+        "photo-medium-auto/photo": {
+          "cases": 4,
+          "mean_rgb_mae_white": 4.456713393684654,
+          "mean_region_boundary_f1": 0.7742959733279311
+        }
+      }
+    }
+  },
+  "parity": [
+    {
+      "case": "photo-astronaut--photo-medium-auto",
+      "rgba_mae": 9.822845458984375e-05,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-astronaut--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-astronaut--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-astronaut--graphic-medium-9",
+      "rgba_mae": 0.013886451721191406,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "photo-coffee--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-coffee--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-coffee--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-coffee--graphic-medium-9",
+      "rgba_mae": 0.016733333333333333,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "photo-chelsea--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-chelsea--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-chelsea--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-chelsea--graphic-medium-9",
+      "rgba_mae": 0.02915373244641537,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "photo-rocket--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-rocket--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-rocket--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-rocket--graphic-medium-9",
+      "rgba_mae": 0.012550314695550352,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-fox--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-fox--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-fox--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-fox--graphic-medium-9",
+      "rgba_mae": 0.001674652099609375,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "openmoji-butterfly--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-butterfly--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-butterfly--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-butterfly--graphic-medium-9",
+      "rgba_mae": 0.002044677734375,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "openmoji-palette--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-palette--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-palette--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-palette--graphic-medium-9",
+      "rgba_mae": 0.00014495849609375,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "openmoji-rocket--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-rocket--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-rocket--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-rocket--graphic-medium-9",
+      "rgba_mae": 0.00038909912109375,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "twemoji-flower--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "twemoji-flower--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "twemoji-flower--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "twemoji-flower--graphic-medium-9",
+      "rgba_mae": 0.00048828125,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "twemoji-unicorn--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "twemoji-unicorn--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "twemoji-unicorn--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "twemoji-unicorn--graphic-medium-9",
+      "rgba_mae": 0.00046539306640625,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "bootstrap-qr-code--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "bootstrap-qr-code--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "bootstrap-qr-code--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "bootstrap-qr-code--graphic-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "bootstrap-diagram-3--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "bootstrap-diagram-3--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "bootstrap-diagram-3--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "bootstrap-diagram-3--graphic-medium-9",
+      "rgba_mae": 0.001079559326171875,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": true
+    }
+  ],
+  "truth_graphic_4x_candidate_mae": {
+    "desktop": 0.6649558349372514,
+    "wasm": 0.6650274909399692
+  },
+  "performance": {
+    "device": "NVIDIA GeForce GTX 1080",
+    "policy": "Warm alternating full trace, same current algorithm; not old/new speed comparison",
+    "rows": [
+      {
+        "image": "photo-astronaut",
+        "repeats": 3,
+        "cpu_seconds": 6.133063399931416,
+        "gpu_seconds": 4.184207399957813,
+        "cpu_gpu_exact_svg": true,
+        "gpu_edge_fit": "OpenCL GPU FP64",
+        "speedup": 1.4657646750477167
+      },
+      {
+        "image": "photo-coffee",
+        "repeats": 3,
+        "cpu_seconds": 6.624038300011307,
+        "gpu_seconds": 4.977438700036146,
+        "cpu_gpu_exact_svg": true,
+        "gpu_edge_fit": "OpenCL GPU FP64",
+        "speedup": 1.3308126326022265
+      }
+    ]
+  },
+  "notice": "Preview: quality is not uniformly improved. The public corpus was used during development; no unseen-set claim. Local coverage optimization is not a global full-image raster optimizer."
+}
