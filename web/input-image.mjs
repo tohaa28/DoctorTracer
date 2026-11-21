@@ -83,3 +83,19 @@ export function decodeImage(file) {
  }
  return createImageBitmap(file);
 }
+
+// Nearest-neighbour only for an explicit crisp raster handoff. A standalone
+// photo import keeps its historic interpolated sampling.
+export function isCrispRasterHandoff(href,parentHref=null){
+ const current=new URL(href);
+ if(current.searchParams.get('raster')==='crisp')return true;
+ if(!parentHref)return false;
+ const parent=new URL(parentHref);
+ return parent.origin===current.origin&&/^\/relief-forge(?:\/|$)/.test(parent.pathname);
+}
+
+export function drawInputRaster(context,image,width,height,{crisp=false,flatten=false}={}){
+ context.imageSmoothingEnabled=!crisp;
+ if(flatten){context.fillStyle='#fff';context.fillRect(0,0,width,height);}
+ context.drawImage(image,0,0,width,height);
+}

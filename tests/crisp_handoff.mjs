@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {isCrispRasterHandoff,drawInputRaster} from '../web/input-image.mjs';
+const base='https://tohaa28.github.io/DoctorTracer/';
+assert.equal(isCrispRasterHandoff(base,'https://tohaa28.github.io/relief-forge/?v=alpha90'),true);
+assert.equal(isCrispRasterHandoff(base+'?raster=crisp'),true);
+for(const parent of [null,'https://other.test/relief-forge/','https://tohaa28.github.io/other/','https://tohaa28.github.io/relief-forgery/'])assert.equal(isCrispRasterHandoff(base,parent),false);
+const calls=[],image={id:'source'};
+const ctx={imageSmoothingEnabled:true,fillRect(...args){calls.push(['fill',...args,this.fillStyle])},drawImage(...args){calls.push(['draw',this.imageSmoothingEnabled,...args])}};
+drawInputRaster(ctx,image,500,250,{crisp:true});
+assert.deepEqual(calls,[['draw',false,image,0,0,500,250]]);
+calls.length=0;drawInputRaster(ctx,image,900,450,{crisp:false,flatten:true});
+assert.deepEqual(calls,[['fill',0,0,900,450,'#fff'],['draw',true,image,0,0,900,450]]);
+console.log('PASS crisp handoff policy and standalone sampling compatibility');

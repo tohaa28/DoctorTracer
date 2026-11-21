@@ -33,3 +33,6 @@
 .swatch-input::-webkit-color-swatch-wrapper{padding:0}.swatch-input::-webkit-color-swatch{border:0}.swatch-input::-moz-color-swatch{border:0}
 
 #viewport{touch-action:none;overscroll-behavior:contain}#jointCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}#jointCanvas[hidden]{display:none}
+
+/* Raster-only preview: do not create visually mixed colours at zoom. */
+#preview.crisp-bitmap{image-rendering:pixelated;image-rendering:crisp-edges}
