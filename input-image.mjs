@@ -1,5 +1,5 @@
 const PDF_ASSETS = new URL('./vendor/pdfjs/', import.meta.url);
-const TIFF_MODULE = new URL('./vendor/tiff.mjs?v=0.21.2', import.meta.url);
+const TIFF_MODULE = new URL('./vendor/tiff.mjs?v=0.21.3', import.meta.url);
 export const acceptedImages = 'image/png,image/jpeg,image/webp,image/bmp,image/tiff,.tif,.tiff,application/pdf,.pdf';
 
 function canvas(width, height) {
@@ -25,7 +25,8 @@ async function pdfBitmap(data) {
   const natural = page.getViewport({scale: 1});
   const longest = Math.max(natural.width, natural.height);
   if (!Number.isFinite(longest) || longest <= 0) throw Error('Неверный размер страницы PDF');
-  const viewport = page.getViewport({scale: Math.min(3, 2400 / longest)});
+  const viewport = page.getViewport({scale: 3});
+  nativeRasterSize({width:Math.max(1,Math.round(viewport.width)),height:Math.max(1,Math.round(viewport.height))});
   const result = canvas(Math.max(1, Math.round(viewport.width)), Math.max(1, Math.round(viewport.height)));
   await page.render({canvas: result, viewport, background: 'rgba(0,0,0,0)'}).promise;
   return await createImageBitmap(result);
@@ -84,8 +85,8 @@ export function decodeImage(file) {
  return createImageBitmap(file);
 }
 
-// Nearest-neighbour only for an explicit crisp raster handoff. A standalone
-// photo import keeps its historic interpolated sampling.
+// Crisp preview is enabled for the integrated wizard. Processing preserves
+// native raster dimensions for both integrated and standalone input.
 export function isCrispRasterHandoff(href,parentHref=null){
  const current=new URL(href);
  if(current.searchParams.get('raster')==='crisp')return true;
@@ -95,7 +96,20 @@ export function isCrispRasterHandoff(href,parentHref=null){
 }
 
 export function drawInputRaster(context,image,width,height,{crisp=false,flatten=false}={}){
- context.imageSmoothingEnabled=!crisp;
+ if(image.width!==width||image.height!==height)throw Error('Изменение размеров исходного растра запрещено.');
+ context.imageSmoothingEnabled=false;
  if(flatten){context.fillStyle='#fff';context.fillRect(0,0,width,height);}
  context.drawImage(image,0,0,width,height);
+}
+
+ // Match the shipped Rust valid(w,h) ABI exactly. Never downsample to fit.
+export const NATIVE_RASTER_MAX_SIDE=4096;
+export const NATIVE_RASTER_MAX_PIXELS=8000000;
+export function nativeRasterSize(image){
+ const {width,height}=image;
+ if(!Number.isSafeInteger(width)||!Number.isSafeInteger(height)||width<1||height<1)
+  throw Error('Некорректные размеры исходного растра.');
+ if(width>NATIVE_RASTER_MAX_SIDE||height>NATIVE_RASTER_MAX_SIDE||width*height>NATIVE_RASTER_MAX_PIXELS)
+  throw Error('Исходный растр '+width+'×'+height+' превышает предел текущего WASM: 4096 px по стороне и 8 млн пикселей. Автоматическое уменьшение запрещено.');
+ return {width,height};
 }

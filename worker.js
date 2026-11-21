@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import createTracer from './rust-tracer.mjs?v=0.21.2';
-import {gpuPrepare,gpuAssign} from './gpu.js?v=0.21.2';
-import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs?v=0.21.2';
-import {auditNative} from './geometry.mjs?v=0.21.2';
-import{regularizeResult}from'./regularize.mjs?v=0.21.2';
-import{cleanResult}from'./post-clean.mjs?v=0.21.2';
-import {smoothResult} from './post-smooth.mjs?v=0.21.2';
-import {traceFixed} from './desktop-curves.mjs?v=0.21.2';
+import createTracer from './rust-tracer.mjs?v=0.21.3';
+import {nativeRasterSize} from './input-image.mjs?v=0.21.3';
+import {gpuPrepare,gpuAssign} from './gpu.js?v=0.21.3';
+import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs?v=0.21.3';
+import {auditNative} from './geometry.mjs?v=0.21.3';
+import{regularizeResult}from'./regularize.mjs?v=0.21.3';
+import{cleanResult}from'./post-clean.mjs?v=0.21.3';
+import {smoothResult} from './post-smooth.mjs?v=0.21.3';
+import {traceFixed} from './desktop-curves.mjs?v=0.21.3';
 let runtime,loading,lastProgress=0;
 function emitProgress(progress,stage){lastProgress=Math.max(lastProgress,progress);self.postMessage({progress:lastProgress,stage});}
 const stages=['','Подготовка изображения','Определение палитры','Сегментация','Объединение областей','Построение кривых','Готово'];
@@ -17,6 +18,8 @@ self.onmessage=async ({data})=>{
   if(data.operation==='regularize'){const result=await regularizeResult(runtime,data.svg,data.tolerance,data.straight,data.curved,data.protect);self.postMessage({regularize:result,requestId:data.requestId});return;}
   if(data.operation==='postClean'){const result=await cleanResult(runtime,data.svg,data.minArea,data.tolerance,data.protect);self.postMessage({postClean:result,requestId:data.requestId});return;}
   if(data.operation==='postSmooth'){const result=await smoothResult(runtime,data.svg,data.strength,data.sharp);self.postMessage({postSmooth:result,requestId:data.requestId});return;}
+  nativeRasterSize(data);
+  if(!(data.pixels instanceof ArrayBuffer)||data.pixels.byteLength!==data.width*data.height*4)throw Error('Неверный размер входного RGBA.');
   if(data.operation==='analyze'){self.postMessage({analysis:runtime.analyze(new Uint8Array(data.pixels),data.width,data.height),requestId:data.requestId});return;}
   if(data.operation==='palette'){const colors=runtime.stage(new Uint8Array(data.pixels),data.width,data.height,{kind:2,colors:data.colors,extra:0});self.postMessage({palette:Array.from({length:colors.length/3},(_,i)=>Array.from(colors.slice(i*3,i*3+3))),requestId:data.requestId});return;}
   let pixels=new Uint8Array(data.pixels);let backend='Rust WASM CPU',prefiltered=false;
