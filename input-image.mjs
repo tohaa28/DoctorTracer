@@ -1,5 +1,5 @@
 const PDF_ASSETS = new URL('./vendor/pdfjs/', import.meta.url);
-const TIFF_MODULE = new URL('./vendor/tiff.mjs?v=0.21.1', import.meta.url);
+const TIFF_MODULE = new URL('./vendor/tiff.mjs?v=0.21.2', import.meta.url);
 export const acceptedImages = 'image/png,image/jpeg,image/webp,image/bmp,image/tiff,.tif,.tiff,application/pdf,.pdf';
 
 function canvas(width, height) {
@@ -82,4 +82,20 @@ export function decodeImage(file) {
   return file.arrayBuffer().then(tiffBitmap);
  }
  return createImageBitmap(file);
+}
+
+// Nearest-neighbour only for an explicit crisp raster handoff. A standalone
+// photo import keeps its historic interpolated sampling.
+export function isCrispRasterHandoff(href,parentHref=null){
+ const current=new URL(href);
+ if(current.searchParams.get('raster')==='crisp')return true;
+ if(!parentHref)return false;
+ const parent=new URL(parentHref);
+ return parent.origin===current.origin&&/^\/relief-forge(?:\/|$)/.test(parent.pathname);
+}
+
+export function drawInputRaster(context,image,width,height,{crisp=false,flatten=false}={}){
+ context.imageSmoothingEnabled=!crisp;
+ if(flatten){context.fillStyle='#fff';context.fillRect(0,0,width,height);}
+ context.drawImage(image,0,0,width,height);
 }
