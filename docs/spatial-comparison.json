@@ -1,0 +1,82 @@
+[
+  {
+    "case": "vm-6-medium",
+    "reference_paths": 3262,
+    "white_mae": 4.844350814819336,
+    "dark_mae": 4.306992053985596,
+    "alpha_iou": 0.9774737790305514,
+    "cpu_gpu_svg_equal": true,
+    "photo_spatial": false,
+    "paths": 7047
+  },
+  {
+    "case": "vm-6-medium",
+    "reference_paths": 3262,
+    "white_mae": 3.9473798274993896,
+    "dark_mae": 3.600327491760254,
+    "alpha_iou": 0.9834658735803108,
+    "cpu_gpu_svg_equal": true,
+    "photo_spatial": true,
+    "paths": 3102
+  },
+  {
+    "case": "vm-9-high",
+    "reference_paths": 2798,
+    "white_mae": 5.416894912719727,
+    "dark_mae": 5.037619590759277,
+    "alpha_iou": 0.9692577508175786,
+    "cpu_gpu_svg_equal": true,
+    "photo_spatial": false,
+    "paths": 9610
+  },
+  {
+    "case": "vm-9-high",
+    "reference_paths": 2798,
+    "white_mae": 4.446390151977539,
+    "dark_mae": 4.215904712677002,
+    "alpha_iou": 0.9775305141831347,
+    "cpu_gpu_svg_equal": true,
+    "photo_spatial": true,
+    "paths": 5002
+  },
+  {
+    "case": "vm-9-low",
+    "reference_paths": 6872,
+    "white_mae": 5.286935806274414,
+    "dark_mae": 4.540206432342529,
+    "alpha_iou": 0.9702215186465502,
+    "cpu_gpu_svg_equal": true,
+    "photo_spatial": false,
+    "paths": 8026
+  },
+  {
+    "case": "vm-9-low",
+    "reference_paths": 6872,
+    "white_mae": 5.019614219665527,
+    "dark_mae": 4.338560581207275,
+    "alpha_iou": 0.977386783146595,
+    "cpu_gpu_svg_equal": true,
+    "photo_spatial": true,
+    "paths": 4682
+  },
+  {
+    "case": "vm-9-medium",
+    "reference_paths": 4306,
+    "white_mae": 5.517098903656006,
+    "dark_mae": 5.09727144241333,
+    "alpha_iou": 0.9695502147735772,
+    "cpu_gpu_svg_equal": true,
+    "photo_spatial": false,
+    "paths": 9570
+  },
+  {
+    "case": "vm-9-medium",
+    "reference_paths": 4306,
+    "white_mae": 4.583401679992676,
+    "dark_mae": 4.2546257972717285,
+    "alpha_iou": 0.9778934184686423,
+    "cpu_gpu_svg_equal": true,
+    "photo_spatial": true,
+    "paths": 4962
+  }
+]

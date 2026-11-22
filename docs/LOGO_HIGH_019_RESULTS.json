@@ -1,0 +1,65 @@
+{
+  "windows": "0.17.0-preview",
+  "wasm": "0.19.0-wasm-preview",
+  "reference": "user-supplied Vector Magic PDF",
+  "method": "both PDFs rendered by Poppler to 1630x1220; blue mask B-R>20; no registration/warping",
+  "metrics": {
+    "baseline-pdf": {
+      "foreground_iou": 0.9175130816509718,
+      "foreground_xor_pixels": 36115,
+      "symmetric_boundary_mean_source_px": 0.1778632551431656,
+      "symmetric_boundary_p95_source_px": 0.6000000238418579
+    },
+    "exported": {
+      "foreground_iou": 0.9665100612463705,
+      "foreground_xor_pixels": 14556,
+      "symmetric_boundary_mean_source_px": 0.05469011515378952,
+      "symmetric_boundary_p95_source_px": 0.20000000298023224
+    }
+  },
+  "target_trace": {
+    "colors": 2,
+    "width": 163,
+    "height": 122,
+    "paths": 33,
+    "palette": [
+      "#ffffff",
+      "#225393"
+    ],
+    "geometry_verified": true,
+    "geometry_audit": {
+      "pairs_checked": 1,
+      "max_intersection_area_px2": 0.0,
+      "tolerance_px2": 0.0001,
+      "unmatched_edges": 0,
+      "boundary_contract": "analytic reversed primitives"
+    },
+    "shape_strategy": "source-fitted two-ink shared interfaces",
+    "logo_reconstruction": {
+      "ellipse_rings": 2,
+      "stars": 4,
+      "scale": 8
+    },
+    "contour_compute": "Rust CPU / Potrace",
+    "reconstruction_seconds": 1.2277635000646114,
+    "working_size": [
+      1304,
+      976
+    ],
+    "seconds": 1.28,
+    "backend": "shared planar color graph"
+  },
+  "parity_mae_rgba_at_4x": {
+    "rings": 0,
+    "stars": 0,
+    "combined": 0,
+    "nf": 0.010509906466861108
+  },
+  "test_cases": 4,
+  "limitations": [
+    "Letters and ornament still differ from Vector Magic.",
+    "Special reconstruction is conservative: opaque two-ink antialiased artwork up to 512x512, high quality only.",
+    "Ellipse models are axis-aligned; other curves use common Potrace boundaries.",
+    "Primitive fitting is CPU Rust; GPU stages of other tracing routes unchanged."
+  ]
+}

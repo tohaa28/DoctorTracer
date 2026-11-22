@@ -1,0 +1,16 @@
+<!doctype html><meta charset="utf-8"><title>GPU contour parity</title><pre id="result">RunningвЂ¦</pre><script type="module">
+import createTracer from '../web/rust-tracer.mjs';import {gpuContourCoordinates,contourGpuError,preferGpuContours} from '../web/gpu-contours.mjs';
+const result=document.querySelector('#result'),check=(v,m)=>{if(!v)throw Error(m)};
+try{const runtime=await createTracer();let cases=0,totalGpuMs=0;
+for(const [w,h] of [[1,1],[19,17],[64,48],[129,73]])for(const detail of [0,1,2])for(const unlimited of [false,true]){
+ result.textContent='Checking '+w+'Г—'+h+' / '+detail+' / '+unlimited;
+ const p=new Uint8Array(w*h*4);for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;const color=(x*7+y*11)%5;p.set([color*51,(color*97)%256,(color*137)%256,(x+y)%17===0?0:255],i*4)}
+ const config={category:'photo',colors:unlimited?0:5,detail,speckle:0};const expected=runtime.trace(p,w,h,config);
+ check(runtime.trace(p,w,h,{...config,deferShared:true})==='','Deferred trace built geometry');const labels=runtime.sharedInput();const passes=(unlimited?[10,8,5]:[4,2,1])[detail];const started=performance.now(),coords=await gpuContourCoordinates(labels,w,h,passes);totalGpuMs+=performance.now()-started;check(coords,'WebGPU unavailable/contour shader failed: '+contourGpuError);
+ const actual=runtime.sharedFinish(coords,passes,{unlimited});check(actual===expected,'GPU SVG differs '+w+'x'+h+' '+detail+' '+unlimited);check(runtime.sharedFinish(null,passes,{unlimited})===expected,'CPU resume differs');cases++;
+}
+check(!preferGpuContours(800,954,{unlimited:false,detail:1}),'Slow fixed path enabled');check(preferGpuContours(800,954,{unlimited:true,detail:1}),'Large photo not accelerated');check(!preferGpuContours(568,960,{unlimited:true,detail:1}),'Small unproven GPU path');
+let workerCases=0;for(const unlimited of [false,true]){const w=64,h=48,p=new Uint8Array(w*h*4);for(let y=3;y<45;y++)for(let x=3;x<61;x++)p.set(x<32?[20,140,60,255]:[200,30,90,255],4*(y*w+x));const config={category:'photo',colors:unlimited?0:2,detail:1,speckle:0};const expected=runtime.trace(p,w,h,config);const worker=new Worker('../web/worker.js',{type:'module'});try{const reply=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('worker timeout')),30000);worker.onmessage=({data})=>{if(data.svg||data.error){clearTimeout(timer);resolve(data)}};worker.postMessage({...config,width:w,height:h,pixels:p.buffer,gpu:true,gpuContours:'always'});});check(!reply.error,reply.error);check(reply.svg===expected,'Worker GPU SVG differs');check(reply.metrics.contour_compute==='WebGPU integer','Worker GPU not used');workerCases++;}finally{worker.terminate()}}
+result.textContent=JSON.stringify({ok:true,cases,workerCases,exactSvg:true,cpuFallback:true,totalGpuMs},null,2);
+}catch(e){result.textContent=JSON.stringify({ok:false,error:String(e),stack:e.stack},null,2)}
+</script>

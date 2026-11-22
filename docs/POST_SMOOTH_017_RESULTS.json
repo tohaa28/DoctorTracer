@@ -1,0 +1,118 @@
+{
+  "versions": {
+    "windows": "0.15.0-preview",
+    "wasm": "0.17.0-wasm-preview"
+  },
+  "native_wasm_byte_identical": true,
+  "fixture_cases": 6,
+  "extra_checks": [
+    "tiny hole unchanged",
+    "three-way junction unchanged",
+    "shared segments reverse-identical",
+    "palette and group tags retained",
+    "preview/cancel/apply",
+    "undo snapshot",
+    "closing dialog during active worker",
+    "existing shared-contract and AA tests",
+    "PDF color groups"
+  ],
+  "cases": [
+    {
+      "name": "interface-0",
+      "strength": 0,
+      "stats": {
+        "nodes": 0,
+        "moved": 0,
+        "applied_strength": 0
+      }
+    },
+    {
+      "name": "interface-35",
+      "strength": 35,
+      "stats": {
+        "nodes": 11,
+        "moved": 5,
+        "applied_strength": 18,
+        "limited": true,
+        "geometry": {
+          "pairs_checked": 1,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      }
+    },
+    {
+      "name": "interface-100",
+      "strength": 100,
+      "stats": {
+        "nodes": 11,
+        "moved": 5,
+        "applied_strength": 13,
+        "limited": true,
+        "geometry": {
+          "pairs_checked": 1,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      }
+    },
+    {
+      "name": "square-0",
+      "strength": 0,
+      "stats": {
+        "nodes": 0,
+        "moved": 0,
+        "applied_strength": 0
+      }
+    },
+    {
+      "name": "square-35",
+      "strength": 35,
+      "stats": {
+        "nodes": 4,
+        "moved": 0,
+        "applied_strength": 35,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      }
+    },
+    {
+      "name": "square-100",
+      "strength": 100,
+      "stats": {
+        "nodes": 4,
+        "moved": 0,
+        "applied_strength": 100,
+        "limited": false,
+        "geometry": {
+          "pairs_checked": 0,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001
+        }
+      }
+    },
+    {
+      "name": "real",
+      "strength": 35,
+      "stats": {
+        "nodes": 5733,
+        "moved": 4226,
+        "applied_strength": 18,
+        "limited": true,
+        "geometry": {
+          "pairs_checked": 6,
+          "tile_pair_checks": 38,
+          "audit_tiles": 30,
+          "max_intersection_area_px2": 0.0,
+          "tolerance_px2": 0.0001,
+          "audit_compute": "tiled integer CPU"
+        }
+      },
+      "seconds": 0.6337159000104293
+    }
+  ]
+}

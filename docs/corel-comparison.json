@@ -1,0 +1,82 @@
+[
+  {
+    "case": "vm-6-medium",
+    "spatial": false,
+    "reference_paths": 3262,
+    "paths": 7855,
+    "white_mae": 4.719768047332764,
+    "dark_mae": 4.212136268615723,
+    "alpha_iou": 0.9795676935972883,
+    "cpu_gpu_svg_equal": true
+  },
+  {
+    "case": "vm-6-medium",
+    "spatial": true,
+    "reference_paths": 3262,
+    "paths": 3315,
+    "white_mae": 3.8165647983551025,
+    "dark_mae": 3.509875535964966,
+    "alpha_iou": 0.9850093960657207,
+    "cpu_gpu_svg_equal": true
+  },
+  {
+    "case": "vm-9-high",
+    "spatial": false,
+    "reference_paths": 2798,
+    "paths": 10734,
+    "white_mae": 5.192990303039551,
+    "dark_mae": 4.8575897216796875,
+    "alpha_iou": 0.9722952014874828,
+    "cpu_gpu_svg_equal": true
+  },
+  {
+    "case": "vm-9-high",
+    "spatial": true,
+    "reference_paths": 2798,
+    "paths": 5311,
+    "white_mae": 4.216047286987305,
+    "dark_mae": 4.036718845367432,
+    "alpha_iou": 0.9797405163784474,
+    "cpu_gpu_svg_equal": true
+  },
+  {
+    "case": "vm-9-low",
+    "spatial": false,
+    "reference_paths": 6872,
+    "paths": 8907,
+    "white_mae": 5.144067764282227,
+    "dark_mae": 4.435216426849365,
+    "alpha_iou": 0.9734906649839445,
+    "cpu_gpu_svg_equal": true
+  },
+  {
+    "case": "vm-9-low",
+    "spatial": true,
+    "reference_paths": 6872,
+    "paths": 5007,
+    "white_mae": 4.879425048828125,
+    "dark_mae": 4.234020233154297,
+    "alpha_iou": 0.9798045714851835,
+    "cpu_gpu_svg_equal": true
+  },
+  {
+    "case": "vm-9-medium",
+    "spatial": false,
+    "reference_paths": 4306,
+    "paths": 10712,
+    "white_mae": 5.338820934295654,
+    "dark_mae": 4.981192111968994,
+    "alpha_iou": 0.972595418202194,
+    "cpu_gpu_svg_equal": true
+  },
+  {
+    "case": "vm-9-medium",
+    "spatial": true,
+    "reference_paths": 4306,
+    "paths": 5280,
+    "white_mae": 4.402212142944336,
+    "dark_mae": 4.135725975036621,
+    "alpha_iou": 0.9800950094190373,
+    "cpu_gpu_svg_equal": true
+  }
+]

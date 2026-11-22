@@ -1,0 +1,854 @@
+{
+  "schema": 2,
+  "images": 12,
+  "profiles": [
+    "photo-medium-auto",
+    "photo-high-auto",
+    "photo-medium-9",
+    "graphic-medium-9"
+  ],
+  "independent_cases_per_engine": 48,
+  "verified_vm_references": 48,
+  "coverage_complete": true,
+  "quality_equivalence_claimed": false,
+  "desktop": {
+    "cases": 48,
+    "verified_reference_cases": 48,
+    "missing_or_unverified": 0,
+    "regressions": [],
+    "errors": [],
+    "baseline_missing": [],
+    "coverage_complete": true,
+    "baseline": null,
+    "run": "desktop-public-v2",
+    "generated": "2026-10-26T07:30:38.450111+00:00",
+    "regression_thresholds": {
+      "white_mae_increase": 0.1,
+      "alpha_iou_decrease": 0.001,
+      "boundary_f1_decrease": 0.01
+    },
+    "notice": "Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.",
+    "mean_rgb_mae_white": 3.3276896003341094,
+    "by_profile": {
+      "graphic-medium-9": {
+        "cases": 12,
+        "mean_rgb_mae_white": 4.207083427817868
+      },
+      "photo-high-auto": {
+        "cases": 12,
+        "mean_rgb_mae_white": 2.130522672616464
+      },
+      "photo-medium-9": {
+        "cases": 12,
+        "mean_rgb_mae_white": 4.391188974653306
+      },
+      "photo-medium-auto": {
+        "cases": 12,
+        "mean_rgb_mae_white": 2.581963326248799
+      }
+    },
+    "by_split": {
+      "external-holdout": {
+        "cases": 48,
+        "mean_rgb_mae_white": 3.3276896003341094
+      }
+    },
+    "by_category": {
+      "illustration": {
+        "cases": 24,
+        "mean_rgb_mae_white": 1.351230147617315
+      },
+      "line-art": {
+        "cases": 8,
+        "mean_rgb_mae_white": 1.0566596984863281
+      },
+      "photo": {
+        "cases": 16,
+        "mean_rgb_mae_white": 7.427893730333191
+      }
+    },
+    "schema": 2,
+    "palette_policy": "ui-total-slots-v2",
+    "source_families": [
+      "hfg-gmuend/openmoji",
+      "scikit-image/scikit-image",
+      "twbs/icons",
+      "twitter/twemoji"
+    ],
+    "recommended_domain_cases": 20,
+    "stress_domain_cases": 28,
+    "by_profile_category": {
+      "graphic-medium-9/illustration": {
+        "cases": 6,
+        "mean_rgb_mae_white": 0.8321241590711804,
+        "mean_region_boundary_f1": 0.9984424262320862
+      },
+      "graphic-medium-9/line-art": {
+        "cases": 2,
+        "mean_rgb_mae_white": 0.22560882568359375,
+        "mean_region_boundary_f1": 1.0
+      },
+      "graphic-medium-9/photo": {
+        "cases": 4,
+        "mean_rgb_mae_white": 11.260259632005038,
+        "mean_region_boundary_f1": 0.7123269485104742
+      },
+      "photo-high-auto/illustration": {
+        "cases": 6,
+        "mean_rgb_mae_white": 1.330264425173824,
+        "mean_region_boundary_f1": 0.9245156978954562
+      },
+      "photo-high-auto/line-art": {
+        "cases": 2,
+        "mean_rgb_mae_white": 1.123382568359375,
+        "mean_region_boundary_f1": 1.0
+      },
+      "photo-high-auto/photo": {
+        "cases": 4,
+        "mean_rgb_mae_white": 3.834480095908967,
+        "mean_region_boundary_f1": 0.8404762810357855
+      },
+      "photo-medium-9/illustration": {
+        "cases": 6,
+        "mean_rgb_mae_white": 1.66079004158901,
+        "mean_region_boundary_f1": 0.9997111768070583
+      },
+      "photo-medium-9/line-art": {
+        "cases": 2,
+        "mean_rgb_mae_white": 1.1958847045898438,
+        "mean_region_boundary_f1": 0.9998540997957397
+      },
+      "photo-medium-9/photo": {
+        "cases": 4,
+        "mean_rgb_mae_white": 10.08443950928148,
+        "mean_region_boundary_f1": 0.8068905368055459
+      },
+      "photo-medium-auto/illustration": {
+        "cases": 6,
+        "mean_rgb_mae_white": 1.5817419646352466,
+        "mean_region_boundary_f1": 0.9535533246377295
+      },
+      "photo-medium-auto/line-art": {
+        "cases": 2,
+        "mean_rgb_mae_white": 1.6817626953125,
+        "mean_region_boundary_f1": 1.0
+      },
+      "photo-medium-auto/photo": {
+        "cases": 4,
+        "mean_rgb_mae_white": 4.532395684137278,
+        "mean_region_boundary_f1": 0.7712878005956393
+      }
+    }
+  },
+  "wasm": {
+    "cases": 48,
+    "verified_reference_cases": 48,
+    "missing_or_unverified": 0,
+    "regressions": [],
+    "errors": [],
+    "baseline_missing": [],
+    "coverage_complete": true,
+    "baseline": null,
+    "run": "wasm-public-v2",
+    "generated": "2026-10-26T07:33:30.503428+00:00",
+    "regression_thresholds": {
+      "white_mae_increase": 0.1,
+      "alpha_iou_decrease": 0.001,
+      "boundary_f1_decrease": 0.01
+    },
+    "notice": "Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.",
+    "mean_rgb_mae_white": 3.3275682957372106,
+    "by_profile": {
+      "graphic-medium-9": {
+        "cases": 12,
+        "mean_rgb_mae_white": 4.208630317148006
+      },
+      "photo-high-auto": {
+        "cases": 12,
+        "mean_rgb_mae_white": 2.129105327144828
+      },
+      "photo-medium-9": {
+        "cases": 12,
+        "mean_rgb_mae_white": 4.391413657733272
+      },
+      "photo-medium-auto": {
+        "cases": 12,
+        "mean_rgb_mae_white": 2.581123880922736
+      }
+    },
+    "by_split": {
+      "external-holdout": {
+        "cases": 48,
+        "mean_rgb_mae_white": 3.3275682957372106
+      }
+    },
+    "by_category": {
+      "illustration": {
+        "cases": 24,
+        "mean_rgb_mae_white": 1.3514410023076344
+      },
+      "line-art": {
+        "cases": 8,
+        "mean_rgb_mae_white": 1.0533084869384766
+      },
+      "photo": {
+        "cases": 16,
+        "mean_rgb_mae_white": 7.4288891402809405
+      }
+    },
+    "schema": 2,
+    "palette_policy": "ui-total-slots-v2",
+    "source_families": [
+      "hfg-gmuend/openmoji",
+      "scikit-image/scikit-image",
+      "twbs/icons",
+      "twitter/twemoji"
+    ],
+    "recommended_domain_cases": 20,
+    "stress_domain_cases": 28,
+    "by_profile_category": {
+      "graphic-medium-9/illustration": {
+        "cases": 6,
+        "mean_rgb_mae_white": 0.8324792965824566,
+        "mean_region_boundary_f1": 0.9984426810038395
+      },
+      "graphic-medium-9/line-art": {
+        "cases": 2,
+        "mean_rgb_mae_white": 0.2260284423828125,
+        "mean_region_boundary_f1": 1.0
+      },
+      "graphic-medium-9/photo": {
+        "cases": 4,
+        "mean_rgb_mae_white": 11.264157785378925,
+        "mean_region_boundary_f1": 0.712619056338754
+      },
+      "photo-high-auto/illustration": {
+        "cases": 6,
+        "mean_rgb_mae_white": 1.330264425173824,
+        "mean_region_boundary_f1": 0.9245156978954562
+      },
+      "photo-high-auto/line-art": {
+        "cases": 2,
+        "mean_rgb_mae_white": 1.1148834228515625,
+        "mean_region_boundary_f1": 1.0
+      },
+      "photo-high-auto/photo": {
+        "cases": 4,
+        "mean_rgb_mae_white": 3.8344776322479674,
+        "mean_region_boundary_f1": 0.840472277270293
+      },
+      "photo-medium-9/illustration": {
+        "cases": 6,
+        "mean_rgb_mae_white": 1.66127832283901,
+        "mean_region_boundary_f1": 0.9997111768070583
+      },
+      "photo-medium-9/line-art": {
+        "cases": 2,
+        "mean_rgb_mae_white": 1.1956405639648438,
+        "mean_region_boundary_f1": 0.9998540997957397
+      },
+      "photo-medium-9/photo": {
+        "cases": 4,
+        "mean_rgb_mae_white": 10.08450320695888,
+        "mean_region_boundary_f1": 0.8069175162122958
+      },
+      "photo-medium-auto/illustration": {
+        "cases": 6,
+        "mean_rgb_mae_white": 1.5817419646352466,
+        "mean_region_boundary_f1": 0.9535533246377295
+      },
+      "photo-medium-auto/line-art": {
+        "cases": 2,
+        "mean_rgb_mae_white": 1.6766815185546875,
+        "mean_region_boundary_f1": 1.0
+      },
+      "photo-medium-auto/photo": {
+        "cases": 4,
+        "mean_rgb_mae_white": 4.5324179365379935,
+        "mean_region_boundary_f1": 0.7712878005956393
+      }
+    }
+  },
+  "desktop_wasm_parity": [
+    {
+      "case": "photo-astronaut--photo-medium-auto",
+      "rgba_mae": 6.67572021484375e-05,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-astronaut--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-astronaut--photo-medium-9",
+      "rgba_mae": 0.0007953643798828125,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-astronaut--graphic-medium-9",
+      "rgba_mae": 0.012102127075195312,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "photo-coffee--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-coffee--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-coffee--photo-medium-9",
+      "rgba_mae": 0.0006760416666666667,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-coffee--graphic-medium-9",
+      "rgba_mae": 0.013632291666666666,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "photo-chelsea--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-chelsea--photo-high-auto",
+      "rgba_mae": 5.173688100517369e-05,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-chelsea--photo-medium-9",
+      "rgba_mae": 0.0003344419807834442,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-chelsea--graphic-medium-9",
+      "rgba_mae": 0.017544345898004434,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "photo-rocket--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-rocket--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-rocket--photo-medium-9",
+      "rgba_mae": 0.0006943427985948477,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "photo-rocket--graphic-medium-9",
+      "rgba_mae": 0.015012990339578454,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-fox--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-fox--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-fox--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-fox--graphic-medium-9",
+      "rgba_mae": 0.000553131103515625,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "openmoji-butterfly--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-butterfly--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-butterfly--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-butterfly--graphic-medium-9",
+      "rgba_mae": 0.001407623291015625,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "openmoji-palette--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-palette--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-palette--photo-medium-9",
+      "rgba_mae": 0.00551605224609375,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-palette--graphic-medium-9",
+      "rgba_mae": 0.000484466552734375,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "openmoji-rocket--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-rocket--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-rocket--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "openmoji-rocket--graphic-medium-9",
+      "rgba_mae": 0.00038909912109375,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "twemoji-flower--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "twemoji-flower--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "twemoji-flower--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "twemoji-flower--graphic-medium-9",
+      "rgba_mae": 0.000789642333984375,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "twemoji-unicorn--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "twemoji-unicorn--photo-high-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "twemoji-unicorn--photo-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "twemoji-unicorn--graphic-medium-9",
+      "rgba_mae": 0.00072479248046875,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "bootstrap-qr-code--photo-medium-auto",
+      "rgba_mae": 0.04114532470703125,
+      "limit": 0.02,
+      "passed": false,
+      "recommended_domain": false
+    },
+    {
+      "case": "bootstrap-qr-code--photo-high-auto",
+      "rgba_mae": 0.01906585693359375,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "bootstrap-qr-code--photo-medium-9",
+      "rgba_mae": 0.000762939453125,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "bootstrap-qr-code--graphic-medium-9",
+      "rgba_mae": 0.0,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": true
+    },
+    {
+      "case": "bootstrap-diagram-3--photo-medium-auto",
+      "rgba_mae": 0.0,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "bootstrap-diagram-3--photo-high-auto",
+      "rgba_mae": 0.00347900390625,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "bootstrap-diagram-3--photo-medium-9",
+      "rgba_mae": 0.0066986083984375,
+      "limit": 0.02,
+      "passed": true,
+      "recommended_domain": false
+    },
+    {
+      "case": "bootstrap-diagram-3--graphic-medium-9",
+      "rgba_mae": 0.001079559326171875,
+      "limit": 0.25,
+      "passed": true,
+      "recommended_domain": true
+    }
+  ],
+  "vector_truth_4x_graphic_mae": {
+    "reference": 0.19267083414239822,
+    "candidate": 0.8200920895034192
+  },
+  "palette_diagnostic": {
+    "notice": "Oracle palette is taken from the VM export. Diagnostic only: exclude from independent quality aggregates. RGB only, not opacity matching.",
+    "rows": [
+      {
+        "image": "photo-astronaut",
+        "source_sha256": "13d1ab55885c4544bfe5b4ab4c3a89b260fb2fc5f31d5fe7b08154bdc77ae92b",
+        "reference_sha256": "b4e9a31bc916d2b3942850552af7bcb56b8582d9dfb9c38a5de2c2fb60bedf8f",
+        "palette_from_reference": true,
+        "palette": [
+          "#070303",
+          "#32273a",
+          "#5c1a12",
+          "#725f5c",
+          "#a1918b",
+          "#a23313",
+          "#c3b7b2",
+          "#dc6a45",
+          "#e2d9d9"
+        ],
+        "config": {
+          "category": "photo",
+          "detail": 1,
+          "colors": 9,
+          "compute": "cpu",
+          "mode": "spline",
+          "photo_regions": true,
+          "photo_spatial": true,
+          "speckle": 2,
+          "artifact_strength": 0,
+          "segmentation_complexity": 5,
+          "spatial_iterations": 2,
+          "curve_tolerance": 0.24,
+          "spatial_strength": 700,
+          "flatten": false,
+          "alphamax": 1.0,
+          "max_size": 2400,
+          "palette": [
+            "#070303",
+            "#32273a",
+            "#5c1a12",
+            "#725f5c",
+            "#a1918b",
+            "#a23313",
+            "#c3b7b2",
+            "#dc6a45",
+            "#e2d9d9"
+          ]
+        },
+        "desktop_seconds": 3.6801026000175625,
+        "desktop": {
+          "independent_rgb_mae": 13.766958872477213,
+          "vm_palette_rgb_mae": 2.2089513142903647,
+          "delta_mae": -11.558007558186848
+        },
+        "wasm": {
+          "independent_rgb_mae": 13.767088572184244,
+          "vm_palette_rgb_mae": 2.2090326944986978,
+          "delta_mae": -11.558055877685547
+        }
+      },
+      {
+        "image": "photo-coffee",
+        "source_sha256": "32ed1fd123151984b3e6e0b9cab9e63c8cdaf44462f29380c24d0d9ebff850b1",
+        "reference_sha256": "a3984697311491f9fa3e5a684bb68857caa0dfc87dfa4ffa1a8b97fa6b51311d",
+        "palette_from_reference": true,
+        "palette": [
+          "#290b05",
+          "#751e0c",
+          "#a63615",
+          "#b56131",
+          "#c68150",
+          "#d8a275",
+          "#e58d37",
+          "#e7c099",
+          "#f7eadd"
+        ],
+        "config": {
+          "category": "photo",
+          "detail": 1,
+          "colors": 9,
+          "compute": "cpu",
+          "mode": "spline",
+          "photo_regions": true,
+          "photo_spatial": true,
+          "speckle": 2,
+          "artifact_strength": 0,
+          "segmentation_complexity": 5,
+          "spatial_iterations": 2,
+          "curve_tolerance": 0.24,
+          "spatial_strength": 700,
+          "flatten": false,
+          "alphamax": 1.0,
+          "max_size": 2400,
+          "palette": [
+            "#290b05",
+            "#751e0c",
+            "#a63615",
+            "#b56131",
+            "#c68150",
+            "#d8a275",
+            "#e58d37",
+            "#e7c099",
+            "#f7eadd"
+          ]
+        },
+        "desktop_seconds": 4.110363799962215,
+        "desktop": {
+          "independent_rgb_mae": 11.08960138888889,
+          "vm_palette_rgb_mae": 2.3601930555555555,
+          "delta_mae": -8.729408333333334
+        },
+        "wasm": {
+          "independent_rgb_mae": 11.0896,
+          "vm_palette_rgb_mae": 2.36,
+          "delta_mae": -8.729600000000001
+        }
+      },
+      {
+        "image": "photo-chelsea",
+        "source_sha256": "ba55f739dac772b7fa485be79b7a0267dfc2643a4354241b7365f8f3581b865d",
+        "reference_sha256": "5700491fbc22a74b94366bfa7ad4a499ca18c107deb5bb812eb25bf2749f6bae",
+        "palette_from_reference": true,
+        "palette": [
+          "#1d130a",
+          "#412714",
+          "#623a1f",
+          "#794f31",
+          "#8a6347",
+          "#9f7756",
+          "#a0806f",
+          "#b5917a",
+          "#bca49e"
+        ],
+        "config": {
+          "category": "photo",
+          "detail": 1,
+          "colors": 9,
+          "compute": "cpu",
+          "mode": "spline",
+          "photo_regions": true,
+          "photo_spatial": true,
+          "speckle": 2,
+          "artifact_strength": 0,
+          "segmentation_complexity": 5,
+          "spatial_iterations": 2,
+          "curve_tolerance": 0.24,
+          "spatial_strength": 700,
+          "flatten": false,
+          "alphamax": 1.0,
+          "max_size": 2400,
+          "palette": [
+            "#1d130a",
+            "#412714",
+            "#623a1f",
+            "#794f31",
+            "#8a6347",
+            "#9f7756",
+            "#a0806f",
+            "#b5917a",
+            "#bca49e"
+          ]
+        },
+        "desktop_seconds": 3.4794441000558436,
+        "desktop": {
+          "independent_rgb_mae": 5.79430155210643,
+          "vm_palette_rgb_mae": 1.7653510716925351,
+          "delta_mae": -4.0289504804138945
+        },
+        "wasm": {
+          "independent_rgb_mae": 5.794387780241439,
+          "vm_palette_rgb_mae": 1.765208179354521,
+          "delta_mae": -4.029179600886918
+        }
+      },
+      {
+        "image": "photo-rocket",
+        "source_sha256": "69a0b7f73696468cab2f235032df400a7d7e92d1a0871457cc54c0d2152ebb64",
+        "reference_sha256": "944d85b795dd43301a4ab6465e8bd5288b96d9fa7154afee509fb6739379e78c",
+        "palette_from_reference": true,
+        "palette": [
+          "#1d263b",
+          "#303f60",
+          "#4f5d7b",
+          "#50453f",
+          "#9d8e72",
+          "#a97a44",
+          "#d8c59b",
+          "#edb347",
+          "#f9f8ea"
+        ],
+        "config": {
+          "category": "photo",
+          "detail": 1,
+          "colors": 9,
+          "compute": "cpu",
+          "mode": "spline",
+          "photo_regions": true,
+          "photo_spatial": true,
+          "speckle": 2,
+          "artifact_strength": 0,
+          "segmentation_complexity": 5,
+          "spatial_iterations": 2,
+          "curve_tolerance": 0.24,
+          "spatial_strength": 700,
+          "flatten": false,
+          "alphamax": 1.0,
+          "max_size": 2400,
+          "palette": [
+            "#1d263b",
+            "#303f60",
+            "#4f5d7b",
+            "#50453f",
+            "#9d8e72",
+            "#a97a44",
+            "#d8c59b",
+            "#edb347",
+            "#f9f8ea"
+          ]
+        },
+        "desktop_seconds": 2.647103999974206,
+        "desktop": {
+          "independent_rgb_mae": 9.686896223653395,
+          "vm_palette_rgb_mae": 1.0622808898149425,
+          "delta_mae": -8.624615333838452
+        },
+        "wasm": {
+          "independent_rgb_mae": 9.686936475409835,
+          "vm_palette_rgb_mae": 1.06207231253157,
+          "delta_mae": -8.624864162878264
+        }
+      }
+    ]
+  },
+  "timing_policy": "Candidate engine timings are recorded, but no controlled VM per-image timing exists; no speed ranking.",
+  "source_families": [
+    "hfg-gmuend/openmoji",
+    "scikit-image/scikit-image",
+    "twbs/icons",
+    "twitter/twemoji"
+  ]
+}

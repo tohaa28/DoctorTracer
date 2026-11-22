@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {nativeRasterSize,drawInputRaster} from '../web/input-image.mjs';
+assert.deepEqual(nativeRasterSize({width:3001,height:181}),{width:3001,height:181});
+assert.deepEqual(nativeRasterSize({width:4000,height:2000}),{width:4000,height:2000});
+for(const x of [{width:4097,height:1},{width:4001,height:2000},{width:0,height:10}])assert.throws(()=>nativeRasterSize(x),/предел|Некорректные/);
+const image={width:3001,height:181};let call;
+const ctx={imageSmoothingEnabled:true,drawImage(...v){call=v;}};
+drawInputRaster(ctx,image,3001,181);
+assert.equal(ctx.imageSmoothingEnabled,false);assert.deepEqual(call,[image,0,0,3001,181]);
+assert.throws(()=>drawInputRaster(ctx,image,2400,145),/запрещено/);
+console.log('PASS native raster size and reject instead of resize');

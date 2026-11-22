@@ -1,0 +1,154 @@
+{
+  "versions": {
+    "windows": "0.14.2-preview",
+    "wasm": "0.16.3-wasm-preview"
+  },
+  "contract": {
+    "paired_edges_in_supplied_case": 6000,
+    "unmatched_edges": 0,
+    "checks": [
+      "exact coordinates",
+      "exact Bezier control points",
+      "opposite traversal",
+      "two distinct face owners",
+      "exterior transparency face"
+    ],
+    "fallback": "verified shared polygon graph"
+  },
+  "pdf_export": {
+    "pdf_svg_exact": true,
+    "matched_internal_primitives": 5106,
+    "color_groups": 4
+  },
+  "privacy": "User input and corrected PDF remain local; no user images/PDFs are included in releases.",
+  "public_validation": {
+    "desktop": {
+      "cases": 8,
+      "verified_reference_cases": 8,
+      "missing_or_unverified": 0,
+      "regressions": [],
+      "errors": [],
+      "baseline_missing": [],
+      "proposal_comparison": false,
+      "coverage_complete": true,
+      "baseline": "desktop-aa-support-0162",
+      "run": "desktop-boundary-release-0163",
+      "generated": "2026-10-28T13:02:52.494366+00:00",
+      "regression_thresholds": {
+        "white_mae_increase": 0.1,
+        "alpha_iou_decrease": 0.001,
+        "boundary_f1_decrease": 0.01
+      },
+      "notice": "Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.",
+      "mean_rgb_mae_white": 0.470455792994281,
+      "by_profile": {
+        "graphic-medium-9": {
+          "cases": 8,
+          "mean_rgb_mae_white": 0.470455792994281
+        }
+      },
+      "by_split": {
+        "external-holdout": {
+          "cases": 8,
+          "mean_rgb_mae_white": 0.470455792994281
+        }
+      },
+      "by_category": {
+        "illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 0.5709313120457601
+        },
+        "line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 0.16902923583984375
+        }
+      },
+      "schema": 2,
+      "palette_policy": "ui-total-slots-v2",
+      "source_families": [
+        "hfg-gmuend/openmoji",
+        "scikit-image/scikit-image",
+        "twbs/icons",
+        "twitter/twemoji"
+      ],
+      "recommended_domain_cases": 8,
+      "stress_domain_cases": 0,
+      "by_profile_category": {
+        "graphic-medium-9/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 0.5709313120457601,
+          "mean_region_boundary_f1": 1.0
+        },
+        "graphic-medium-9/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 0.16902923583984375,
+          "mean_region_boundary_f1": 1.0
+        }
+      }
+    },
+    "wasm": {
+      "cases": 8,
+      "verified_reference_cases": 8,
+      "missing_or_unverified": 0,
+      "regressions": [],
+      "errors": [],
+      "baseline_missing": [],
+      "proposal_comparison": false,
+      "coverage_complete": true,
+      "baseline": "wasm-aa-support-0162",
+      "run": "wasm-boundary-release-0163",
+      "generated": "2026-10-28T13:02:34.580958+00:00",
+      "regression_thresholds": {
+        "white_mae_increase": 0.1,
+        "alpha_iou_decrease": 0.001,
+        "boundary_f1_decrease": 0.01
+      },
+      "notice": "Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.",
+      "mean_rgb_mae_white": 0.470455792994281,
+      "by_profile": {
+        "graphic-medium-9": {
+          "cases": 8,
+          "mean_rgb_mae_white": 0.470455792994281
+        }
+      },
+      "by_split": {
+        "external-holdout": {
+          "cases": 8,
+          "mean_rgb_mae_white": 0.470455792994281
+        }
+      },
+      "by_category": {
+        "illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 0.5709313120457601
+        },
+        "line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 0.16902923583984375
+        }
+      },
+      "schema": 2,
+      "palette_policy": "ui-total-slots-v2",
+      "source_families": [
+        "hfg-gmuend/openmoji",
+        "scikit-image/scikit-image",
+        "twbs/icons",
+        "twitter/twemoji"
+      ],
+      "recommended_domain_cases": 8,
+      "stress_domain_cases": 0,
+      "by_profile_category": {
+        "graphic-medium-9/illustration": {
+          "cases": 6,
+          "mean_rgb_mae_white": 0.5709313120457601,
+          "mean_region_boundary_f1": 1.0
+        },
+        "graphic-medium-9/line-art": {
+          "cases": 2,
+          "mean_rgb_mae_white": 0.16902923583984375,
+          "mean_region_boundary_f1": 1.0
+        }
+      }
+    }
+  }
+}

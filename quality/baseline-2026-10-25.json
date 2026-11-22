@@ -1,0 +1,3794 @@
+{
+  "date": "2026-10-25",
+  "method": "uniform-path-painter-3x-v1",
+  "images": 42,
+  "synthetic": 40,
+  "previously_used_real_controls": 2,
+  "profiles_captured": [
+    "photo-medium-auto",
+    "photo-medium-9"
+  ],
+  "profiles_pending": [
+    "photo-high-auto",
+    "graphic-medium-9",
+    "hard-medium-2"
+  ],
+  "summaries": {
+    "desktop": {
+      "cases": 84,
+      "verified_reference_cases": 84,
+      "missing_or_unverified": 0,
+      "regressions": [],
+      "errors": [],
+      "coverage_complete": true,
+      "baseline": null,
+      "run": "desktop-suite-v1",
+      "generated": "2026-10-25T18:05:07.055697+00:00",
+      "regression_thresholds": {
+        "white_mae_increase": 0.1,
+        "alpha_iou_decrease": 0.001,
+        "boundary_f1_decrease": 0.01
+      },
+      "notice": "Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.",
+      "mean_rgb_mae_white": 7.21826699901628,
+      "by_profile": {
+        "photo-medium-9": {
+          "cases": 42,
+          "mean_rgb_mae_white": 8.534305977553613
+        },
+        "photo-medium-auto": {
+          "cases": 42,
+          "mean_rgb_mae_white": 5.902228020478948
+        }
+      },
+      "by_split": {
+        "development": {
+          "cases": 52,
+          "mean_rgb_mae_white": 7.392289058202416
+        },
+        "holdout": {
+          "cases": 32,
+          "mean_rgb_mae_white": 6.935481152838809
+        }
+      },
+      "by_category": {
+        "alpha": {
+          "cases": 10,
+          "mean_rgb_mae_white": 10.912838311887004
+        },
+        "gradient": {
+          "cases": 10,
+          "mean_rgb_mae_white": 10.61084322490037
+        },
+        "holes": {
+          "cases": 10,
+          "mean_rgb_mae_white": 3.736591669014615
+        },
+        "logo": {
+          "cases": 10,
+          "mean_rgb_mae_white": 1.6740852246356372
+        },
+        "photo": {
+          "cases": 2,
+          "mean_rgb_mae_white": 5.558737378314001
+        },
+        "text": {
+          "cases": 10,
+          "mean_rgb_mae_white": 6.0393186294809285
+        },
+        "texture": {
+          "cases": 10,
+          "mean_rgb_mae_white": 10.100556552556457
+        },
+        "thin-lines": {
+          "cases": 10,
+          "mean_rgb_mae_white": 9.191717859477427
+        },
+        "watercolor": {
+          "cases": 12,
+          "mean_rgb_mae_white": 6.0464532034345915
+        }
+      }
+    },
+    "wasm": {
+      "cases": 84,
+      "verified_reference_cases": 84,
+      "missing_or_unverified": 0,
+      "regressions": [
+        "thin-lines-02--photo-medium-auto",
+        "thin-lines-03--photo-medium-auto",
+        "thin-lines-04--photo-medium-auto",
+        "thin-lines-05--photo-medium-auto",
+        "alpha-01--photo-medium-9"
+      ],
+      "errors": [],
+      "coverage_complete": true,
+      "baseline": "desktop-suite-v1",
+      "run": "wasm-suite-v1",
+      "generated": "2026-10-25T18:06:44.957679+00:00",
+      "regression_thresholds": {
+        "white_mae_increase": 0.1,
+        "alpha_iou_decrease": 0.001,
+        "boundary_f1_decrease": 0.01
+      },
+      "notice": "Missing/unverified references are excluded from quality aggregates. Metrics do not prove Vector Magic equivalence.",
+      "mean_rgb_mae_white": 7.222503587684763,
+      "by_profile": {
+        "photo-medium-9": {
+          "cases": 42,
+          "mean_rgb_mae_white": 8.538418002086184
+        },
+        "photo-medium-auto": {
+          "cases": 42,
+          "mean_rgb_mae_white": 5.906589173283341
+        }
+      },
+      "by_split": {
+        "development": {
+          "cases": 52,
+          "mean_rgb_mae_white": 7.408700296036055
+        },
+        "holdout": {
+          "cases": 32,
+          "mean_rgb_mae_white": 6.919933936613912
+        }
+      },
+      "by_category": {
+        "alpha": {
+          "cases": 10,
+          "mean_rgb_mae_white": 10.914375746491073
+        },
+        "gradient": {
+          "cases": 10,
+          "mean_rgb_mae_white": 10.619029998092918
+        },
+        "holes": {
+          "cases": 10,
+          "mean_rgb_mae_white": 3.7389874522187534
+        },
+        "logo": {
+          "cases": 10,
+          "mean_rgb_mae_white": 1.6857770832327286
+        },
+        "photo": {
+          "cases": 2,
+          "mean_rgb_mae_white": 5.533133539115958
+        },
+        "text": {
+          "cases": 10,
+          "mean_rgb_mae_white": 5.951229201013377
+        },
+        "texture": {
+          "cases": 10,
+          "mean_rgb_mae_white": 10.103175715319384
+        },
+        "thin-lines": {
+          "cases": 10,
+          "mean_rgb_mae_white": 9.286733359840072
+        },
+        "watercolor": {
+          "cases": 12,
+          "mean_rgb_mae_white": 6.052579060433761
+        }
+      }
+    }
+  },
+  "cases": {
+    "desktop": [
+      {
+        "image": "logo-01",
+        "category": "logo",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 1.0151502821180556,
+          "rgb_mae_dark": 1.0151502821180556,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.9991084695393759,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "logo-01",
+        "category": "logo",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 2.5688283218018118,
+          "rgb_mae_dark": 1.336769625927628,
+          "alpha_mae": 3.076171875,
+          "alpha_iou": 0.99114990234375,
+          "boundary_f1_1px": 0.9765119036760012,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 19
+          }
+        }
+      },
+      {
+        "image": "logo-02",
+        "category": "logo",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 0.979093137254902,
+          "rgb_mae_dark": 0.979093137254902,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.9983342587451417,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "logo-02",
+        "category": "logo",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 2.4827481016916573,
+          "rgb_mae_dark": 1.354402201076509,
+          "alpha_mae": 3.1934742647058822,
+          "alpha_iou": 0.9897242647058824,
+          "boundary_f1_1px": 0.9829657766632247,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 21
+          }
+        }
+      },
+      {
+        "image": "logo-03",
+        "category": "logo",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 0.8115762998575499,
+          "rgb_mae_dark": 0.8115762998575499,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.99974140160331,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "logo-03",
+        "category": "logo",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 2.5180547481635105,
+          "rgb_mae_dark": 1.3291611240293837,
+          "alpha_mae": 3.2749232104700856,
+          "alpha_iou": 0.9894497863247863,
+          "boundary_f1_1px": 0.9756711717461743,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 22
+          }
+        }
+      },
+      {
+        "image": "logo-04",
+        "category": "logo",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 0.7382584064327485,
+          "rgb_mae_dark": 0.7382584064327485,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 1.0,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "logo-04",
+        "category": "logo",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 2.381005996859433,
+          "rgb_mae_dark": 1.2359418596873446,
+          "alpha_mae": 3.1805403265107213,
+          "alpha_iou": 0.9900249756335283,
+          "boundary_f1_1px": 0.9763299538960958,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 22
+          }
+        }
+      },
+      {
+        "image": "logo-05",
+        "category": "logo",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 0.8836309523809524,
+          "rgb_mae_dark": 0.8836309523809524,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 1.0,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "logo-05",
+        "category": "logo",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 2.362505999795752,
+          "rgb_mae_dark": 1.2048291243580764,
+          "alpha_mae": 3.2358677455357143,
+          "alpha_iou": 0.9894949776785714,
+          "boundary_f1_1px": 0.9743608117701942,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 24
+          }
+        }
+      },
+      {
+        "image": "text-01",
+        "category": "text",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.420627170138889,
+          "rgb_mae_dark": 6.420627170138889,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.9732774218392882,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "text-01",
+        "category": "text",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 7.00550928053513,
+          "rgb_mae_dark": 7.753006626370166,
+          "alpha_mae": 2.4102579752604165,
+          "alpha_iou": 0.99676513671875,
+          "boundary_f1_1px": 0.9638572132229254,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 103
+          }
+        }
+      },
+      {
+        "image": "text-02",
+        "category": "text",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.827328431372549,
+          "rgb_mae_dark": 6.827328431372549,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.9442689614788504,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "text-02",
+        "category": "text",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 5.724058535178778,
+          "rgb_mae_dark": 6.351613850442137,
+          "alpha_mae": 3.5513235294117647,
+          "alpha_iou": 0.9933639705882353,
+          "boundary_f1_1px": 0.9812540860186101,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 243
+          }
+        }
+      },
+      {
+        "image": "text-03",
+        "category": "text",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 5.547709668803419,
+          "rgb_mae_dark": 5.547709668803419,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.9806886385129413,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "text-03",
+        "category": "text",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 5.68519122971482,
+          "rgb_mae_dark": 5.7652272394000335,
+          "alpha_mae": 4.146784855769231,
+          "alpha_iou": 0.991386217948718,
+          "boundary_f1_1px": 0.9774087522535282,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 330
+          }
+        }
+      },
+      {
+        "image": "text-04",
+        "category": "text",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 5.689251340155946,
+          "rgb_mae_dark": 5.689251340155946,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.9391245090846947,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "text-04",
+        "category": "text",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 5.302602773159295,
+          "rgb_mae_dark": 5.418325258953484,
+          "alpha_mae": 2.7284509015594542,
+          "alpha_iou": 0.9947764376218323,
+          "boundary_f1_1px": 0.9736014873677554,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 241
+          }
+        }
+      },
+      {
+        "image": "text-05",
+        "category": "text",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.642731584821429,
+          "rgb_mae_dark": 6.642731584821429,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.8734838740319932,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "text-05",
+        "category": "text",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 5.548176280929037,
+          "rgb_mae_dark": 6.318281851803221,
+          "alpha_mae": 3.72451171875,
+          "alpha_iou": 0.9925362723214286,
+          "boundary_f1_1px": 0.9487024427637839,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 355
+          }
+        }
+      },
+      {
+        "image": "thin-lines-01",
+        "category": "thin-lines",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 10.591193305121529,
+          "rgb_mae_dark": 10.591193305121529,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.8569609552932979,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "thin-lines-01",
+        "category": "thin-lines",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 7.200457511020902,
+          "rgb_mae_dark": 9.354338868251293,
+          "alpha_mae": 10.990071614583334,
+          "alpha_iou": 0.9735107421875,
+          "boundary_f1_1px": 0.9674400252234245,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 314
+          }
+        }
+      },
+      {
+        "image": "thin-lines-02",
+        "category": "thin-lines",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 16.52359681372549,
+          "rgb_mae_dark": 16.52359681372549,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.6307483024326227,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "thin-lines-02",
+        "category": "thin-lines",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 8.157151696462899,
+          "rgb_mae_dark": 10.121722702806611,
+          "alpha_mae": 11.0290625,
+          "alpha_iou": 0.9736764705882353,
+          "boundary_f1_1px": 0.9746393847559809,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 380
+          }
+        }
+      },
+      {
+        "image": "thin-lines-03",
+        "category": "thin-lines",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 9.282040153133902,
+          "rgb_mae_dark": 9.282040153133902,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.8776137192943775,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "thin-lines-03",
+        "category": "thin-lines",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 7.313915118219653,
+          "rgb_mae_dark": 9.316582108715991,
+          "alpha_mae": 11.710520165598291,
+          "alpha_iou": 0.9719885149572649,
+          "boundary_f1_1px": 0.9585879066352075,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 412
+          }
+        }
+      },
+      {
+        "image": "thin-lines-04",
+        "category": "thin-lines",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 9.465892015919428,
+          "rgb_mae_dark": 9.465892015919428,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.8780603962576238,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "thin-lines-04",
+        "category": "thin-lines",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 7.674176656123789,
+          "rgb_mae_dark": 9.239964935373107,
+          "alpha_mae": 10.1348988791423,
+          "alpha_iou": 0.9768823099415205,
+          "boundary_f1_1px": 0.9736836924295152,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 2,
+            "holes": 405
+          }
+        }
+      },
+      {
+        "image": "thin-lines-05",
+        "category": "thin-lines",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 8.153106398809523,
+          "rgb_mae_dark": 8.153106398809523,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.90387020678578,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "thin-lines-05",
+        "category": "thin-lines",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 7.55564892623716,
+          "rgb_mae_dark": 8.858290641777545,
+          "alpha_mae": 8.610895647321428,
+          "alpha_iou": 0.9796316964285714,
+          "boundary_f1_1px": 0.9696498039853204,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 368
+          }
+        }
+      },
+      {
+        "image": "holes-01",
+        "category": "holes",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 2.627294443167891,
+          "rgb_mae_dark": 0.3545810940478622,
+          "alpha_mae": 3.11358642578125,
+          "alpha_iou": 0.9917163533749033,
+          "boundary_f1_1px": 0.9879784632388188,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 4,
+            "holes": 10
+          }
+        }
+      },
+      {
+        "image": "holes-01",
+        "category": "holes",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 4.477399466188384,
+          "rgb_mae_dark": 0.5465789196537989,
+          "alpha_mae": 5.342000325520833,
+          "alpha_iou": 0.9700145825738243,
+          "boundary_f1_1px": 0.8997938931879196,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 8,
+            "holes": 25
+          }
+        }
+      },
+      {
+        "image": "holes-02",
+        "category": "holes",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 2.427846044790465,
+          "rgb_mae_dark": 0.32725004805843905,
+          "alpha_mae": 2.9006066176470586,
+          "alpha_iou": 0.9919016196760648,
+          "boundary_f1_1px": 0.9875910402906274,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 4,
+            "holes": 10
+          }
+        }
+      },
+      {
+        "image": "holes-02",
+        "category": "holes",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 5.373007040561322,
+          "rgb_mae_dark": 0.6152290224913496,
+          "alpha_mae": 6.540625,
+          "alpha_iou": 0.9588988146366604,
+          "boundary_f1_1px": 0.832947272287525,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 4,
+            "holes": 34
+          }
+        }
+      },
+      {
+        "image": "holes-03",
+        "category": "holes",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 2.2848435710644655,
+          "rgb_mae_dark": 0.3083608501270878,
+          "alpha_mae": 2.761217948717949,
+          "alpha_iou": 0.9925083016117275,
+          "boundary_f1_1px": 0.9860851199735214,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 4,
+            "holes": 10
+          }
+        }
+      },
+      {
+        "image": "holes-03",
+        "category": "holes",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 4.241046065862243,
+          "rgb_mae_dark": 0.4544034289285513,
+          "alpha_mae": 5.121360844017094,
+          "alpha_iou": 0.9689705524458506,
+          "boundary_f1_1px": 0.9178830865665019,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 4,
+            "holes": 37
+          }
+        }
+      },
+      {
+        "image": "holes-04",
+        "category": "holes",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 2.1174271235459745,
+          "rgb_mae_dark": 0.2991668219432022,
+          "alpha_mae": 2.5867598684210527,
+          "alpha_iou": 0.9932455770042599,
+          "boundary_f1_1px": 0.9852756984920659,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 4,
+            "holes": 10
+          }
+        }
+      },
+      {
+        "image": "holes-04",
+        "category": "holes",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 6.050541497056915,
+          "rgb_mae_dark": 0.625263114098791,
+          "alpha_mae": 7.601516812865497,
+          "alpha_iou": 0.9512495194156094,
+          "boundary_f1_1px": 0.7546657110480489,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 8,
+            "holes": 34
+          }
+        }
+      },
+      {
+        "image": "holes-05",
+        "category": "holes",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 1.9706366348622775,
+          "rgb_mae_dark": 0.307446640114379,
+          "alpha_mae": 2.4413783482142857,
+          "alpha_iou": 0.9933605720122574,
+          "boundary_f1_1px": 0.9844303068631245,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 4,
+            "holes": 9
+          }
+        }
+      },
+      {
+        "image": "holes-05",
+        "category": "holes",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 5.7958748030462175,
+          "rgb_mae_dark": 0.6805410028594769,
+          "alpha_mae": 7.370424107142857,
+          "alpha_iou": 0.946143446965545,
+          "boundary_f1_1px": 0.7668360214478932,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 8,
+            "holes": 45
+          }
+        }
+      },
+      {
+        "image": "alpha-01",
+        "category": "alpha",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 12.864276561861722,
+          "rgb_mae_dark": 16.359218861698324,
+          "alpha_mae": 29.7554931640625,
+          "alpha_iou": 0.987456346660965,
+          "boundary_f1_1px": 0.8016986066200873,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 3
+          }
+        }
+      },
+      {
+        "image": "alpha-01",
+        "category": "alpha",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 13.13083785977498,
+          "rgb_mae_dark": 16.248219661671094,
+          "alpha_mae": 29.7008056640625,
+          "alpha_iou": 0.9785830792142401,
+          "boundary_f1_1px": 0.7896418151443211,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 2,
+            "holes": 22
+          }
+        }
+      },
+      {
+        "image": "alpha-02",
+        "category": "alpha",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 11.661106833910033,
+          "rgb_mae_dark": 14.775183967704729,
+          "alpha_mae": 26.88801470588235,
+          "alpha_iou": 0.9699714693295293,
+          "boundary_f1_1px": 0.7562318397308457,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 3
+          }
+        }
+      },
+      {
+        "image": "alpha-02",
+        "category": "alpha",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 11.981158905228757,
+          "rgb_mae_dark": 14.626307285659363,
+          "alpha_mae": 26.87659926470588,
+          "alpha_iou": 0.9778171509567682,
+          "boundary_f1_1px": 0.7367247963906483,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 3,
+            "holes": 14
+          }
+        }
+      },
+      {
+        "image": "alpha-03",
+        "category": "alpha",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 10.613012541198815,
+          "rgb_mae_dark": 13.494219182063853,
+          "alpha_mae": 24.530465411324787,
+          "alpha_iou": 0.9861377692471742,
+          "boundary_f1_1px": 0.751660616075587,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 3
+          }
+        }
+      },
+      {
+        "image": "alpha-03",
+        "category": "alpha",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 10.9027939910829,
+          "rgb_mae_dark": 13.42039059881431,
+          "alpha_mae": 24.531016292735043,
+          "alpha_iou": 0.978478690375388,
+          "boundary_f1_1px": 0.7789200973607253,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 2,
+            "holes": 20
+          }
+        }
+      },
+      {
+        "image": "alpha-04",
+        "category": "alpha",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 9.790044524551211,
+          "rgb_mae_dark": 12.372454519900879,
+          "alpha_mae": 22.48135964912281,
+          "alpha_iou": 0.9857535792368997,
+          "boundary_f1_1px": 0.7712517287505384,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 4
+          }
+        }
+      },
+      {
+        "image": "alpha-04",
+        "category": "alpha",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 9.95804967495445,
+          "rgb_mae_dark": 12.303888323523042,
+          "alpha_mae": 22.492492080896685,
+          "alpha_iou": 0.9789739276703112,
+          "boundary_f1_1px": 0.7637713961867748,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 12
+          }
+        }
+      },
+      {
+        "image": "alpha-05",
+        "category": "alpha",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 8.989923370389821,
+          "rgb_mae_dark": 11.401029138217785,
+          "alpha_mae": 20.687820870535713,
+          "alpha_iou": 0.9847548124209639,
+          "boundary_f1_1px": 0.7745532523230879,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "alpha-05",
+        "category": "alpha",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 9.237178855917366,
+          "rgb_mae_dark": 11.350942350898691,
+          "alpha_mae": 20.771121651785716,
+          "alpha_iou": 0.9749371683887182,
+          "boundary_f1_1px": 0.7233400681709519,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 14
+          }
+        }
+      },
+      {
+        "image": "gradient-01",
+        "category": "gradient",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.312391493055555,
+          "rgb_mae_dark": 6.312391493055555,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5502243867642194,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "gradient-01",
+        "category": "gradient",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 12.944637336814065,
+          "rgb_mae_dark": 12.746222841350082,
+          "alpha_mae": 0.6243693033854166,
+          "alpha_iou": 0.9991455078125,
+          "boundary_f1_1px": 0.6375714872943663,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 16
+          }
+        }
+      },
+      {
+        "image": "gradient-02",
+        "category": "gradient",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.4175490196078435,
+          "rgb_mae_dark": 6.4175490196078435,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5494122402764258,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "gradient-02",
+        "category": "gradient",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 15.853973856209153,
+          "rgb_mae_dark": 15.695274629950019,
+          "alpha_mae": 0.6920404411764706,
+          "alpha_iou": 0.9991176470588236,
+          "boundary_f1_1px": 0.5732029511607217,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 16
+          }
+        }
+      },
+      {
+        "image": "gradient-03",
+        "category": "gradient",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.396028089387465,
+          "rgb_mae_dark": 6.396028089387465,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5165151802438177,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "gradient-03",
+        "category": "gradient",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 17.59968101467795,
+          "rgb_mae_dark": 17.4365616576937,
+          "alpha_mae": 0.7215377938034188,
+          "alpha_iou": 0.9987146100427351,
+          "boundary_f1_1px": 0.5511722154962421,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 17
+          }
+        }
+      },
+      {
+        "image": "gradient-04",
+        "category": "gradient",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.478552428525016,
+          "rgb_mae_dark": 6.478552428525016,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5456492414259023,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "gradient-04",
+        "category": "gradient",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 15.77319839404248,
+          "rgb_mae_dark": 15.609622148485775,
+          "alpha_mae": 0.663026924951267,
+          "alpha_iou": 0.9988273635477583,
+          "boundary_f1_1px": 0.5758700140638559,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 25
+          }
+        }
+      },
+      {
+        "image": "gradient-05",
+        "category": "gradient",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.62309802827381,
+          "rgb_mae_dark": 6.62309802827381,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5246418017104764,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "gradient-05",
+        "category": "gradient",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 11.709322588410364,
+          "rgb_mae_dark": 11.530719847834966,
+          "alpha_mae": 0.8326032366071429,
+          "alpha_iou": 0.9985491071428572,
+          "boundary_f1_1px": 0.5933228394008953,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 29
+          }
+        }
+      },
+      {
+        "image": "texture-01",
+        "category": "texture",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 5.927056206597222,
+          "rgb_mae_dark": 5.927056206597222,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.548200252102062,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "texture-01",
+        "category": "texture",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 9.018925791887938,
+          "rgb_mae_dark": 8.786406659560527,
+          "alpha_mae": 0.8741251627604166,
+          "alpha_iou": 0.9985555013020834,
+          "boundary_f1_1px": 0.6551290844741968,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 20
+          }
+        }
+      },
+      {
+        "image": "texture-02",
+        "category": "texture",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.258468137254902,
+          "rgb_mae_dark": 6.258468137254902,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5312175487874868,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "texture-02",
+        "category": "texture",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 12.294026239907728,
+          "rgb_mae_dark": 11.992373822568242,
+          "alpha_mae": 1.1386580882352941,
+          "alpha_iou": 0.9980330882352941,
+          "boundary_f1_1px": 0.5359169817313971,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 31
+          }
+        }
+      },
+      {
+        "image": "texture-03",
+        "category": "texture",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.2763977920227925,
+          "rgb_mae_dark": 6.2763977920227925,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5113062369030165,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "texture-03",
+        "category": "texture",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 16.33100136689291,
+          "rgb_mae_dark": 16.01919557130188,
+          "alpha_mae": 1.244808360042735,
+          "alpha_iou": 0.9977630876068376,
+          "boundary_f1_1px": 0.49765029150625795,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 45
+          }
+        }
+      },
+      {
+        "image": "texture-04",
+        "category": "texture",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.506729864216642,
+          "rgb_mae_dark": 6.506370438851304,
+          "alpha_mae": 0.00044164230019493175,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5050770599365316,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "texture-04",
+        "category": "texture",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 16.329676232497548,
+          "rgb_mae_dark": 15.910862648746962,
+          "alpha_mae": 1.4879081384015596,
+          "alpha_iou": 0.9973196881091618,
+          "boundary_f1_1px": 0.44844865604251327,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 72
+          }
+        }
+      },
+      {
+        "image": "texture-05",
+        "category": "texture",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 7.1737820414624185,
+          "rgb_mae_dark": 7.173657285830998,
+          "alpha_mae": 0.0004045758928571429,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.4714617165069116,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "texture-05",
+        "category": "texture",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 14.889501852824461,
+          "rgb_mae_dark": 14.56217754289216,
+          "alpha_mae": 1.7310546875,
+          "alpha_iou": 0.9968052455357143,
+          "boundary_f1_1px": 0.5583762129316487,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 80
+          }
+        }
+      },
+      {
+        "image": "watercolor-01",
+        "category": "watercolor",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 2.889560275607639,
+          "rgb_mae_dark": 2.889560275607639,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.9138343419505315,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "watercolor-01",
+        "category": "watercolor",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 6.938370475685933,
+          "rgb_mae_dark": 8.230982110183483,
+          "alpha_mae": 2.7649332682291665,
+          "alpha_iou": 0.9946695963541666,
+          "boundary_f1_1px": 0.781268306940941,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 131
+          }
+        }
+      },
+      {
+        "image": "watercolor-02",
+        "category": "watercolor",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 3.6797242647058823,
+          "rgb_mae_dark": 3.6797242647058823,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.7785524607562417,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "watercolor-02",
+        "category": "watercolor",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 6.1295643742791235,
+          "rgb_mae_dark": 7.13488321799308,
+          "alpha_mae": 2.100386029411765,
+          "alpha_iou": 0.9959375,
+          "boundary_f1_1px": 0.7447364145371945,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 93
+          }
+        }
+      },
+      {
+        "image": "watercolor-03",
+        "category": "watercolor",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 3.8394264155982905,
+          "rgb_mae_dark": 3.8394264155982905,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.6409887146186274,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "watercolor-03",
+        "category": "watercolor",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 7.57692997248757,
+          "rgb_mae_dark": 8.591088268462656,
+          "alpha_mae": 2.3811097756410255,
+          "alpha_iou": 0.9955094818376068,
+          "boundary_f1_1px": 0.6309251106425877,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 123
+          }
+        }
+      },
+      {
+        "image": "watercolor-04",
+        "category": "watercolor",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 3.8962242121507473,
+          "rgb_mae_dark": 3.8962242121507473,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5637606140668607,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "watercolor-04",
+        "category": "watercolor",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 5.8244934401635895,
+          "rgb_mae_dark": 6.564538422581507,
+          "alpha_mae": 1.4022599902534114,
+          "alpha_iou": 0.9973958333333334,
+          "boundary_f1_1px": 0.4972361683574889,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 42
+          }
+        }
+      },
+      {
+        "image": "watercolor-05",
+        "category": "watercolor",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 3.6327055431547617,
+          "rgb_mae_dark": 3.6327055431547617,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.483665708353123,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "watercolor-05",
+        "category": "watercolor",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 6.791448449171337,
+          "rgb_mae_dark": 7.378367617880485,
+          "alpha_mae": 1.1738002232142857,
+          "alpha_iou": 0.99755859375,
+          "boundary_f1_1px": 0.2317058150559254,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 47
+          }
+        }
+      },
+      {
+        "image": "private-figurine",
+        "category": "photo",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 3.7359677896491146,
+          "rgb_mae_dark": 3.735956390576575,
+          "alpha_mae": 5.318368544600939e-05,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.6427030716498142,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "private-figurine",
+        "category": "photo",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 7.381506966978888,
+          "rgb_mae_dark": 7.090686715609562,
+          "alpha_mae": 0.5654287705399061,
+          "alpha_iou": 0.9989308245305164,
+          "boundary_f1_1px": 0.5190034128408405,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 222
+          }
+        }
+      },
+      {
+        "image": "private-lion",
+        "category": "watercolor",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.932317649456709,
+          "rgb_mae_dark": 6.910647665145725,
+          "alpha_mae": 1.535302672955975,
+          "alpha_iou": 0.9924660237731137,
+          "boundary_f1_1px": 0.8637769318117652,
+          "reference_topology": {
+            "components": 62,
+            "holes": 2
+          },
+          "candidate_topology": {
+            "components": 44,
+            "holes": 0
+          }
+        }
+      },
+      {
+        "image": "private-lion",
+        "category": "watercolor",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 14.426673368753514,
+          "rgb_mae_dark": 14.224969259122238,
+          "alpha_mae": 4.902254979035639,
+          "alpha_iou": 0.9809472504740562,
+          "boundary_f1_1px": 0.8072414226261144,
+          "reference_topology": {
+            "components": 70,
+            "holes": 5
+          },
+          "candidate_topology": {
+            "components": 46,
+            "holes": 2789
+          }
+        }
+      }
+    ],
+    "wasm": [
+      {
+        "image": "logo-01",
+        "category": "logo",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 1.0320773654513888,
+          "rgb_mae_dark": 1.0320773654513888,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.9991084695393759,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.01692708333333326
+      },
+      {
+        "image": "logo-01",
+        "category": "logo",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 2.566560739421637,
+          "rgb_mae_dark": 1.338748920249523,
+          "alpha_mae": 3.0930582682291665,
+          "alpha_iou": 0.9912312825520834,
+          "boundary_f1_1px": 0.9741735354135318,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 21
+          }
+        },
+        "delta_white_mae": -0.0022675823801745487
+      },
+      {
+        "image": "logo-02",
+        "category": "logo",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 1.0076654411764705,
+          "rgb_mae_dark": 1.0076654411764705,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.9983342587451417,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.02857230392156851
+      },
+      {
+        "image": "logo-02",
+        "category": "logo",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 2.505181132256824,
+          "rgb_mae_dark": 1.353170703575548,
+          "alpha_mae": 3.239264705882353,
+          "alpha_iou": 0.9897242647058824,
+          "boundary_f1_1px": 0.9829752668921159,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 22
+          }
+        },
+        "delta_white_mae": 0.022433030565166767
+      },
+      {
+        "image": "logo-03",
+        "category": "logo",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 0.8270232371794872,
+          "rgb_mae_dark": 0.8270232371794872,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.99974140160331,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.01544693732193736
+      },
+      {
+        "image": "logo-03",
+        "category": "logo",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 2.5218732324660635,
+          "rgb_mae_dark": 1.3304704738911235,
+          "alpha_mae": 3.2810830662393164,
+          "alpha_iou": 0.9894497863247863,
+          "boundary_f1_1px": 0.975664868186441,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 22
+          }
+        },
+        "delta_white_mae": 0.003818484302553049
+      },
+      {
+        "image": "logo-04",
+        "category": "logo",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 0.7403397092267706,
+          "rgb_mae_dark": 0.7403397092267706,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 1.0,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.0020813027940220774
+      },
+      {
+        "image": "logo-04",
+        "category": "logo",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 2.387759829402847,
+          "rgb_mae_dark": 1.2341438768489852,
+          "alpha_mae": 3.195723684210526,
+          "alpha_iou": 0.990009746588694,
+          "boundary_f1_1px": 0.9763532928493267,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 22
+          }
+        },
+        "delta_white_mae": 0.006753832543413996
+      },
+      {
+        "image": "logo-05",
+        "category": "logo",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 0.8970284598214285,
+          "rgb_mae_dark": 0.8970284598214285,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 1.0,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.013397507440476186
+      },
+      {
+        "image": "logo-05",
+        "category": "logo",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 2.37226168592437,
+          "rgb_mae_dark": 1.206246662727591,
+          "alpha_mae": 3.24267578125,
+          "alpha_iou": 0.9894670758928571,
+          "boundary_f1_1px": 0.9743550634364684,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 24
+          }
+        },
+        "delta_white_mae": 0.009755686128618102
+      },
+      {
+        "image": "text-01",
+        "category": "text",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.450880262586805,
+          "rgb_mae_dark": 6.450880262586805,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.9718970051087815,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.030253092447916075
+      },
+      {
+        "image": "text-01",
+        "category": "text",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 7.000760266671773,
+          "rgb_mae_dark": 7.769656538288057,
+          "alpha_mae": 2.4317626953125,
+          "alpha_iou": 0.9967244466145834,
+          "boundary_f1_1px": 0.9647576981808831,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 105
+          }
+        },
+        "delta_white_mae": -0.004749013863357021
+      },
+      {
+        "image": "text-02",
+        "category": "text",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.7680453431372545,
+          "rgb_mae_dark": 6.7680453431372545,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.9468617391855089,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": -0.05928308823529438
+      },
+      {
+        "image": "text-02",
+        "category": "text",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 5.725294165705499,
+          "rgb_mae_dark": 6.3602652825836214,
+          "alpha_mae": 3.5651838235294115,
+          "alpha_iou": 0.9931617647058824,
+          "boundary_f1_1px": 0.9812584489886699,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 249
+          }
+        },
+        "delta_white_mae": 0.0012356305267209322
+      },
+      {
+        "image": "text-03",
+        "category": "text",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 5.572844328703703,
+          "rgb_mae_dark": 5.572844328703703,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.9842118158125577,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.025134659900284184
+      },
+      {
+        "image": "text-03",
+        "category": "text",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 5.692271294201442,
+          "rgb_mae_dark": 5.781119267952907,
+          "alpha_mae": 4.163311298076923,
+          "alpha_iou": 0.9912025908119658,
+          "boundary_f1_1px": 0.9775574880981216,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 331
+          }
+        },
+        "delta_white_mae": 0.007080064486621573
+      },
+      {
+        "image": "text-04",
+        "category": "text",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 5.6910026803118905,
+          "rgb_mae_dark": 5.6910026803118905,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.9434343982752142,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.0017513401559448027
+      },
+      {
+        "image": "text-04",
+        "category": "text",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 5.299887026366752,
+          "rgb_mae_dark": 5.422924251328212,
+          "alpha_mae": 2.7421418128654973,
+          "alpha_iou": 0.9946393762183235,
+          "boundary_f1_1px": 0.973609051024011,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 245
+          }
+        },
+        "delta_white_mae": -0.002715746792542717
+      },
+      {
+        "image": "text-05",
+        "category": "text",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 5.7640625,
+          "rgb_mae_dark": 5.7640625,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.8814199496934524,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": -0.8786690848214294
+      },
+      {
+        "image": "text-05",
+        "category": "text",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 5.547244142448646,
+          "rgb_mae_dark": 6.332282712564194,
+          "alpha_mae": 3.7439871651785714,
+          "alpha_iou": 0.99248046875,
+          "boundary_f1_1px": 0.9483387024841275,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 352
+          }
+        },
+        "delta_white_mae": -0.0009321384803913091
+      },
+      {
+        "image": "thin-lines-01",
+        "category": "thin-lines",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 10.43597412109375,
+          "rgb_mae_dark": 10.43597412109375,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.8664260219434597,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": -0.15521918402777857
+      },
+      {
+        "image": "thin-lines-01",
+        "category": "thin-lines",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 7.199118673619621,
+          "rgb_mae_dark": 9.370647222647737,
+          "alpha_mae": 11.01019287109375,
+          "alpha_iou": 0.9734903971354166,
+          "boundary_f1_1px": 0.9676170636481776,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 315
+          }
+        },
+        "delta_white_mae": -0.0013388374012812676
+      },
+      {
+        "image": "thin-lines-02",
+        "category": "thin-lines",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 16.920968137254903,
+          "rgb_mae_dark": 16.920968137254903,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.6208902723550138,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.39737132352941273
+      },
+      {
+        "image": "thin-lines-02",
+        "category": "thin-lines",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 8.15795074009996,
+          "rgb_mae_dark": 10.12523635140331,
+          "alpha_mae": 11.024852941176471,
+          "alpha_iou": 0.9736948529411765,
+          "boundary_f1_1px": 0.9746317052489756,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 378
+          }
+        },
+        "delta_white_mae": 0.0007990436370608478
+      },
+      {
+        "image": "thin-lines-03",
+        "category": "thin-lines",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 9.55735844017094,
+          "rgb_mae_dark": 9.55735844017094,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.8922800979127092,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.2753182870370381
+      },
+      {
+        "image": "thin-lines-03",
+        "category": "thin-lines",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 7.315154290437685,
+          "rgb_mae_dark": 9.31957722770376,
+          "alpha_mae": 11.715177617521368,
+          "alpha_iou": 0.9719718215811965,
+          "boundary_f1_1px": 0.9586701710416738,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 412
+          }
+        },
+        "delta_white_mae": 0.0012391722180318254
+      },
+      {
+        "image": "thin-lines-04",
+        "category": "thin-lines",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 9.677377761533464,
+          "rgb_mae_dark": 9.677377761533464,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.8704881001218583,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.211485745614036
+      },
+      {
+        "image": "thin-lines-04",
+        "category": "thin-lines",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 7.67552895549058,
+          "rgb_mae_dark": 9.248570460510388,
+          "alpha_mae": 10.15282346491228,
+          "alpha_iou": 0.9768366228070176,
+          "boundary_f1_1px": 0.9738789730710944,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 2,
+            "holes": 405
+          }
+        },
+        "delta_white_mae": 0.0013522993667907102
+      },
+      {
+        "image": "thin-lines-05",
+        "category": "thin-lines",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 8.373042224702381,
+          "rgb_mae_dark": 8.373042224702381,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.9079262752340687,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.21993582589285765
+      },
+      {
+        "image": "thin-lines-05",
+        "category": "thin-lines",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 7.5548602539974326,
+          "rgb_mae_dark": 8.865594216853408,
+          "alpha_mae": 8.622056361607143,
+          "alpha_iou": 0.9796037946428572,
+          "boundary_f1_1px": 0.9695861190795076,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 369
+          }
+        },
+        "delta_white_mae": -0.0007886722397270063
+      },
+      {
+        "image": "holes-01",
+        "category": "holes",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 2.627294443167891,
+          "rgb_mae_dark": 0.3545810940478622,
+          "alpha_mae": 3.11358642578125,
+          "alpha_iou": 0.9917163533749033,
+          "boundary_f1_1px": 0.9879784632388188,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 4,
+            "holes": 10
+          }
+        },
+        "delta_white_mae": 0.0
+      },
+      {
+        "image": "holes-01",
+        "category": "holes",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 4.480924186623434,
+          "rgb_mae_dark": 0.5469051585477941,
+          "alpha_mae": 5.346537272135417,
+          "alpha_iou": 0.9699690120306234,
+          "boundary_f1_1px": 0.8997938931879196,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 8,
+            "holes": 25
+          }
+        },
+        "delta_white_mae": 0.0035247204350499217
+      },
+      {
+        "image": "holes-02",
+        "category": "holes",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 2.427846044790465,
+          "rgb_mae_dark": 0.32725004805843905,
+          "alpha_mae": 2.9006066176470586,
+          "alpha_iou": 0.9919016196760648,
+          "boundary_f1_1px": 0.9875910402906274,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 4,
+            "holes": 10
+          }
+        },
+        "delta_white_mae": 0.0
+      },
+      {
+        "image": "holes-02",
+        "category": "holes",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 5.3761267060745865,
+          "rgb_mae_dark": 0.6155967896962707,
+          "alpha_mae": 6.545275735294117,
+          "alpha_iou": 0.9588988146366604,
+          "boundary_f1_1px": 0.8329967241937846,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 4,
+            "holes": 34
+          }
+        },
+        "delta_white_mae": 0.0031196655132648132
+      },
+      {
+        "image": "holes-03",
+        "category": "holes",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 2.2848435710644655,
+          "rgb_mae_dark": 0.3083608501270878,
+          "alpha_mae": 2.761217948717949,
+          "alpha_iou": 0.9925083016117275,
+          "boundary_f1_1px": 0.9860851199735214,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 4,
+            "holes": 10
+          }
+        },
+        "delta_white_mae": 0.0
+      },
+      {
+        "image": "holes-03",
+        "category": "holes",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 4.26065401810653,
+          "rgb_mae_dark": 0.45633438337942006,
+          "alpha_mae": 5.147001869658119,
+          "alpha_iou": 0.9689299910764988,
+          "boundary_f1_1px": 0.917349470137871,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 4,
+            "holes": 37
+          }
+        },
+        "delta_white_mae": 0.019607952244287574
+      },
+      {
+        "image": "holes-04",
+        "category": "holes",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 2.1174271235459745,
+          "rgb_mae_dark": 0.2991668219432022,
+          "alpha_mae": 2.5867598684210527,
+          "alpha_iou": 0.9932455770042599,
+          "boundary_f1_1px": 0.9852756984920659,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 4,
+            "holes": 10
+          }
+        },
+        "delta_white_mae": 0.0
+      },
+      {
+        "image": "holes-04",
+        "category": "holes",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 6.0492324163258555,
+          "rgb_mae_dark": 0.6250955746983654,
+          "alpha_mae": 7.599765472709552,
+          "alpha_iou": 0.951287966166859,
+          "boundary_f1_1px": 0.7549780869747955,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 8,
+            "holes": 34
+          }
+        },
+        "delta_white_mae": -0.0013090807310591757
+      },
+      {
+        "image": "holes-05",
+        "category": "holes",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 1.9706366348622775,
+          "rgb_mae_dark": 0.307446640114379,
+          "alpha_mae": 2.4413783482142857,
+          "alpha_iou": 0.9933605720122574,
+          "boundary_f1_1px": 0.9844303068631245,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 4,
+            "holes": 9
+          }
+        },
+        "delta_white_mae": 0.0
+      },
+      {
+        "image": "holes-05",
+        "category": "holes",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 5.794889377626051,
+          "rgb_mae_dark": 0.6802349038573761,
+          "alpha_mae": 7.369210379464286,
+          "alpha_iou": 0.9459261965655827,
+          "boundary_f1_1px": 0.7668815713089943,
+          "reference_topology": {
+            "components": 4,
+            "holes": 8
+          },
+          "candidate_topology": {
+            "components": 8,
+            "holes": 45
+          }
+        },
+        "delta_white_mae": -0.0009854254201666635
+      },
+      {
+        "image": "alpha-01",
+        "category": "alpha",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 12.857623357502721,
+          "rgb_mae_dark": 16.35296827661186,
+          "alpha_mae": 29.740987141927082,
+          "alpha_iou": 0.9878796520747184,
+          "boundary_f1_1px": 0.8019971019067159,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 4
+          }
+        },
+        "delta_white_mae": -0.006653204359000853
+      },
+      {
+        "image": "alpha-01",
+        "category": "alpha",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 13.123421888829313,
+          "rgb_mae_dark": 16.24045048466435,
+          "alpha_mae": 29.66680908203125,
+          "alpha_iou": 0.9792154359083493,
+          "boundary_f1_1px": 0.7788686449586133,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 2,
+            "holes": 22
+          }
+        },
+        "delta_white_mae": -0.007415970945666928
+      },
+      {
+        "image": "alpha-02",
+        "category": "alpha",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 11.66896520569012,
+          "rgb_mae_dark": 14.772728301614762,
+          "alpha_mae": 26.886305147058824,
+          "alpha_iou": 0.9701811956056499,
+          "boundary_f1_1px": 0.7539759369381829,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 3
+          }
+        },
+        "delta_white_mae": 0.007858371780086415
+      },
+      {
+        "image": "alpha-02",
+        "category": "alpha",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 11.979695141291812,
+          "rgb_mae_dark": 14.628191825259513,
+          "alpha_mae": 26.879375,
+          "alpha_iou": 0.9781006378454996,
+          "boundary_f1_1px": 0.7370421673163031,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 3,
+            "holes": 14
+          }
+        },
+        "delta_white_mae": -0.0014637639369450284
+      },
+      {
+        "image": "alpha-03",
+        "category": "alpha",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 10.626239914145856,
+          "rgb_mae_dark": 13.496103416883138,
+          "alpha_mae": 24.537092681623932,
+          "alpha_iou": 0.9864201919658727,
+          "boundary_f1_1px": 0.7528289659169927,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 2
+          }
+        },
+        "delta_white_mae": 0.013227372947040905
+      },
+      {
+        "image": "alpha-03",
+        "category": "alpha",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 10.905895140285455,
+          "rgb_mae_dark": 13.419580217236467,
+          "alpha_mae": 24.529480502136753,
+          "alpha_iou": 0.9783375670335873,
+          "boundary_f1_1px": 0.7750324996325738,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 2,
+            "holes": 20
+          }
+        },
+        "delta_white_mae": 0.00310114920255522
+      },
+      {
+        "image": "alpha-04",
+        "category": "alpha",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 9.796788303934308,
+          "rgb_mae_dark": 12.368609713622293,
+          "alpha_mae": 22.48135964912281,
+          "alpha_iou": 0.9857535792368997,
+          "boundary_f1_1px": 0.7713363063201599,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 4
+          }
+        },
+        "delta_white_mae": 0.006743779383096893
+      },
+      {
+        "image": "alpha-04",
+        "category": "alpha",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 9.957162826956642,
+          "rgb_mae_dark": 12.306090403591588,
+          "alpha_mae": 22.492309332358673,
+          "alpha_iou": 0.9789038407625456,
+          "boundary_f1_1px": 0.7637713961867748,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 12
+          }
+        },
+        "delta_white_mae": -0.0008868479978083599
+      },
+      {
+        "image": "alpha-05",
+        "category": "alpha",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 8.986389691293185,
+          "rgb_mae_dark": 11.404877031541782,
+          "alpha_mae": 20.689801897321427,
+          "alpha_iou": 0.9846164652992414,
+          "boundary_f1_1px": 0.7744709310657812,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 1
+          }
+        },
+        "delta_white_mae": -0.0035336790966358222
+      },
+      {
+        "image": "alpha-05",
+        "category": "alpha",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 9.241575994981327,
+          "rgb_mae_dark": 11.34900740765056,
+          "alpha_mae": 20.777134486607142,
+          "alpha_iou": 0.9747294938917975,
+          "boundary_f1_1px": 0.7233400681709519,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 14
+          }
+        },
+        "delta_white_mae": 0.0043971390639612196
+      },
+      {
+        "image": "gradient-01",
+        "category": "gradient",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.330824110243055,
+          "rgb_mae_dark": 6.330824110243055,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5501027058423996,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.0184326171875
+      },
+      {
+        "image": "gradient-01",
+        "category": "gradient",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 12.933838848039217,
+          "rgb_mae_dark": 12.745698497497958,
+          "alpha_mae": 0.6068522135416666,
+          "alpha_iou": 0.9991455078125,
+          "boundary_f1_1px": 0.6380407694928016,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 16
+          }
+        },
+        "delta_white_mae": -0.01079848877484757
+      },
+      {
+        "image": "gradient-02",
+        "category": "gradient",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.422377450980393,
+          "rgb_mae_dark": 6.422377450980393,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5496616965455791,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.004828431372549069
+      },
+      {
+        "image": "gradient-02",
+        "category": "gradient",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 15.866417747981547,
+          "rgb_mae_dark": 15.689123293925414,
+          "alpha_mae": 0.7161764705882353,
+          "alpha_iou": 0.9990441176470588,
+          "boundary_f1_1px": 0.5726879457387054,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 20
+          }
+        },
+        "delta_white_mae": 0.012443891772393911
+      },
+      {
+        "image": "gradient-03",
+        "category": "gradient",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.4078469996438745,
+          "rgb_mae_dark": 6.4078469996438745,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5142835895507898,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.011818910256409687
+      },
+      {
+        "image": "gradient-03",
+        "category": "gradient",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 17.61557588001369,
+          "rgb_mae_dark": 17.436820110433775,
+          "alpha_mae": 0.7428218482905983,
+          "alpha_iou": 0.9986478365384616,
+          "boundary_f1_1px": 0.5520469679002926,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 18
+          }
+        },
+        "delta_white_mae": 0.015894865335738473
+      },
+      {
+        "image": "gradient-04",
+        "category": "gradient",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.484324236517219,
+          "rgb_mae_dark": 6.484324236517219,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5421849197439117,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.005771807992203115
+      },
+      {
+        "image": "gradient-04",
+        "category": "gradient",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 15.778786657206743,
+          "rgb_mae_dark": 15.60819181270624,
+          "alpha_mae": 0.67869761208577,
+          "alpha_iou": 0.9988730506822612,
+          "boundary_f1_1px": 0.5767914792638171,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 23
+          }
+        },
+        "delta_white_mae": 0.005588263164263196
+      },
+      {
+        "image": "gradient-05",
+        "category": "gradient",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.640852864583334,
+          "rgb_mae_dark": 6.640852864583334,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5259231385433794,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.017754836309523903
+      },
+      {
+        "image": "gradient-05",
+        "category": "gradient",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 11.70945518572012,
+          "rgb_mae_dark": 11.531340325192577,
+          "alpha_mae": 0.8358537946428571,
+          "alpha_iou": 0.9985630580357143,
+          "boundary_f1_1px": 0.5941720564712428,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 28
+          }
+        },
+        "delta_white_mae": 0.00013259730975612172
+      },
+      {
+        "image": "texture-01",
+        "category": "texture",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 5.948947482638889,
+          "rgb_mae_dark": 5.948947482638889,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.552327909119348,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.021891276041666963
+      },
+      {
+        "image": "texture-01",
+        "category": "texture",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 9.027154979830476,
+          "rgb_mae_dark": 8.790819301896107,
+          "alpha_mae": 0.8955078125,
+          "alpha_iou": 0.99847412109375,
+          "boundary_f1_1px": 0.6552801183033966,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 20
+          }
+        },
+        "delta_white_mae": 0.008229187942538019
+      },
+      {
+        "image": "texture-02",
+        "category": "texture",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.27624387254902,
+          "rgb_mae_dark": 6.27624387254902,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5351587418153498,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.017775735294117467
+      },
+      {
+        "image": "texture-02",
+        "category": "texture",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 12.309855272010765,
+          "rgb_mae_dark": 11.996441753171858,
+          "alpha_mae": 1.1776286764705883,
+          "alpha_iou": 0.9979963235294118,
+          "boundary_f1_1px": 0.5371167414464115,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 33
+          }
+        },
+        "delta_white_mae": 0.015829032103036766
+      },
+      {
+        "image": "texture-03",
+        "category": "texture",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.271701388888889,
+          "rgb_mae_dark": 6.271701388888889,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5115258326446653,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": -0.004696403133903182
+      },
+      {
+        "image": "texture-03",
+        "category": "texture",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 16.33249262000028,
+          "rgb_mae_dark": 16.018372009594433,
+          "alpha_mae": 1.2410022702991452,
+          "alpha_iou": 0.9977630876068376,
+          "boundary_f1_1px": 0.4974743934919108,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 45
+          }
+        },
+        "delta_white_mae": 0.0014912531073711932
+      },
+      {
+        "image": "texture-04",
+        "category": "texture",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 6.516121108531132,
+          "rgb_mae_dark": 6.515761683165794,
+          "alpha_mae": 0.00044164230019493175,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.5066322472065233,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.009391244314489455
+      },
+      {
+        "image": "texture-04",
+        "category": "texture",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 16.349870662608772,
+          "rgb_mae_dark": 15.910061780153907,
+          "alpha_mae": 1.5209856237816763,
+          "alpha_iou": 0.9973044590643275,
+          "boundary_f1_1px": 0.44910277942515403,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 72
+          }
+        },
+        "delta_white_mae": 0.020194430111224904
+      },
+      {
+        "image": "texture-05",
+        "category": "texture",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 7.104506557831466,
+          "rgb_mae_dark": 7.104372501604808,
+          "alpha_mae": 0.0004045758928571429,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.48648034727602424,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": -0.06927548363095237
+      },
+      {
+        "image": "texture-05",
+        "category": "texture",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 14.894863208304152,
+          "rgb_mae_dark": 14.56572593881303,
+          "alpha_mae": 1.7465680803571428,
+          "alpha_iou": 0.9967912946428571,
+          "boundary_f1_1px": 0.5589014407652683,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 79
+          }
+        },
+        "delta_white_mae": 0.005361355479690744
+      },
+      {
+        "image": "watercolor-01",
+        "category": "watercolor",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 2.9409722222222223,
+          "rgb_mae_dark": 2.9409722222222223,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.9100592926926174,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.05141194661458348
+      },
+      {
+        "image": "watercolor-01",
+        "category": "watercolor",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 6.945565975413604,
+          "rgb_mae_dark": 8.249746178853487,
+          "alpha_mae": 2.80914306640625,
+          "alpha_iou": 0.99462890625,
+          "boundary_f1_1px": 0.7829946829667005,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 133
+          }
+        },
+        "delta_white_mae": 0.007195499727671084
+      },
+      {
+        "image": "watercolor-02",
+        "category": "watercolor",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 3.680526960784314,
+          "rgb_mae_dark": 3.680526960784314,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.7777535338176051,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.0008026960784315307
+      },
+      {
+        "image": "watercolor-02",
+        "category": "watercolor",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 6.135442305843904,
+          "rgb_mae_dark": 7.179009083044982,
+          "alpha_mae": 2.1746875,
+          "alpha_iou": 0.9960477941176471,
+          "boundary_f1_1px": 0.7428908714756279,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 91
+          }
+        },
+        "delta_white_mae": 0.005877931564780781
+      },
+      {
+        "image": "watercolor-03",
+        "category": "watercolor",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 3.845847800925926,
+          "rgb_mae_dark": 3.845847800925926,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.6385083855882702,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.006421385327635587
+      },
+      {
+        "image": "watercolor-03",
+        "category": "watercolor",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 7.583478227473324,
+          "rgb_mae_dark": 8.620709845993241,
+          "alpha_mae": 2.432608840811966,
+          "alpha_iou": 0.9954594017094017,
+          "boundary_f1_1px": 0.6299453769658002,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 126
+          }
+        },
+        "delta_white_mae": 0.006548254985753843
+      },
+      {
+        "image": "watercolor-04",
+        "category": "watercolor",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 3.8331455084470436,
+          "rgb_mae_dark": 3.8331455084470436,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.575596409128149,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": -0.06307870370370372
+      },
+      {
+        "image": "watercolor-04",
+        "category": "watercolor",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 5.82790490546446,
+          "rgb_mae_dark": 6.580229673903351,
+          "alpha_mae": 1.4376218323586745,
+          "alpha_iou": 0.9973349171539961,
+          "boundary_f1_1px": 0.497004169949461,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 44
+          }
+        },
+        "delta_white_mae": 0.003411465300870553
+      },
+      {
+        "image": "watercolor-05",
+        "category": "watercolor",
+        "split": "holdout",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 3.609295944940476,
+          "rgb_mae_dark": 3.609295944940476,
+          "alpha_mae": 0.0,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.47818590652683834,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": -0.023409598214285676
+      },
+      {
+        "image": "watercolor-05",
+        "category": "watercolor",
+        "split": "holdout",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 6.794261532738095,
+          "rgb_mae_dark": 7.399301762371613,
+          "alpha_mae": 1.210825892857143,
+          "alpha_iou": 0.9975027901785715,
+          "boundary_f1_1px": 0.23066441185200304,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 47
+          }
+        },
+        "delta_white_mae": 0.0028130835667576903
+      },
+      {
+        "image": "private-figurine",
+        "category": "photo",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 3.6826924081937156,
+          "rgb_mae_dark": 3.682681009121176,
+          "alpha_mae": 5.318368544600939e-05,
+          "alpha_iou": 1.0,
+          "boundary_f1_1px": 0.646304267479145,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": -0.05327538145539901
+      },
+      {
+        "image": "private-figurine",
+        "category": "photo",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 7.3835746700382,
+          "rgb_mae_dark": 7.090688448843937,
+          "alpha_mae": 0.5668573943661972,
+          "alpha_iou": 0.9989216549295775,
+          "boundary_f1_1px": 0.5189667315320762,
+          "reference_topology": {
+            "components": 1,
+            "holes": 0
+          },
+          "candidate_topology": {
+            "components": 1,
+            "holes": 223
+          }
+        },
+        "delta_white_mae": 0.0020677030593123646
+      },
+      {
+        "image": "private-lion",
+        "category": "watercolor",
+        "split": "development",
+        "profile": "photo-medium-auto",
+        "metrics": {
+          "rgb_mae_white": 7.000774057631436,
+          "rgb_mae_dark": 6.979245853372793,
+          "alpha_mae": 1.5365946016771488,
+          "alpha_iou": 0.9923839966870062,
+          "boundary_f1_1px": 0.8620126585927805,
+          "reference_topology": {
+            "components": 62,
+            "holes": 2
+          },
+          "candidate_topology": {
+            "components": 44,
+            "holes": 0
+          }
+        },
+        "delta_white_mae": 0.0684564081747272
+      },
+      {
+        "image": "private-lion",
+        "category": "watercolor",
+        "split": "development",
+        "profile": "photo-medium-9",
+        "metrics": {
+          "rgb_mae_white": 14.433733283320318,
+          "rgb_mae_dark": 14.228935753826335,
+          "alpha_mae": 4.918265199161426,
+          "alpha_iou": 0.9808526042699166,
+          "boundary_f1_1px": 0.8072197108598633,
+          "reference_topology": {
+            "components": 70,
+            "holes": 5
+          },
+          "candidate_topology": {
+            "components": 46,
+            "holes": 2805
+          }
+        },
+        "delta_white_mae": 0.007059914566804437
+      }
+    ]
+  }
+}

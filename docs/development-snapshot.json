@@ -1,0 +1,175 @@
+{
+  "snapshot_date": "2026-10-25",
+  "timezone": "Europe/Moscow",
+  "application_commit": "eccf5c9bbdd748afceff5f2aba8fa5848bc39a10",
+  "branch": "spatial-photo-preview",
+  "commits": [
+    {
+      "sha": "5abe9a9c385c90099421ca3eaa401e15e5d02959",
+      "date": "2026-10-24T18:15:57+03:00",
+      "subject": "Add Windows tracer, measured photo improvements and offline WASM preview"
+    },
+    {
+      "sha": "239c29ea36ae694827613892caf91704d28aeba1",
+      "date": "2026-10-24T18:17:07+03:00",
+      "subject": "Disable SVG export after cancelling WASM tracing"
+    },
+    {
+      "sha": "4101b96856e7de48ae1e33f4ea1857786cc7adec",
+      "date": "2026-10-24T18:22:34+03:00",
+      "subject": "Apply image-type palette presets in WASM wizard"
+    },
+    {
+      "sha": "d124353e0aff2fee10032c43bf85b769fc34cce5",
+      "date": "2026-10-24T18:23:14+03:00",
+      "subject": "Document patched WASM preview release"
+    },
+    {
+      "sha": "3d9275aa504c1d77a838ed4af9be33b36cd04291",
+      "date": "2026-10-24T19:01:05+03:00",
+      "subject": "Refit stepped photo regions with native optimized Bezier curves"
+    },
+    {
+      "sha": "e1247d227f008ac1913eb14fac182d465bc3cdca",
+      "date": "2026-10-24T22:51:17+03:00",
+      "subject": "Fix missing SVG colors and add opt-in GPU spatial photo segmentation"
+    },
+    {
+      "sha": "dbbdcf2c278e18a5139a28016f340f133aab8941",
+      "date": "2026-10-24T23:49:00+03:00",
+      "subject": "Group SVG regions by color and remove vector overlaps with audited geometry"
+    },
+    {
+      "sha": "90a35387ab90d456c1170cdaae0d0bd5a62eebd1",
+      "date": "2026-10-24T23:50:04+03:00",
+      "subject": "Document linear fallback cost for complex overlap removal"
+    },
+    {
+      "sha": "459ef53171614e3b38bee1ee5f9c9dab14d25909",
+      "date": "2026-10-25T00:32:53+03:00",
+      "subject": "Merge color geometry, preserve Corel PDF objects and add GPU preprocessing"
+    },
+    {
+      "sha": "2bde53ae7066632498c52ed30019f0ef8f525bea",
+      "date": "2026-10-25T08:15:58+03:00",
+      "subject": "Add shared photo regions and exact OpenCL mode filtering"
+    },
+    {
+      "sha": "6c9448986a1ce7b25035b0ee7586a850e2e3686e",
+      "date": "2026-10-25T08:16:35+03:00",
+      "subject": "Normalize photo module source formatting"
+    },
+    {
+      "sha": "bada27ba9c2088b5616d269901e78ea2bbccd72b",
+      "date": "2026-10-25T08:33:50+03:00",
+      "subject": "Remove shared-region preview seams and align review UI"
+    },
+    {
+      "sha": "71d2e6b8ba1205f0643929cd3f66378f1c98b12b",
+      "date": "2026-10-25T09:07:55+03:00",
+      "subject": "Show tracing stage percentages and fit expanded export controls"
+    },
+    {
+      "sha": "fac4f2b550933465da443e969fa82fa24a917386",
+      "date": "2026-10-25T09:47:33+03:00",
+      "subject": "Preserve nested color groups when importing PDFs into CorelDRAW"
+    },
+    {
+      "sha": "884e01744223175b25ac7853cdfb49184c24d985",
+      "date": "2026-10-25T15:01:38+03:00",
+      "subject": "Publish Rust WASM preview with wizard UI, WebGPU filtering and grouped PDF"
+    },
+    {
+      "sha": "5e398f900e5d227c1451c371826d46e45470c036",
+      "date": "2026-10-25T19:41:35+03:00",
+      "subject": "Port desktop tracing pipeline to Rust WASM with parity and geometry gates"
+    },
+    {
+      "sha": "8e0f67dda244e16d1664e039c1bbacc500ad43d6",
+      "date": "2026-10-25T19:43:24+03:00",
+      "subject": "Handle Unicode palette icon labels without broken surrogate text"
+    },
+    {
+      "sha": "4bd274502b2719406ede5335fafac228a5ef7ad5",
+      "date": "2026-10-25T19:43:48+03:00",
+      "subject": "Refresh deployment cache key after label fix"
+    },
+    {
+      "sha": "eccf5c9bbdd748afceff5f2aba8fa5848bc39a10",
+      "date": "2026-10-25T20:02:02+03:00",
+      "subject": "Default desktop and browser vector exports to PDF"
+    }
+  ],
+  "releases": [
+    {
+      "isLatest": false,
+      "isPrerelease": true,
+      "name": "DoctorTracer Windows 0.10.3 — PDF by default",
+      "publishedAt": "2026-10-25T17:04:12Z",
+      "tagName": "v0.10.3-preview"
+    },
+    {
+      "isLatest": false,
+      "isPrerelease": true,
+      "name": "DoctorTracer WASM 0.12.1 — PDF by default",
+      "publishedAt": "2026-10-25T17:03:10Z",
+      "tagName": "v0.12.1-wasm-preview"
+    },
+    {
+      "isLatest": false,
+      "isPrerelease": true,
+      "name": "DoctorTracer Desktop WASM 0.12 preview",
+      "publishedAt": "2026-10-25T16:42:38Z",
+      "tagName": "v0.12.0-wasm-preview"
+    },
+    {
+      "isLatest": false,
+      "isPrerelease": true,
+      "name": "DoctorTracer 0.11 Rust WASM preview",
+      "publishedAt": "2026-10-25T12:05:01Z",
+      "tagName": "v0.11.0-wasm-preview"
+    },
+    {
+      "isLatest": false,
+      "isPrerelease": true,
+      "name": "DoctorTracer 0.10.2 preview — CorelDRAW color groups",
+      "publishedAt": "2026-10-25T06:50:31Z",
+      "tagName": "v0.10.2-preview"
+    },
+    {
+      "isLatest": false,
+      "isPrerelease": true,
+      "name": "DoctorTracer 0.10.1 preview — Windows x64",
+      "publishedAt": "2026-10-25T06:13:44Z",
+      "tagName": "v0.10.1-preview"
+    },
+    {
+      "isLatest": false,
+      "isPrerelease": true,
+      "name": "DoctorTracer 0.10 preview — Windows x64",
+      "publishedAt": "2026-10-25T05:41:11Z",
+      "tagName": "v0.10.0-preview"
+    },
+    {
+      "isLatest": true,
+      "isPrerelease": false,
+      "name": "DoctorTracer 0.6 — smooth native Bezier curves (Windows)",
+      "publishedAt": "2026-10-24T16:04:06Z",
+      "tagName": "v0.6.0"
+    },
+    {
+      "isLatest": false,
+      "isPrerelease": false,
+      "name": "DoctorTracer 0.5.1 — Windows + WASM preview",
+      "publishedAt": "2026-10-24T15:24:21Z",
+      "tagName": "v0.5.1"
+    },
+    {
+      "isLatest": false,
+      "isPrerelease": false,
+      "name": "DoctorTracer 0.5 — Windows + WASM preview",
+      "publishedAt": "2026-10-24T15:19:25Z",
+      "tagName": "v0.5.0"
+    }
+  ]
+}

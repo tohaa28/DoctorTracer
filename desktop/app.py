@@ -1,4 +1,8 @@
 import sys
+if '--geometry-worker' in sys.argv:
+    from vector_partition import geometry_worker
+    index=sys.argv.index('--geometry-worker')
+    sys.exit(geometry_worker(sys.argv[index+1],int(sys.argv[index+2])))
 if '--worker-server' in sys.argv:
     from engine import worker_server
     sys.exit(worker_server())
