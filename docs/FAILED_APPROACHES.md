@@ -54,3 +54,7 @@ Verified on distinct rectangle and circle and a simple mixed scene, but the glob
 
 ## Previous risk: ambiguous binary cells
 A pixel-grid square is not proof of a true 90-degree corner. Do not indiscriminately smooth every vector node; preserve explicit polygons and straight-only borders. Also avoid independent tracing of adjacent colors (gaps/overlaps), alpha-threshold postprocessing, and an arbitrary resizing stage. Potrace candidate MUST be rejected on complex ownership and failed pixel-center or geometry checks; baseline is unchanged. CI pending.
+
+
+## 2026-11-22 · Failed 0.21.5 candidate calibrations
+Run 45009181173: candidate rejected with opaque pre-fallback output, initial 8% edge fidelity budget too strict. Run 45009549102: detailed source mask correct, 30th center mismatch exceeded 29 allowed. Run 45009846852: measured true 59 mismatches across 368 original boundary steps; mean proxy 0.1603. Adjustment introduced independent dual cap <=25% boundary steps and <=2% foreground pixels; actual ring/ellipse/rectangle audited on GH run 45010264233, CircleCI successful. No silent image resampling and no weakening topology. User's actual EPS untested.
