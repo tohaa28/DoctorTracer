@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import createTracer from './rust-tracer.mjs?v=0.21.4';
-import {nativeRasterSize} from './input-image.mjs?v=0.21.4';
-import {gpuPrepare,gpuAssign} from './gpu.js?v=0.21.4';
-import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs?v=0.21.4';
-import {auditNative} from './geometry.mjs?v=0.21.4';
-import{regularizeResult}from'./regularize.mjs?v=0.21.4';
-import{cleanResult}from'./post-clean.mjs?v=0.21.4';
-import {smoothResult} from './post-smooth.mjs?v=0.21.4';
-import {traceFixed} from './desktop-curves.mjs?v=0.21.4';
+import createTracer from './rust-tracer.mjs?v=0.21.5';
+import {nativeRasterSize} from './input-image.mjs?v=0.21.5';
+import {gpuPrepare,gpuAssign} from './gpu.js?v=0.21.5';
+import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs?v=0.21.5';
+import {auditNative} from './geometry.mjs?v=0.21.5';
+import{regularizeResult}from'./regularize.mjs?v=0.21.5';
+import{cleanResult}from'./post-clean.mjs?v=0.21.5';
+import {smoothResult} from './post-smooth.mjs?v=0.21.5';
+import {traceFixed} from './desktop-curves.mjs?v=0.21.5';
 let runtime,loading,lastProgress=0;
 function emitProgress(progress,stage){lastProgress=Math.max(lastProgress,progress);self.postMessage({progress:lastProgress,stage});}
 const stages=['','Подготовка изображения','Определение палитры','Сегментация','Объединение областей','Построение кривых','Готово'];
@@ -48,7 +48,7 @@ self.onmessage=async ({data})=>{
    svg=labels?runtime.finish(pixels,labels,data.width,data.height,{...data,palette,unlimited,deferShared}):runtime.trace(pixels,data.width,data.height,{...data,prefiltered,deferShared});metrics=runtime.stats();metrics.joint_gpu_steps=jointGpuSteps;segments=runtime.segments();
    if(deferShared){emitProgress(72,'Сглаживание общих границ на GPU');const passes=(unlimited?[10,8,5]:[4,2,1])[data.detail],started=performance.now();const coordinates=await gpuContourCoordinates(runtime.sharedInput(),data.width,data.height,passes);svg=runtime.sharedFinish(coordinates,passes,{...data,unlimited});metrics.contour_compute=coordinates?'WebGPU integer':'Rust CPU';metrics.contour_gpu_fallback=coordinates?null:contourGpuError;metrics.contour_seconds=(performance.now()-started)/1000;metrics.raster_refit=runtime.stats().raster_refit;if(coordinates)backend='WebGPU contours + Rust WASM';}
   }
-  else{const result=await traceFixed(runtime,pixels,data.width,data.height,{...data,prefiltered},emitProgress);svg=result.svg;segments=result.segments;prechecked=result.geometry;metrics={algorithm:result.algorithm,palette:result.palette,logo_reconstruction:result.logo_reconstruction};}
+  else{const result=await traceFixed(runtime,pixels,data.width,data.height,{...data,prefiltered},emitProgress);svg=result.svg;segments=result.segments;prechecked=result.geometry;metrics={algorithm:result.algorithm,palette:result.palette,logo_reconstruction:result.logo_reconstruction,pixel_grid_fit:result.pixelGridFit};}
   emitProgress(90,'Проверка пересечений');let geometry=prechecked;let smoothing_fallback=false;try{geometry??=await auditNative(svg);}catch(error){if(data.category!=='photo')throw error;const base=runtime.rasterBase();try{if(!base)throw error;geometry=await auditNative(base);svg=base;metrics.raster_refit_rejected=true;}catch{svg=runtime.fallback();geometry=await auditNative(svg);smoothing_fallback=true;}}
   emitProgress(100,'Готово');self.postMessage({geometry,smoothing_fallback,metrics,segments:segments?.buffer,svg,paths:(svg.match(/<path /g)||[]).length,colors:(svg.match(/id="color-/g)||[]).length,seconds:(performance.now()-start)/1000,backend},segments?[segments.buffer]:[]);
  }catch(error){self.postMessage({error:String(error.message??error),requestId:data.requestId});}

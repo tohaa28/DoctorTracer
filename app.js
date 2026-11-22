@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import {icon} from './icons.js?v=0.21.4';
-import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs?v=0.21.4';
-import {zip} from './zip.mjs?v=0.21.4';
-import {opaqueCount,paletteKey,paintPalette,transparentSwatch,latestSelection} from './palette-ui.mjs?v=0.21.4';
-import {partitionPreview} from './preview.mjs?v=0.21.4';
-import {decodeImage,acceptedImages,isCrispRasterHandoff,drawInputRaster,nativeRasterSize} from './input-image.mjs?v=0.21.4';
+import {icon} from './icons.js?v=0.21.5';
+import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs?v=0.21.5';
+import {zip} from './zip.mjs?v=0.21.5';
+import {opaqueCount,paletteKey,paintPalette,transparentSwatch,latestSelection} from './palette-ui.mjs?v=0.21.5';
+import {partitionPreview} from './preview.mjs?v=0.21.5';
+import {decodeImage,acceptedImages,isCrispRasterHandoff,drawInputRaster,nativeRasterSize,pngRasterDpi} from './input-image.mjs?v=0.21.5';
 const $=id=>document.getElementById(id);
 const hasTransparentSlot=()=>sourceHasAlpha&&!config.flatten;
 // Only the same-origin Relief Forge frame (or explicit raster=crisp URL)
@@ -17,7 +17,7 @@ const defaults=()=>({mode:'basic',category:'photo',detail:2,colors:0,speckle:2,f
 let config=defaults(),step=-1,source=null,sourceUrl='',vectorUrl='',outlineUrl='',svg='',worker=null,busy=false,name='image',elapsed=0,backend='',progress=0,stage='',loadToken=0;
 const titles=['Режим Мастера','Тип Изображения','Прозрачность','Качество Ввода','Цветовой Режим','Обзор Результата','Экспорт Результата','Выбор Палитры'];titles[-1]='Загрузка Изображения';titles[8]='Редактирование Результата';titles[9]='Удаление Фона';
 let editTool='pan',vectorUndo=[],vectorRedo=[];
-let pageHistory=[],segmentUrl='',paletteWorker,requestId=0,pendingPalettes=new Map(),paletteCache=new Map(),palettePage=0,recommendedPaletteCount=9,sourceHasAlpha=false,view='bitmap',previewToken=0,panX=0,panY=0,exportDir=null;
+let pageHistory=[],segmentUrl='',paletteWorker,requestId=0,pendingPalettes=new Map(),paletteCache=new Map(),palettePage=0,recommendedPaletteCount=9,sourceHasAlpha=false,sourceRasterDpi=null,view='bitmap',previewToken=0,panX=0,panY=0,exportDir=null;
 function go(target){if(step!==target)pageHistory.push(step);step=target;show();}
 function navImage(kind){return '<img alt="" src="'+new URL('./desktop-icons/nav-'+kind+'.png',import.meta.url).href+'">';}
 function status(text){$('status').textContent=text;}
@@ -45,7 +45,7 @@ function show(){
   add('Расширенный','• Тонкие настройки управления.\n• Более сложные варианты.','advanced',config.mode==='advanced',()=>{config.mode='advanced';config.colors=config.colors||recommendedPaletteCount;go(7);});
   const hint=document.createElement('p');hint.className='hint';hint.textContent='Откройте изображение, затем выберите режим. Все вычисления выполняются на вашем устройстве.';p.append(hint);
  }else if(step===1){
-  for(const [value,title,desc,symbol] of [['photo','Фотоснимок','• Захват с помощью фото- или веб-камеры.','photo'],['aa','Смешанные Края','• Сглаживание.\n• Наиболее распространённая категория.','aa'],['hard','Чистые Края','• Исходный растр без антиалиасинга.\n• При векторизации плавные контуры строятся кривыми Безье.','hard']])add(title,desc,symbol,config.category===value,()=>{config.category=value;config.colors=0;config.palette=null;go(sourceHasAlpha?2:3);});
+  for(const [value,title,desc,symbol] of [['photo','Фотоснимок','• Захват с помощью фото- или веб-камеры.','photo'],['aa','Смешанные Края','• Сглаживание.\n• Наиболее распространённая категория.','aa'],['hard','Чистые Края','• Исходный растр без антиалиасинга.\n• Восстановление усреднённых кривых Безье по исходной пиксельной сетке.','hard']])add(title,desc,symbol,config.category===value,()=>{config.category=value;config.colors=0;config.palette=null;go(sourceHasAlpha?2:3);});
  }else if(step===2){
   add('Оставить Прозрачность','• Подходит для изображений PNG.','alpha',!config.flatten,()=>{if(config.flatten)config.palette=null;config.flatten=false;advance();});
   add('Свести в Белый Цвет','• Если изображение было сглажено в белый цвет.','white',config.flatten,()=>{if(!config.flatten)config.palette=null;config.flatten=true;advance();});
@@ -97,14 +97,14 @@ async function run(){
  if(config.colors>0&&!config.palette?.length&&hasTransparentSlot()){try{const generation=loadToken,palette=await requestPalette(config.colors);if(generation!==loadToken||!busy)return;config.palette=palette;config.palette_generated=true;}catch(error){busy=false;step=pageHistory.pop()??4;show();status(error.message);return;}}
  const canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;const context=canvas.getContext('2d',{willReadFrequently:true});
  drawInputRaster(context,source,canvas.width,canvas.height,{crisp:crispRaster,flatten:config.flatten});const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
- worker??=new Worker(new URL('./worker.js?v=0.21.4',import.meta.url),{type:'module'});
+ worker??=new Worker(new URL('./worker.js?v=0.21.5',import.meta.url),{type:'module'});
  worker.onmessage=({data})=>{
   if(data.progress!==undefined){progress=data.progress;stage=data.stage;updateProgress();return;}
   busy=false;if(data.error){worker?.terminate();worker=null;status(data.error);step=pageHistory.pop()??0;show();return;}svg=data.svg;vectorUndo=[];vectorRedo=[];elapsed=data.seconds;backend=data.backend;panX=0;panY=0;if(data.segments)awaitSegments(data.segments);$('segments').hidden=!data.segments;
   for(const url of [vectorUrl,outlineUrl])if(url)URL.revokeObjectURL(url);outlineUrl='';vectorUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));$('vector').disabled=false;if(config.skipReview)step=6;display(true);show();status(source.width+'×'+source.height+' · '+(data.colors+Number(hasTransparentSlot()))+' цветов · '+data.paths+' кривых · '+elapsed.toFixed(2)+' с · '+backend);
  };
  worker.onerror=event=>{cancel();status('Ошибка WASM: '+event.message);};
- worker.postMessage({pixels:pixels.buffer,width:source.width,height:source.height,...config},[pixels.buffer]);
+ worker.postMessage({pixels:pixels.buffer,width:source.width,height:source.height,...config,inputDpi:sourceRasterDpi},[pixels.buffer]);
 }
 function cancel(){if(busy&&step===5)step=pageHistory.pop()??0;batchAbort?.();worker?.terminate();worker=null;busy=false;show();if(!svg){$('outlines').checked=false;display(false);}}
 async function download(bytes,type,extension,filename){
@@ -117,10 +117,10 @@ async function save(){
 }
 
 async function load(file){
- const token=++loadToken;cancel();source?.close();source=null;for(const url of [sourceUrl,vectorUrl,outlineUrl,segmentUrl])if(url)URL.revokeObjectURL(url);sourceUrl=vectorUrl=outlineUrl=segmentUrl=svg='';$('vector').disabled=true;$('segments').hidden=true;$('filename').textContent='Локальная обработка';step=-1;display(false);show();status('Открытие изображения…');
+ const token=++loadToken;cancel();source?.close();source=null;sourceRasterDpi=null;for(const url of [sourceUrl,vectorUrl,outlineUrl,segmentUrl])if(url)URL.revokeObjectURL(url);sourceUrl=vectorUrl=outlineUrl=segmentUrl=svg='';$('vector').disabled=true;$('segments').hidden=true;$('filename').textContent='Локальная обработка';step=-1;display(false);show();status('Открытие изображения…');
  try{const original=await decodeImage(file);if(token!==loadToken){original.close();return;}let width,height;try{({width,height}=nativeRasterSize(original));}catch(error){original.close();throw error;}
-  const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;drawInputRaster(canvas.getContext('2d'),original,width,height,{crisp:crispRaster});const next=original;const directRaster=/^image\/(png|jpeg|webp|bmp)$/i.test(file.type)||/\.(png|jpe?g|webp|bmp)$/i.test(file.name);const blob=directRaster?file:await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error('Не удалось подготовить исходный растр.'))));if(token!==loadToken){next.close();return;}
-  source?.close();source=next;for(const url of [sourceUrl,vectorUrl,outlineUrl])if(url)URL.revokeObjectURL(url);vectorUrl='';outlineUrl='';sourceUrl=URL.createObjectURL(blob);const rgba=canvas.getContext('2d').getImageData(0,0,width,height).data;sourceHasAlpha=rgba.some((v,i)=>i%4===3&&v<255);paletteCache.clear();config.palette=null;name=(file.name||'image').replace(/\.[^.]+$/,'');svg='';$('outlines').checked=false;$('vector').disabled=true;config=defaults();pageHistory=[];step=0;display();busy=true;progress=0;stage='Анализ изображения';show();fit();const analysis=await analyzeSource();if(token!==loadToken)return;config.category=analysis?.category||'photo';recommendedPaletteCount=Math.max(2,Math.min(12,(analysis?.palette?.length||8)+Number(hasTransparentSlot())));busy=false;show();$('filename').textContent=file.name||'Пример';status(width+'×'+height+' · '+(file.name||'Пример')+' · исходное разрешение'+(crispRaster?' · без интерполяции растра':''));
+  const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;drawInputRaster(canvas.getContext('2d'),original,width,height,{crisp:crispRaster});const next=original;const nativeDpi=await pngRasterDpi(file);const directRaster=/^image\/(png|jpeg|webp|bmp)$/i.test(file.type)||/\.(png|jpe?g|webp|bmp)$/i.test(file.name);const blob=directRaster?file:await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error('Не удалось подготовить исходный растр.'))));if(token!==loadToken){next.close();return;}
+  source?.close();source=next;for(const url of [sourceUrl,vectorUrl,outlineUrl])if(url)URL.revokeObjectURL(url);vectorUrl='';outlineUrl='';sourceUrl=URL.createObjectURL(blob);const rgba=canvas.getContext('2d').getImageData(0,0,width,height).data;sourceHasAlpha=rgba.some((v,i)=>i%4===3&&v<255);paletteCache.clear();config.palette=null;name=(file.name||'image').replace(/\.[^.]+$/,'');svg='';$('outlines').checked=false;$('vector').disabled=true;config=defaults();sourceRasterDpi=nativeDpi;pageHistory=[];step=0;display();busy=true;progress=0;stage='Анализ изображения';show();fit();const analysis=await analyzeSource();if(token!==loadToken)return;config.category=analysis?.category||'photo';recommendedPaletteCount=Math.max(2,Math.min(12,(analysis?.palette?.length||8)+Number(hasTransparentSlot())));busy=false;show();$('filename').textContent=file.name||'Пример';status(width+'×'+height+' · '+(file.name||'Пример')+' · исходное разрешение'+(crispRaster?' · без интерполяции растра':''));
  }catch(error){if(token!==loadToken)return;busy=false;show();status('Не удалось открыть изображение: '+error.message);}
 }
 $('file').onchange=e=>{if(e.target.files[0])load(e.target.files[0]);e.target.value='';};
@@ -207,10 +207,10 @@ new ResizeObserver(()=>{if(source)refreshView();}).observe(viewport);
 
 let batchAbort=null;
 async function runBatch(files){
- if(!files.length||busy)return;const options=structuredClone(config),result=[];busy=true;step=5;progress=0;stage='Пакетная Обработка';show();const batchWorker=new Worker(new URL('./worker.js?v=0.21.4',import.meta.url),{type:'module'});let aborted=false,rejectJob;
+ if(!files.length||busy)return;const options=structuredClone(config),result=[];busy=true;step=5;progress=0;stage='Пакетная Обработка';show();const batchWorker=new Worker(new URL('./worker.js?v=0.21.5',import.meta.url),{type:'module'});let aborted=false,rejectJob;
  batchAbort=()=>{aborted=true;batchWorker.terminate();rejectJob?.(Error('Трассировка отменена'));};
- try{for(const [index,file] of files.entries()){if(aborted)break;const image=await decodeImage(file);if(aborted){image.close();break;}let dimensions;try{dimensions=nativeRasterSize(image);}catch(error){image.close();throw error;}const c=document.createElement('canvas');c.width=dimensions.width;c.height=dimensions.height;const ctx=c.getContext('2d');drawInputRaster(ctx,image,c.width,c.height,{crisp:crispRaster,flatten:options.flatten});image.close();const pixels=ctx.getImageData(0,0,c.width,c.height).data;
- const traced=await new Promise((resolve,reject)=>{rejectJob=reject;batchWorker.onerror=e=>reject(Error(e.message));batchWorker.onmessage=({data})=>{if(data.progress!==undefined){progress=Math.floor((index+data.progress/100)/files.length*100);stage=(index+1)+' / '+files.length+' · '+data.stage;updateProgress();}else if(data.error)reject(Error(data.error));else resolve(data.svg);};batchWorker.postMessage({pixels:pixels.buffer,width:c.width,height:c.height,...options},[pixels.buffer]);});
+ try{for(const [index,file] of files.entries()){if(aborted)break;const inputDpi=await pngRasterDpi(file);const image=await decodeImage(file);if(aborted){image.close();break;}let dimensions;try{dimensions=nativeRasterSize(image);}catch(error){image.close();throw error;}const c=document.createElement('canvas');c.width=dimensions.width;c.height=dimensions.height;const ctx=c.getContext('2d');drawInputRaster(ctx,image,c.width,c.height,{crisp:crispRaster,flatten:options.flatten});image.close();const pixels=ctx.getImageData(0,0,c.width,c.height).data;
+ const traced=await new Promise((resolve,reject)=>{rejectJob=reject;batchWorker.onerror=e=>reject(Error(e.message));batchWorker.onmessage=({data})=>{if(data.progress!==undefined){progress=Math.floor((index+data.progress/100)/files.length*100);stage=(index+1)+' / '+files.length+' · '+data.stage;updateProgress();}else if(data.error)reject(Error(data.error));else resolve(data.svg);};batchWorker.postMessage({pixels:pixels.buffer,width:c.width,height:c.height,...options,inputDpi},[pixels.buffer]);});
  const base=String(index+1).padStart(3,'0')+'-'+file.name.replace(/\.[^.]+$/,'');result.push({name:base+'.svg',data:traced},{name:base+'.pdf',data:pdfBytes(traced)});}
  if(!aborted){await download(zip(result),'application/zip','zip','DoctorTracer-batch');status('Пакетная обработка завершена: '+files.length+' файлов');}
  }catch(error){status(error.message);}finally{batchWorker.terminate();batchAbort=null;busy=false;step=source?0:-1;show();}
@@ -265,7 +265,7 @@ function buildVectorEditor(parent){
 }
 
 function paletteService(){
- if(!paletteWorker){paletteWorker=new Worker(new URL('./worker.js?v=0.21.4',import.meta.url),{type:'module'});paletteWorker.onmessage=({data})=>{if(data.requestId!==undefined&&(data.palette||data.analysis||data.error)){const resolve=pendingPalettes.get(data.requestId);pendingPalettes.delete(data.requestId);resolve?.(data.palette||data.analysis||null);}};}return paletteWorker;
+ if(!paletteWorker){paletteWorker=new Worker(new URL('./worker.js?v=0.21.5',import.meta.url),{type:'module'});paletteWorker.onmessage=({data})=>{if(data.requestId!==undefined&&(data.palette||data.analysis||data.error)){const resolve=pendingPalettes.get(data.requestId);pendingPalettes.delete(data.requestId);resolve?.(data.palette||data.analysis||null);}};}return paletteWorker;
 }
 async function analyzeSource(){
  const c=document.createElement('canvas');c.width=source.width;c.height=source.height;const ctx=c.getContext('2d');drawInputRaster(ctx,source,c.width,c.height,{crisp:crispRaster});const pixels=ctx.getImageData(0,0,c.width,c.height).data,id=++requestId,promise=new Promise(resolve=>pendingPalettes.set(id,resolve));paletteService().postMessage({operation:'analyze',requestId:id,pixels:pixels.buffer,width:c.width,height:c.height},[pixels.buffer]);return promise;
@@ -287,7 +287,7 @@ function openPostSmooth(cleanup=false,regularize=false){
  if(regularize){dialog.querySelector('h3').textContent='Выравнивание контуров';dialog.querySelector('p').textContent='Подгонка длинных общих участков целиком. Более высокий допуск сильнее меняет форму.';dialog.querySelector('#postStrength').max=200;dialog.querySelector('#postStrength').value=15;const options=document.createElement('p');options.innerHTML='<label><input id="postStraight" type="checkbox" checked> Выпрямлять почти прямые участки</label><br><label><input id="postCurved" type="checkbox" checked> Выравнивать плавные кривые</label>';dialog.querySelector('#postSharp').closest('p').before(options);dialog.querySelector('#postSharp').parentElement.lastChild.textContent=' Сохранять углы и мелкие детали';}
  document.body.append(dialog);const range=dialog.querySelector('#postStrength'),sharp=dialog.querySelector('#postSharp'),preview=dialog.querySelector('#postPreview'),info=dialog.querySelector('#postInfo'),apply=dialog.querySelector('#postApply');
  const area=dialog.querySelector('#postArea');if(cleanup||regularize){range.parentElement.firstChild.textContent=regularize?'Допуск изменения формы: ':'Допуск упрощения: ';range.setAttribute('aria-label',regularize?'Допуск изменения формы':'Допуск упрощения');}
- const service=new Worker(new URL('./worker.js?v=0.21.4',import.meta.url),{type:'module'});
+ const service=new Worker(new URL('./worker.js?v=0.21.5',import.meta.url),{type:'module'});
  function paint(value){svg=value;if(vectorUrl)URL.revokeObjectURL(vectorUrl);if(outlineUrl)URL.revokeObjectURL(outlineUrl);outlineUrl='';vectorUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));display(true);}
  function draw(){paint(preview.checked?candidate:base);}
  function schedule(){token++;apply.disabled=true;dialog.querySelector('output').textContent=(cleanup||regularize)?(Number(range.value)/100).toFixed(2)+' пкс':range.value+'%';info.textContent='Расчёт предпросмотра…';clearTimeout(timer);timer=setTimeout(()=>service.postMessage({operation:regularize?'regularize':cleanup?'postClean':'postSmooth',svg:base,strength:Number(range.value),sharp:sharp.checked,minArea:area?Math.max(0,Math.min(10000,Number(area.value))):0,tolerance:Number(range.value)/100,protect:sharp.checked,straight:dialog.querySelector('#postStraight')?.checked,curved:dialog.querySelector('#postCurved')?.checked,requestId:token}),180);}

@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Shared planar color graph with analytically paired interfaces.
-import initMask from './vendor/mask.mjs?v=0.21.4';import initPaths from './vendor/pathkit.mjs?v=0.21.4';
-import {gpuAssign} from './gpu.js?v=0.21.4';
-import {auditNative} from './geometry.mjs?v=0.21.4';
+import initMask from './vendor/mask.mjs?v=0.21.5';import initPaths from './vendor/pathkit.mjs?v=0.21.5';
+import {gpuAssign} from './gpu.js?v=0.21.5';
+import {auditNative} from './geometry.mjs?v=0.21.5';
+import {fitPixelGrid} from './pixel-grid-trace.mjs?v=0.21.5';
 let maskRuntime,pathRuntime;
 async function binary(url){return new Uint8Array(await(await fetch(url)).arrayBuffer());}
 export async function curveRuntime({maskBinary,pathBinary}={}){
- maskRuntime??=await initMask(maskBinary?{wasmBinary:maskBinary}:{locateFile:()=>new URL('./vendor/mask.wasm?v=0.21.4',import.meta.url).href});
- pathRuntime??=await initPaths(pathBinary?{wasmBinary:pathBinary}:{locateFile:()=>new URL('./vendor/pathkit.wasm?v=0.21.4',import.meta.url).href});
+ maskRuntime??=await initMask(maskBinary?{wasmBinary:maskBinary}:{locateFile:()=>new URL('./vendor/mask.wasm?v=0.21.5',import.meta.url).href});
+ pathRuntime??=await initPaths(pathBinary?{wasmBinary:pathBinary}:{locateFile:()=>new URL('./vendor/pathkit.wasm?v=0.21.5',import.meta.url).href});
  return{mask:maskRuntime,paths:pathRuntime};
 }
 function data(path){let out='',current=[0,0];for(const command of path.toCmds()){const[verb,...p]=command;if(verb===0){out+='M'+p.join(' ')+' ';current=p;}else if(verb===1){out+='L'+p.join(' ')+' ';current=p;}else if(verb===2){const[cx,cy,x,y]=p;const c1=[current[0]+2/3*(cx-current[0]),current[1]+2/3*(cy-current[1])],c2=[x+2/3*(cx-x),y+2/3*(cy-y)];out+='C'+[...c1,...c2,x,y].join(' ')+' ';current=[x,y];}else if(verb===4){out+='C'+p.join(' ')+' ';current=p.slice(-2);}else if(verb===5)out+='Z ';else throw Error('Unsupported Skia path verb');}return out;}
@@ -41,6 +42,13 @@ export async function traceFixed(runtime,pixels,w,h,config,progress=()=>{}){
   // boundary-contract audit rejects invalid curves.
   const polygon=!!config.polygon||config.smooth===false||orthogonal;
   const adaptiveCrispCurves=exactGrid&&!polygon;
+  if(exactGrid&&!polygon&&config.detail>=1){
+   const fitted=await fitPixelGrid(shared,palette,ww,hh,{
+    curveRuntime,traceMask,audit:auditNative,inputDpi:config.inputDpi
+   });
+   if(fitted)return{svg:fitted.svg,segments:a,palette,geometry:await auditNative(fitted.svg),
+    algorithm:fitted.metrics.algorithm,pixelGridFit:fitted.metrics,adaptiveCrispCurves:true};
+  }
   let svg=runtime.shared(shared,palette,ww,hh,config.detail,!polygon,{fixed:true,polygon});
   svg=svg.replace(/width="[^"]+" height="[^"]+"/,`width="${w}" height="${h}"`);
   let geometry;try{geometry=await auditNative(svg);}catch{

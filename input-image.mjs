@@ -1,5 +1,5 @@
 const PDF_ASSETS = new URL('./vendor/pdfjs/', import.meta.url);
-const TIFF_MODULE = new URL('./vendor/tiff.mjs?v=0.21.4', import.meta.url);
+const TIFF_MODULE = new URL('./vendor/tiff.mjs?v=0.21.5', import.meta.url);
 export const acceptedImages = 'image/png,image/jpeg,image/webp,image/bmp,image/tiff,.tif,.tiff,application/pdf,.pdf';
 
 function canvas(width, height) {
@@ -112,4 +112,26 @@ export function nativeRasterSize(image){
  if(width>NATIVE_RASTER_MAX_SIDE||height>NATIVE_RASTER_MAX_SIDE||width*height>NATIVE_RASTER_MAX_PIXELS)
   throw Error('Исходный растр '+width+'×'+height+' превышает предел текущего WASM: 4096 px по стороне и 8 млн пикселей. Автоматическое уменьшение запрещено.');
  return {width,height};
+}
+
+
+// PNG pHYs stores integer pixels/meter. This is read-only metadata: do
+// not decode/re-encode the PNG, normalize alpha, or alter any source pixel.
+export async function pngRasterDpi(file){
+ if(!file||!(file.type==='image/png'||/\.png$/i.test(file.name||'')))return null;
+ const bytes=new Uint8Array(await file.slice(0,4096).arrayBuffer());
+ if(bytes.length<33)return null;
+ const v=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+ if(v.getUint32(0)!==0x89504e47||v.getUint32(4)!==0x0d0a1a0a)return null;
+ for(let i=8;i+12<=bytes.length;){
+  const len=v.getUint32(i),type=v.getUint32(i+4);
+  if(i+12+len>bytes.length)break;
+  if(type===0x70485973&&len===9&&bytes[i+16]===1){
+   const x=v.getUint32(i+8),y=v.getUint32(i+12);
+   if(x>0&&x===y){const dpi=x*.0254;return dpi>=36&&dpi<=9600?Math.round(dpi*1000)/1000:null;}
+  }
+  if(type===0x49444154)break;
+  i+=12+len;
+ }
+ return null;
 }
