@@ -61,9 +61,9 @@ export function pixelCenterError(d,mask,w,h,limit=Infinity){
   }
  }return errors;
 }
-export async function fitPixelGrid(labels,palette,w,h,{curveRuntime,traceMask,audit,inputDpi,limitFraction=.08}={}){
+export async function fitPixelGrid(labels,palette,w,h,{curveRuntime,traceMask,audit,inputDpi,limitFraction=.08,report=()=>{}}={}){
  const cls=binaryGridClasses(labels,palette,w,h);
- if(!cls||cls.foreground<4||!traceMask||!audit||!curveRuntime)return null;
+ if(!cls||cls.foreground<4||!traceMask||!audit||!curveRuntime){report('classes');return null;}
  const mask=new Uint8Array(w*h);let perimeter=0;
  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
   const i=y*w+x,on=labels[i]===cls.fg;mask[i]=+on;
@@ -73,11 +73,11 @@ export async function fitPixelGrid(labels,palette,w,h,{curveRuntime,traceMask,au
  const {mask:engine}=await curveRuntime();
  // 0.18 px tolerance is (0.18 * 25.4/dpi) millimeters. No raster resampling.
  const raw=traceMask(engine,mask,w,h,.18,1.0);
- if(!raw||!raw.includes('C'))return null;
+ if(!raw||!raw.includes('C')){report({step:'curve',len:raw?.length||0});return null;}
  const parts=parse(raw);if(!parts.length)return null;
  const face=print(parts),maxErrors=Math.max(2,Math.floor(perimeter*limitFraction));
  const errors=pixelCenterError(face,mask,w,h,maxErrors);
- if(errors>maxErrors)return null;
+ if(errors>maxErrors){report({step:'pixel centers',errors,maxErrors,perimeter});return null;}
  const opposite=print(parts,true);
  const dominant=parts.reduce((a,b)=>Math.abs(area(b))>Math.abs(area(a))?b:a);
  const bgShape=rectangle(w,h,area(dominant)<0)+' '+opposite;
@@ -85,7 +85,7 @@ export async function fitPixelGrid(labels,palette,w,h,{curveRuntime,traceMask,au
  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" data-shared-boundaries="true" data-boundary-contract="paired" data-quantization-band-px="0.5"'+
   (pitch?' data-pixel-pitch-mm="'+pitch.toFixed(9)+'" data-source-dpi="'+inputDpi+'"':'')+'><g id="image">'+
   (cls.bg<0?'':paint(palette[cls.bg],bgShape))+paint(palette[cls.fg],face)+'</g></svg>';
- try{await audit(svg);}catch{return null;}
+ try{await audit(svg);}catch(error){report({step:'audit',message:String(error)});return null;}
  return {svg,metrics:{algorithm:'Potrace quantization-aware paired curves',inputDpi:inputDpi??null,pixelPitchMm:pitch,
   uncertaintyPx:.5,sourceBoundaryEdges:perimeter,mismatchedPixelCenters:errors,allowedErrors:maxErrors,
   bezierSegments:(face.match(/C/g)||[]).length}};

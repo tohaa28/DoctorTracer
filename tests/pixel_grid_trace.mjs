@@ -12,7 +12,22 @@ const raster=predicate=>{const p=new Uint8Array(w*h*4);for(let y=0;y<h;y++)for(l
 const opts={category:'hard',colors:2,detail:2,speckle:0,polygon:false,gpu:false,smooth:true,inputDpi:600};
 const run=(r,config={})=>traceFixed(runtime,r,w,h,{...opts,...config});
 const circle=raster((x,y)=>(x-80)**2+(y-72)**2<46**2);
-const a=await run(circle);assert.ok(a.pixelGridFit,JSON.stringify(a));
+const a=await run(circle);
+if(!a.pixelGridFit){
+ const paletteBytes=runtime.stage(circle,w,h,{kind:2,colors:2});
+ const palette=Array.from({length:paletteBytes.length/3},(_,i)=>Array.from(paletteBytes.slice(i*3,i*3+3)));
+ const labels=runtime.stage(circle,w,h,{kind:3,palette,extra:0});
+ const cleaned=runtime.stage(labels,w,h,{kind:4,palette,colors:palette.length,extra:1});
+ const shared=Int32Array.from(cleaned,v=>v===255?-1:v);
+ console.log('GRID DEBUG',JSON.stringify({palette,classes:binaryGridClasses(shared,palette,w,h)}));
+ const {fitPixelGrid}=await import('../web/pixel-grid-trace.mjs');
+ const {traceMask}=await import('../web/desktop-curves.mjs');
+ const report=value=>console.log('FIT DEBUG',JSON.stringify(value));
+ const silent=await fitPixelGrid(shared,palette,w,h,{curveRuntime,traceMask,audit:async()=>{},inputDpi:600,report});
+ console.log('FIT WITHOUT AUDIT',silent?.metrics||null);
+ await fitPixelGrid(shared,palette,w,h,{curveRuntime,traceMask,audit:auditNative,inputDpi:600,report});
+}
+assert.ok(a.pixelGridFit,'Expected Potrace quantization path to be accepted');
 assert.equal(a.pixelGridFit.inputDpi,600);assert.equal(a.pixelGridFit.pixelPitchMm,25.4/600);
 assert.ok(a.pixelGridFit.bezierSegments>=4);assert.ok(a.pixelGridFit.mismatchedPixelCenters<=a.pixelGridFit.allowedErrors);
 assert.match(a.svg,/data-quantization-band-px="0.5"/);assert.match(a.svg,/data-boundary-contract="paired"/);
