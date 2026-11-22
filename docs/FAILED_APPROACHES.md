@@ -50,3 +50,7 @@ The old `exactGrid || orthogonal` predicate equated binary RGBA with vector poly
 
 ## 2026-11-22 · Residual corner risk for combined angular/curved compositions
 Verified on distinct rectangle and circle and a simple mixed scene, but the global shared graph can still round some nonorthogonal artwork corners in a complex shared edge. No original user EPS test was possible. If the general audit rejects pairing, the Rust tracer falls back to safe polygon geometry; do not claim perfect reconstruction. Algorithm details and rollback at START_HERE.md.
+
+
+## Previous risk: ambiguous binary cells
+A pixel-grid square is not proof of a true 90-degree corner. Do not indiscriminately smooth every vector node; preserve explicit polygons and straight-only borders. Also avoid independent tracing of adjacent colors (gaps/overlaps), alpha-threshold postprocessing, and an arbitrary resizing stage. Potrace candidate MUST be rejected on complex ownership and failed pixel-center or geometry checks; baseline is unchanged. CI pending.
