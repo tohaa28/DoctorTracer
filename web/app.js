@@ -45,7 +45,7 @@ function show(){
   add('Расширенный','• Тонкие настройки управления.\n• Более сложные варианты.','advanced',config.mode==='advanced',()=>{config.mode='advanced';config.colors=config.colors||recommendedPaletteCount;go(7);});
   const hint=document.createElement('p');hint.className='hint';hint.textContent='Откройте изображение, затем выберите режим. Все вычисления выполняются на вашем устройстве.';p.append(hint);
  }else if(step===1){
-  for(const [value,title,desc,symbol] of [['photo','Фотоснимок','• Захват с помощью фото- или веб-камеры.','photo'],['aa','Смешанные Края','• Сглаживание.\n• Наиболее распространённая категория.','aa'],['hard','Чистые Края','• Без сглаживания.\n• Чёткие пиксельные границы.','hard']])add(title,desc,symbol,config.category===value,()=>{config.category=value;config.colors=0;config.palette=null;go(sourceHasAlpha?2:3);});
+  for(const [value,title,desc,symbol] of [['photo','Фотоснимок','• Захват с помощью фото- или веб-камеры.','photo'],['aa','Смешанные Края','• Сглаживание.\n• Наиболее распространённая категория.','aa'],['hard','Чистые Края','• Исходный растр без антиалиасинга.\n• При векторизации плавные контуры строятся кривыми Безье.','hard']])add(title,desc,symbol,config.category===value,()=>{config.category=value;config.colors=0;config.palette=null;go(sourceHasAlpha?2:3);});
  }else if(step===2){
   add('Оставить Прозрачность','• Подходит для изображений PNG.','alpha',!config.flatten,()=>{if(config.flatten)config.palette=null;config.flatten=false;advance();});
   add('Свести в Белый Цвет','• Если изображение было сглажено в белый цвет.','white',config.flatten,()=>{if(!config.flatten)config.palette=null;config.flatten=true;advance();});

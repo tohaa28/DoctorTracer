@@ -46,3 +46,7 @@
 
 ## 2026-11-22 · Exact grid must not force polygon
 The old `exactGrid || orthogonal` predicate equated binary RGBA with vector polygon intent. This was incorrect for a Ghostscript rasterized ellipse, diagonal or cubic. Fix only the decision for natural staircase edges, not source image, transparency, anti-aliasing, palette, adjacency or binary WASM. Preserve manual polygon choice and long-axis rectilinear figures. Source test and browser validation pending.
+
+
+## 2026-11-22 · Residual corner risk for combined angular/curved compositions
+Verified on distinct rectangle and circle and a simple mixed scene, but the global shared graph can still round some nonorthogonal artwork corners in a complex shared edge. No original user EPS test was possible. If the general audit rejects pairing, the Rust tracer falls back to safe polygon geometry; do not claim perfect reconstruction. Algorithm details and rollback at START_HERE.md.
