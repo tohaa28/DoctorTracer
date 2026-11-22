@@ -4,7 +4,7 @@ import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs';
 import {zip} from './zip.mjs';
 import {opaqueCount,paletteKey,paintPalette,transparentSwatch,latestSelection} from './palette-ui.mjs';
 import {partitionPreview} from './preview.mjs';
-import {decodeImage,acceptedImages,isCrispRasterHandoff,drawInputRaster,nativeRasterSize} from './input-image.mjs';
+import {decodeImage,acceptedImages,isCrispRasterHandoff,drawInputRaster,nativeRasterSize,pngRasterDpi} from './input-image.mjs';
 const $=id=>document.getElementById(id);
 const hasTransparentSlot=()=>sourceHasAlpha&&!config.flatten;
 // Only the same-origin Relief Forge frame (or explicit raster=crisp URL)
@@ -17,7 +17,7 @@ const defaults=()=>({mode:'basic',category:'photo',detail:2,colors:0,speckle:2,f
 let config=defaults(),step=-1,source=null,sourceUrl='',vectorUrl='',outlineUrl='',svg='',worker=null,busy=false,name='image',elapsed=0,backend='',progress=0,stage='',loadToken=0;
 const titles=['Режим Мастера','Тип Изображения','Прозрачность','Качество Ввода','Цветовой Режим','Обзор Результата','Экспорт Результата','Выбор Палитры'];titles[-1]='Загрузка Изображения';titles[8]='Редактирование Результата';titles[9]='Удаление Фона';
 let editTool='pan',vectorUndo=[],vectorRedo=[];
-let pageHistory=[],segmentUrl='',paletteWorker,requestId=0,pendingPalettes=new Map(),paletteCache=new Map(),palettePage=0,recommendedPaletteCount=9,sourceHasAlpha=false,view='bitmap',previewToken=0,panX=0,panY=0,exportDir=null;
+let pageHistory=[],segmentUrl='',paletteWorker,requestId=0,pendingPalettes=new Map(),paletteCache=new Map(),palettePage=0,recommendedPaletteCount=9,sourceHasAlpha=false,sourceRasterDpi=null,view='bitmap',previewToken=0,panX=0,panY=0,exportDir=null;
 function go(target){if(step!==target)pageHistory.push(step);step=target;show();}
 function navImage(kind){return '<img alt="" src="'+new URL('./desktop-icons/nav-'+kind+'.png',import.meta.url).href+'">';}
 function status(text){$('status').textContent=text;}
@@ -104,7 +104,7 @@ async function run(){
   for(const url of [vectorUrl,outlineUrl])if(url)URL.revokeObjectURL(url);outlineUrl='';vectorUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));$('vector').disabled=false;if(config.skipReview)step=6;display(true);show();status(source.width+'×'+source.height+' · '+(data.colors+Number(hasTransparentSlot()))+' цветов · '+data.paths+' кривых · '+elapsed.toFixed(2)+' с · '+backend);
  };
  worker.onerror=event=>{cancel();status('Ошибка WASM: '+event.message);};
- worker.postMessage({pixels:pixels.buffer,width:source.width,height:source.height,...config},[pixels.buffer]);
+ worker.postMessage({pixels:pixels.buffer,width:source.width,height:source.height,...config,inputDpi:sourceRasterDpi},[pixels.buffer]);
 }
 function cancel(){if(busy&&step===5)step=pageHistory.pop()??0;batchAbort?.();worker?.terminate();worker=null;busy=false;show();if(!svg){$('outlines').checked=false;display(false);}}
 async function download(bytes,type,extension,filename){
@@ -117,10 +117,10 @@ async function save(){
 }
 
 async function load(file){
- const token=++loadToken;cancel();source?.close();source=null;for(const url of [sourceUrl,vectorUrl,outlineUrl,segmentUrl])if(url)URL.revokeObjectURL(url);sourceUrl=vectorUrl=outlineUrl=segmentUrl=svg='';$('vector').disabled=true;$('segments').hidden=true;$('filename').textContent='Локальная обработка';step=-1;display(false);show();status('Открытие изображения…');
+ const token=++loadToken;cancel();source?.close();source=null;sourceRasterDpi=null;for(const url of [sourceUrl,vectorUrl,outlineUrl,segmentUrl])if(url)URL.revokeObjectURL(url);sourceUrl=vectorUrl=outlineUrl=segmentUrl=svg='';$('vector').disabled=true;$('segments').hidden=true;$('filename').textContent='Локальная обработка';step=-1;display(false);show();status('Открытие изображения…');
  try{const original=await decodeImage(file);if(token!==loadToken){original.close();return;}let width,height;try{({width,height}=nativeRasterSize(original));}catch(error){original.close();throw error;}
-  const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;drawInputRaster(canvas.getContext('2d'),original,width,height,{crisp:crispRaster});const next=original;const directRaster=/^image\/(png|jpeg|webp|bmp)$/i.test(file.type)||/\.(png|jpe?g|webp|bmp)$/i.test(file.name);const blob=directRaster?file:await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error('Не удалось подготовить исходный растр.'))));if(token!==loadToken){next.close();return;}
-  source?.close();source=next;for(const url of [sourceUrl,vectorUrl,outlineUrl])if(url)URL.revokeObjectURL(url);vectorUrl='';outlineUrl='';sourceUrl=URL.createObjectURL(blob);const rgba=canvas.getContext('2d').getImageData(0,0,width,height).data;sourceHasAlpha=rgba.some((v,i)=>i%4===3&&v<255);paletteCache.clear();config.palette=null;name=(file.name||'image').replace(/\.[^.]+$/,'');svg='';$('outlines').checked=false;$('vector').disabled=true;config=defaults();pageHistory=[];step=0;display();busy=true;progress=0;stage='Анализ изображения';show();fit();const analysis=await analyzeSource();if(token!==loadToken)return;config.category=analysis?.category||'photo';recommendedPaletteCount=Math.max(2,Math.min(12,(analysis?.palette?.length||8)+Number(hasTransparentSlot())));busy=false;show();$('filename').textContent=file.name||'Пример';status(width+'×'+height+' · '+(file.name||'Пример')+' · исходное разрешение'+(crispRaster?' · без интерполяции растра':''));
+  const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;drawInputRaster(canvas.getContext('2d'),original,width,height,{crisp:crispRaster});const next=original;const nativeDpi=await pngRasterDpi(file);const directRaster=/^image\/(png|jpeg|webp|bmp)$/i.test(file.type)||/\.(png|jpe?g|webp|bmp)$/i.test(file.name);const blob=directRaster?file:await new Promise((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(Error('Не удалось подготовить исходный растр.'))));if(token!==loadToken){next.close();return;}
+  source?.close();source=next;for(const url of [sourceUrl,vectorUrl,outlineUrl])if(url)URL.revokeObjectURL(url);vectorUrl='';outlineUrl='';sourceUrl=URL.createObjectURL(blob);const rgba=canvas.getContext('2d').getImageData(0,0,width,height).data;sourceHasAlpha=rgba.some((v,i)=>i%4===3&&v<255);paletteCache.clear();config.palette=null;name=(file.name||'image').replace(/\.[^.]+$/,'');svg='';$('outlines').checked=false;$('vector').disabled=true;config=defaults();sourceRasterDpi=nativeDpi;pageHistory=[];step=0;display();busy=true;progress=0;stage='Анализ изображения';show();fit();const analysis=await analyzeSource();if(token!==loadToken)return;config.category=analysis?.category||'photo';recommendedPaletteCount=Math.max(2,Math.min(12,(analysis?.palette?.length||8)+Number(hasTransparentSlot())));busy=false;show();$('filename').textContent=file.name||'Пример';status(width+'×'+height+' · '+(file.name||'Пример')+' · исходное разрешение'+(crispRaster?' · без интерполяции растра':''));
  }catch(error){if(token!==loadToken)return;busy=false;show();status('Не удалось открыть изображение: '+error.message);}
 }
 $('file').onchange=e=>{if(e.target.files[0])load(e.target.files[0]);e.target.value='';};
@@ -209,8 +209,8 @@ let batchAbort=null;
 async function runBatch(files){
  if(!files.length||busy)return;const options=structuredClone(config),result=[];busy=true;step=5;progress=0;stage='Пакетная Обработка';show();const batchWorker=new Worker(new URL('./worker.js',import.meta.url),{type:'module'});let aborted=false,rejectJob;
  batchAbort=()=>{aborted=true;batchWorker.terminate();rejectJob?.(Error('Трассировка отменена'));};
- try{for(const [index,file] of files.entries()){if(aborted)break;const image=await decodeImage(file);if(aborted){image.close();break;}let dimensions;try{dimensions=nativeRasterSize(image);}catch(error){image.close();throw error;}const c=document.createElement('canvas');c.width=dimensions.width;c.height=dimensions.height;const ctx=c.getContext('2d');drawInputRaster(ctx,image,c.width,c.height,{crisp:crispRaster,flatten:options.flatten});image.close();const pixels=ctx.getImageData(0,0,c.width,c.height).data;
- const traced=await new Promise((resolve,reject)=>{rejectJob=reject;batchWorker.onerror=e=>reject(Error(e.message));batchWorker.onmessage=({data})=>{if(data.progress!==undefined){progress=Math.floor((index+data.progress/100)/files.length*100);stage=(index+1)+' / '+files.length+' · '+data.stage;updateProgress();}else if(data.error)reject(Error(data.error));else resolve(data.svg);};batchWorker.postMessage({pixels:pixels.buffer,width:c.width,height:c.height,...options},[pixels.buffer]);});
+ try{for(const [index,file] of files.entries()){if(aborted)break;const inputDpi=await pngRasterDpi(file);const image=await decodeImage(file);if(aborted){image.close();break;}let dimensions;try{dimensions=nativeRasterSize(image);}catch(error){image.close();throw error;}const c=document.createElement('canvas');c.width=dimensions.width;c.height=dimensions.height;const ctx=c.getContext('2d');drawInputRaster(ctx,image,c.width,c.height,{crisp:crispRaster,flatten:options.flatten});image.close();const pixels=ctx.getImageData(0,0,c.width,c.height).data;
+ const traced=await new Promise((resolve,reject)=>{rejectJob=reject;batchWorker.onerror=e=>reject(Error(e.message));batchWorker.onmessage=({data})=>{if(data.progress!==undefined){progress=Math.floor((index+data.progress/100)/files.length*100);stage=(index+1)+' / '+files.length+' · '+data.stage;updateProgress();}else if(data.error)reject(Error(data.error));else resolve(data.svg);};batchWorker.postMessage({pixels:pixels.buffer,width:c.width,height:c.height,...options,inputDpi},[pixels.buffer]);});
  const base=String(index+1).padStart(3,'0')+'-'+file.name.replace(/\.[^.]+$/,'');result.push({name:base+'.svg',data:traced},{name:base+'.pdf',data:pdfBytes(traced)});}
  if(!aborted){await download(zip(result),'application/zip','zip','DoctorTracer-batch');status('Пакетная обработка завершена: '+files.length+' файлов');}
  }catch(error){status(error.message);}finally{batchWorker.terminate();batchAbort=null;busy=false;step=source?0:-1;show();}

@@ -3,6 +3,7 @@
 import initMask from './vendor/mask.mjs';import initPaths from './vendor/pathkit.mjs';
 import {gpuAssign} from './gpu.js';
 import {auditNative} from './geometry.mjs';
+import {fitPixelGrid} from './pixel-grid-trace.mjs';
 let maskRuntime,pathRuntime;
 async function binary(url){return new Uint8Array(await(await fetch(url)).arrayBuffer());}
 export async function curveRuntime({maskBinary,pathBinary}={}){
@@ -41,6 +42,13 @@ export async function traceFixed(runtime,pixels,w,h,config,progress=()=>{}){
   // boundary-contract audit rejects invalid curves.
   const polygon=!!config.polygon||config.smooth===false||orthogonal;
   const adaptiveCrispCurves=exactGrid&&!polygon;
+  if(exactGrid&&!polygon&&config.detail>=1){
+   const fitted=await fitPixelGrid(shared,palette,ww,hh,{
+    curveRuntime,traceMask,audit:auditNative,inputDpi:config.inputDpi
+   });
+   if(fitted)return{svg:fitted.svg,segments:a,palette,geometry:await auditNative(fitted.svg),
+    algorithm:fitted.metrics.algorithm,pixelGridFit:fitted.metrics,adaptiveCrispCurves:true};
+  }
   let svg=runtime.shared(shared,palette,ww,hh,config.detail,!polygon,{fixed:true,polygon});
   svg=svg.replace(/width="[^"]+" height="[^"]+"/,`width="${w}" height="${h}"`);
   let geometry;try{geometry=await auditNative(svg);}catch{
