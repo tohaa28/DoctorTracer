@@ -61,7 +61,7 @@ export function pixelCenterError(d,mask,w,h,limit=Infinity){
   }
  }return errors;
 }
-export async function fitPixelGrid(labels,palette,w,h,{curveRuntime,traceMask,audit,inputDpi,limitFraction=.08,report=()=>{}}={}){
+export async function fitPixelGrid(labels,palette,w,h,{curveRuntime,traceMask,audit,inputDpi,limitFraction=.25,report=()=>{}}={}){
  const cls=binaryGridClasses(labels,palette,w,h);
  if(!cls||cls.foreground<4||!traceMask||!audit||!curveRuntime){report('classes');return null;}
  const mask=new Uint8Array(w*h);let perimeter=0;
@@ -87,6 +87,6 @@ export async function fitPixelGrid(labels,palette,w,h,{curveRuntime,traceMask,au
   (cls.bg<0?'':paint(palette[cls.bg],bgShape))+paint(palette[cls.fg],face)+'</g></svg>';
  try{await audit(svg);}catch(error){report({step:'audit',message:String(error)});return null;}
  return {svg,metrics:{algorithm:'Potrace quantization-aware paired curves',inputDpi:inputDpi??null,pixelPitchMm:pitch,
-  uncertaintyPx:.5,sourceBoundaryEdges:perimeter,mismatchedPixelCenters:errors,allowedErrors:maxErrors,
+  uncertaintyPx:.5,sourceBoundaryEdges:perimeter,mismatchedPixelCenters:errors,allowedErrors:maxErrors,estimatedCrossingErrorPx:errors/perimeter,
   bezierSegments:(face.match(/C/g)||[]).length}};
 }

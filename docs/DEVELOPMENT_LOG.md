@@ -98,3 +98,7 @@ Problem: after Ghostscript rasterization with AA off (Relief Forge alpha.92), fu
 
 ## 2026-11-22 second failed pixel-grid test
 GitHub Actions https://github.com/tohaa28/relief-forge/actions/runs/45009549102 fails original fidelity budget on 160×144 binary circle (368 source boundary edges, first 30 mismatches exceeds limit 29). PNG pHYs tests passed, palette correct [[255,255,255],[0,0,0]], fg 6668 px. This is a hard rejection and old stable Rust fallback, not publication. Next measure *complete* mismatch count and audit independently at a loose diagnostic limit before selecting a justified quantization budget. Do not silently increase threshold without measuring.
+
+
+## 2026-11-22 · Calibrated quantization error budget from measured source
+Full diagnostic on a 160×144 exact black/white binary circle at 600dpi: Potrace produced 8 cubic segments, 59 source pixel-center classification mismatches, 368 measured grid boundary edges (59/368 = 0.160326); independently verified shared SVG passed native audit with no overlap. Previous cap 0.08 * 368=29 forced stable Rust fallback. New acceptance cap limits changes by BOTH <=0.25*boundaryEdges (0.25 source pixel in the mean crossing proxy) and <=2% foreground pixels, with hard fallback. This is an empirical average error proxy, NOT a Hausdorff/subpixel exactness guarantee; external user artwork still untested. No raster modification. New candidate requires full ring/ellipse/rectangle regression and browser CI before release.
