@@ -23,9 +23,9 @@ if(!a.pixelGridFit){
  const {fitPixelGrid}=await import('../web/pixel-grid-trace.mjs');
  const {traceMask}=await import('../web/desktop-curves.mjs');
  const report=value=>console.log('FIT DEBUG',JSON.stringify(value));
- const silent=await fitPixelGrid(shared,palette,w,h,{curveRuntime,traceMask,audit:async()=>{},inputDpi:600,report});
+ const silent=await fitPixelGrid(shared,palette,w,h,{curveRuntime,traceMask,audit:async()=>{},inputDpi:600,limitFraction:1,report});
  console.log('FIT WITHOUT AUDIT',silent?.metrics||null);
- await fitPixelGrid(shared,palette,w,h,{curveRuntime,traceMask,audit:auditNative,inputDpi:600,report});
+ await fitPixelGrid(shared,palette,w,h,{curveRuntime,traceMask,audit:auditNative,inputDpi:600,limitFraction:1,report});
 }
 assert.ok(a.pixelGridFit,'Expected Potrace quantization path to be accepted');
 assert.equal(a.pixelGridFit.inputDpi,600);assert.equal(a.pixelGridFit.pixelPitchMm,25.4/600);
