@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import createTracer from './rust-tracer.mjs?v=0.21.3';
-import {nativeRasterSize} from './input-image.mjs?v=0.21.3';
-import {gpuPrepare,gpuAssign} from './gpu.js?v=0.21.3';
-import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs?v=0.21.3';
-import {auditNative} from './geometry.mjs?v=0.21.3';
-import{regularizeResult}from'./regularize.mjs?v=0.21.3';
-import{cleanResult}from'./post-clean.mjs?v=0.21.3';
-import {smoothResult} from './post-smooth.mjs?v=0.21.3';
-import {traceFixed} from './desktop-curves.mjs?v=0.21.3';
+import createTracer from './rust-tracer.mjs?v=0.21.4';
+import {nativeRasterSize} from './input-image.mjs?v=0.21.4';
+import {gpuPrepare,gpuAssign} from './gpu.js?v=0.21.4';
+import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs?v=0.21.4';
+import {auditNative} from './geometry.mjs?v=0.21.4';
+import{regularizeResult}from'./regularize.mjs?v=0.21.4';
+import{cleanResult}from'./post-clean.mjs?v=0.21.4';
+import {smoothResult} from './post-smooth.mjs?v=0.21.4';
+import {traceFixed} from './desktop-curves.mjs?v=0.21.4';
 let runtime,loading,lastProgress=0;
 function emitProgress(progress,stage){lastProgress=Math.max(lastProgress,progress);self.postMessage({progress:lastProgress,stage});}
 const stages=['','Подготовка изображения','Определение палитры','Сегментация','Объединение областей','Построение кривых','Готово'];

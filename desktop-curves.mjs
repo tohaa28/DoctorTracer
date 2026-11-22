@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Shared planar color graph with analytically paired interfaces.
-import initMask from './vendor/mask.mjs?v=0.21.3';import initPaths from './vendor/pathkit.mjs?v=0.21.3';
-import {gpuAssign} from './gpu.js?v=0.21.3';
-import {auditNative} from './geometry.mjs?v=0.21.3';
+import initMask from './vendor/mask.mjs?v=0.21.4';import initPaths from './vendor/pathkit.mjs?v=0.21.4';
+import {gpuAssign} from './gpu.js?v=0.21.4';
+import {auditNative} from './geometry.mjs?v=0.21.4';
 let maskRuntime,pathRuntime;
 async function binary(url){return new Uint8Array(await(await fetch(url)).arrayBuffer());}
 export async function curveRuntime({maskBinary,pathBinary}={}){
- maskRuntime??=await initMask(maskBinary?{wasmBinary:maskBinary}:{locateFile:()=>new URL('./vendor/mask.wasm?v=0.21.3',import.meta.url).href});
- pathRuntime??=await initPaths(pathBinary?{wasmBinary:pathBinary}:{locateFile:()=>new URL('./vendor/pathkit.wasm?v=0.21.3',import.meta.url).href});
+ maskRuntime??=await initMask(maskBinary?{wasmBinary:maskBinary}:{locateFile:()=>new URL('./vendor/mask.wasm?v=0.21.4',import.meta.url).href});
+ pathRuntime??=await initPaths(pathBinary?{wasmBinary:pathBinary}:{locateFile:()=>new URL('./vendor/pathkit.wasm?v=0.21.4',import.meta.url).href});
  return{mask:maskRuntime,paths:pathRuntime};
 }
 function data(path){let out='',current=[0,0];for(const command of path.toCmds()){const[verb,...p]=command;if(verb===0){out+='M'+p.join(' ')+' ';current=p;}else if(verb===1){out+='L'+p.join(' ')+' ';current=p;}else if(verb===2){const[cx,cy,x,y]=p;const c1=[current[0]+2/3*(cx-current[0]),current[1]+2/3*(cy-current[1])],c2=[x+2/3*(cx-x),y+2/3*(cy-y)];out+='C'+[...c1,...c2,x,y].join(' ')+' ';current=[x,y];}else if(verb===4){out+='C'+p.join(' ')+' ';current=p.slice(-2);}else if(verb===5)out+='Z ';else throw Error('Unsupported Skia path verb');}return out;}
@@ -30,7 +30,17 @@ export async function traceFixed(runtime,pixels,w,h,config,progress=()=>{}){
   let orthogonal=true;
   for(let y=1;y<hh&&orthogonal;y++){let start=-1;for(let x=0;x<=ww;x++){const edge=x<ww&&labels[y*ww+x]!==labels[(y-1)*ww+x];if(edge&&start<0)start=x;else if(!edge&&start>=0){if(x-start<3){orthogonal=false;break;}start=-1;}}}
   for(let x=1;x<ww&&orthogonal;x++){let start=-1;for(let y=0;y<=hh;y++){const edge=y<hh&&labels[y*ww+x]!==labels[y*ww+x-1];if(edge&&start<0)start=y;else if(!edge&&start>=0){if(y-start<3){orthogonal=false;break;}start=-1;}}}
-  const polygon=!!config.polygon||exactGrid||orthogonal;
+  // A 1-bit Ghostscript raster is evidence of crisp source sampling, NOT
+  // evidence that the underlying artwork is a polygon. Otherwise all
+  // digitized circles and diagonal Beziers are locked into stair-step lines.
+  // Horizontal/vertical borders with no short lattice runs remain polygons,
+  // as do explicit "straight segments" mode and disabled vector smoothing.
+  // The paired shared-boundary graph moves each interface only ONCE, so
+  // adjacent colors keep identical reversed geometry. Rust's graph keeps
+  // junctions, image borders and small isolated loops pinned, and its
+  // boundary-contract audit rejects invalid curves.
+  const polygon=!!config.polygon||config.smooth===false||orthogonal;
+  const adaptiveCrispCurves=exactGrid&&!polygon;
   let svg=runtime.shared(shared,palette,ww,hh,config.detail,!polygon,{fixed:true,polygon});
   svg=svg.replace(/width="[^"]+" height="[^"]+"/,`width="${w}" height="${h}"`);
   let geometry;try{geometry=await auditNative(svg);}catch{
@@ -38,5 +48,5 @@ export async function traceFixed(runtime,pixels,w,h,config,progress=()=>{}){
    svg=svg.replace(/width="[^"]+" height="[^"]+"/,`width="${w}" height="${h}"`);geometry=await auditNative(svg);
   }
   const segments=new Uint8Array(w*h*4);for(let i=0;i<w*h;i++){const label=labels[(Math.floor(i/w)*scale)*ww+(i%w)*scale];if(label!==255)segments.set([...palette[label],255],i*4);}
-  return{svg,segments,palette,geometry,algorithm:'shared planar color graph'};
+  return{svg,segments,palette,geometry,algorithm:adaptiveCrispCurves?'adaptive crisp-grid shared Bezier curves':'shared planar color graph',adaptiveCrispCurves};
 }
