@@ -13,3 +13,7 @@
 Полная обработка контрольной акварели 800×954 занимает около 6.2 с на высоком, около 4 с на среднем и 2.8 с на низком качестве без учёта запуска интерпретатора; новый этап добавляет около 3.1 / 1.5 / 0.5 с соответственно. Качество здесь приоритетнее скорости. GPU в этом этапе не используется.
 
 Проверки: `python tests/photo_curves.py` (синтетический силуэт IoU 0.992, кривые, прозрачность, внутренний белый цвет, нечётная ширина bitmap, ориентация, детерминизм) и `python tests/desktop_smoke.py`. Сборка DLL: официальный Zig 0.15.2 на PATH, `python scripts/build_potrace_dll.py`. Исходники Potrace и native SVG adapter включены; Windows-сборка с DLL распространяется по GPL-3.0-or-later. Ранее выпущенная WASM-версия не изменялась.
+
+
+## 2026-11-22 · Crisp-grid adaptive routing
+A 1-bit raster gives exact pigment but not underlying curve type. Stage: label ownership → inspect short lattice boundary runs → keep all long-run horizontal/vertical or manual polygon contours rectilinear → for a staircase pass to the existing paired shared-graph fixed smoother and cubic segments; topology audit required, fallback to polygon on shared contract failure. Source raster unchanged. See tests/crisp_grid_curves.mjs. CI not yet verified.
