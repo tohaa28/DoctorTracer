@@ -30,7 +30,17 @@ export async function traceFixed(runtime,pixels,w,h,config,progress=()=>{}){
   let orthogonal=true;
   for(let y=1;y<hh&&orthogonal;y++){let start=-1;for(let x=0;x<=ww;x++){const edge=x<ww&&labels[y*ww+x]!==labels[(y-1)*ww+x];if(edge&&start<0)start=x;else if(!edge&&start>=0){if(x-start<3){orthogonal=false;break;}start=-1;}}}
   for(let x=1;x<ww&&orthogonal;x++){let start=-1;for(let y=0;y<=hh;y++){const edge=y<hh&&labels[y*ww+x]!==labels[y*ww+x-1];if(edge&&start<0)start=y;else if(!edge&&start>=0){if(y-start<3){orthogonal=false;break;}start=-1;}}}
-  const polygon=!!config.polygon||exactGrid||orthogonal;
+  // A 1-bit Ghostscript raster is evidence of crisp source sampling, NOT
+  // evidence that the underlying artwork is a polygon. Otherwise all
+  // digitized circles and diagonal Beziers are locked into stair-step lines.
+  // Horizontal/vertical borders with no short lattice runs remain polygons,
+  // as do explicit "straight segments" mode and disabled vector smoothing.
+  // The paired shared-boundary graph moves each interface only ONCE, so
+  // adjacent colors keep identical reversed geometry. Rust's graph keeps
+  // junctions, image borders and small isolated loops pinned, and its
+  // boundary-contract audit rejects invalid curves.
+  const polygon=!!config.polygon||config.smooth===false||orthogonal;
+  const adaptiveCrispCurves=exactGrid&&!polygon;
   let svg=runtime.shared(shared,palette,ww,hh,config.detail,!polygon,{fixed:true,polygon});
   svg=svg.replace(/width="[^"]+" height="[^"]+"/,`width="${w}" height="${h}"`);
   let geometry;try{geometry=await auditNative(svg);}catch{
@@ -38,5 +48,5 @@ export async function traceFixed(runtime,pixels,w,h,config,progress=()=>{}){
    svg=svg.replace(/width="[^"]+" height="[^"]+"/,`width="${w}" height="${h}"`);geometry=await auditNative(svg);
   }
   const segments=new Uint8Array(w*h*4);for(let i=0;i<w*h;i++){const label=labels[(Math.floor(i/w)*scale)*ww+(i%w)*scale];if(label!==255)segments.set([...palette[label],255],i*4);}
-  return{svg,segments,palette,geometry,algorithm:'shared planar color graph'};
+  return{svg,segments,palette,geometry,algorithm:adaptiveCrispCurves?'adaptive crisp-grid shared Bezier curves':'shared planar color graph',adaptiveCrispCurves};
 }
