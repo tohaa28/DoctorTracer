@@ -116,7 +116,7 @@ class Window(wizard.WizardWindow):
         self.canvas.layer_buttons['Сегменты'].setText('Сегменты')
         for button in self.canvas.nav.findChildren(QPushButton):button.setStyleSheet('padding:0px;');button.setFixedSize(19,19)
         for label in self.statusBar().findChildren(QLabel):
-            if label.text()=='v2.0':label.setText('v0.19.2 preview')
+            if label.text()=='v2.0':label.setText('v0.19.3 preview')
         self.auto_timer=QTimer(self);self.auto_timer.setSingleShot(True);self.auto_timer.timeout.connect(self.apply_pending)
         for key,fn in [('A',lambda:self.set_background_tool('drag') if self.page=='background' else self.set_tool('drag')),('D',lambda:self.set_background_tool('cut') if self.page=='background' else self.set_tool('adapt')),('F',lambda:self.set_tool('fill')),('X',lambda:self.set_tool('pencil')),('C',lambda:self.set_tool('color')),('Z',lambda:self.undo_background() if self.page=='background' else self.undo_edit()),('Y',lambda:self.redo_background() if self.page=='background' else self.redo_edit()),('T',lambda:self.reset_background() if self.page=='background' else self.update_segmentation())]:
             action=wizard.QAction(self);action.setShortcut(key);action.triggered.connect(fn);self.addAction(action)
@@ -339,6 +339,11 @@ class Window(wizard.WizardWindow):
         self.small_button(self.page_layout,'Очистка и упрощение…',self.open_post_clean).setFixedWidth(190)
         self.small_button(self.page_layout,'Выравнивание контуров…',self.open_regularizer).setFixedWidth(190)
         self.small_button(self.page_layout,'Точная оптимизация узлов…',self.open_exact_optimizer).setFixedWidth(190)
+        self.small_button(self.page_layout,'Очистка промежуточных цветов…',lambda:self.open_color_node_tools(True)).setFixedWidth(220)
+        self.small_button(self.page_layout,'Сокращение узлов кривых…',lambda:self.open_color_node_tools(False)).setFixedWidth(220)
+    def open_color_node_tools(self,color):
+        from color_node_dialog import open_tools
+        open_tools(self,color);self.render_page()
     def open_exact_optimizer(self):
         from exact_optimizer_dialog import open_exact_optimizer
         open_exact_optimizer(self);self.render_page()
@@ -521,7 +526,7 @@ class Window(wizard.WizardWindow):
         self.flatten_mode='preserve';self.selected_color=0
         super().load(path)
     def about(self):
-        QMessageBox.information(self,'Паспорт DoctorTracer','DoctorTracer 0.19.2 preview\n\nЛокальная трассировка SVG / EPS / PDF / PNG.\nSVG: группы по цветам, устранение наложений геометрии.\n\nGPU ускоряет фильтрацию фотографий, назначение цветов, пространственную сегментацию, сглаживание общих границ, упрощение цепочек и расчёт контрольных точек Безье.\nСвязность графа, объединение областей и проверка геометрии выполняются на CPU.\n\nНастройки находятся в меню «Дополнительные Параметры».')
+        QMessageBox.information(self,'Паспорт DoctorTracer','DoctorTracer 0.19.3 preview\n\nЛокальная трассировка SVG / EPS / PDF / PNG.\nSVG: группы по цветам, устранение наложений геометрии.\n\nGPU ускоряет фильтрацию фотографий, назначение цветов, пространственную сегментацию, сглаживание общих границ, упрощение цепочек и расчёт контрольных точек Безье.\nСвязность графа, объединение областей и проверка геометрии выполняются на CPU.\n\nНастройки находятся в меню «Дополнительные Параметры».')
     def build_export(self):
         self.post_smooth_tools()
         self.choice('Сохранение Результата','• Совет: Попробуйте перетащить изображение в нужное вам место.\n• Клавиши быстрого доступа: Ctrl-S.','save',self.export)

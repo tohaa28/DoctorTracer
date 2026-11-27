@@ -81,9 +81,80 @@ fn regular_graph(nodes:&[P],neighbors:&[Vec<usize>],curves:&mut Vec<Curve>,assig
  counts
 }
 
-pub fn clean(svg:&str,min_area:f64,tolerance:f64,protect:bool)->Result<(String,usize,usize,usize,usize),&'static str>{process(svg,min_area,tolerance,protect,false,true,true)}
-pub fn regularize(svg:&str,tolerance:f64,straight:bool,curved:bool,protect:bool)->Result<(String,usize,usize,usize,usize),&'static str>{process(svg,0.,tolerance,protect,true,straight,curved)}
-fn process(svg:&str,min_area:f64,tolerance:f64,protect:bool,regularize:bool,straight:bool,curved:bool)->Result<(String,usize,usize,usize,usize),&'static str>{
+
+// Conservative first-cycle anti-alias face cleanup. Work on the finished
+// vector, never rasterize/retrace the user's edited artwork. Only accept a
+// convex straight-sided face with exactly two consecutive, fully shared
+// neighbour chains. The chord splits its area into two positive pieces.
+// True curved/concave faces, holes, junction ambiguities and transparency
+// remain untouched. Every replacement has a single owner edge in the graph.
+fn rgb(tag:&str)->Option<[f64;3]>{
+ let text=attr(tag,"fill")?.strip_prefix('#')?;
+ if text.len()!=6||!text.is_ascii(){return None;}
+ Some(std::array::from_fn(|i|u8::from_str_radix(&text[i*2..i*2+2],16).map(f64::from).unwrap_or(f64::NAN)))
+}
+fn blend(c:[f64;3],a:[f64;3],b:[f64;3],strength:f64)->bool{
+ if c.iter().chain(&a).chain(&b).any(|x|!x.is_finite()){return false;}
+ let d:[f64;3]=std::array::from_fn(|i|b[i]-a[i]);
+ let den=d.iter().map(|v|v*v).sum::<f64>();if den<32.*32.{return false;}
+ let t=(0..3).map(|i|(c[i]-a[i])*d[i]).sum::<f64>()/den;
+ if t<0.12||t>0.88{return false;}
+ let err=(0..3).map(|i|(c[i]-a[i]-t*d[i]).powi(2)).sum::<f64>().sqrt();
+ err<=3.+15.*strength
+}
+fn chain_is_reversed(chain:&[(usize,bool)],other:&[(usize,bool)])->bool{
+ if chain.is_empty()||other.len()<=chain.len(){return false;}
+ let needle:Vec<_>=chain.iter().rev().map(|&(i,r)|(i,!r)).collect();
+ other.iter().enumerate().any(|(start,x)|*x==needle[0]&&needle.iter().enumerate().all(|(j,y)|other[(start+j)%other.len()]==*y))
+}
+fn intermediate_graph(strength:u32,scale:f64,nodes:&[P],edges:&[Edge],neighbors:&[Vec<usize>],paths:&[Path],path_cycles:&[Vec<usize>],cycles:&[Vec<(usize,bool)>],curves:&mut Vec<Curve>,assigned:&mut[(usize,bool)],remove:&mut[bool])->(usize,usize){
+ let power=strength as f64/100.;
+ let max_area=100.*power*scale*scale;let max_width=4.*power*scale;
+ let mut path_of=vec![usize::MAX;cycles.len()];for (p,ids) in path_cycles.iter().enumerate(){for &i in ids{path_of[i]=p;}}
+ let mut owners=vec![Vec::<usize>::new();edges.len()];for(i,cycle)in cycles.iter().enumerate(){for &(e,_)in cycle{owners[e].push(i);}}
+ let mut touched=vec![false;cycles.len()];let mut used=vec![false;edges.len()];let(mut removed,mut protected)=(0,0);
+ for (ci,cycle) in cycles.iter().enumerate(){
+  if cycle.len()<4||touched[ci]||remove[ci]||cycle.iter().any(|&(e,_)|used[e]||edges[e].c.is_some()||owners[e].len()!=2||owners[e][0]==owners[e][1]){continue;}
+  let pts:Vec<P>=cycle.iter().map(|&(e,r)|nodes[if r{edges[e].b}else{edges[e].a}]).collect();
+  let n=pts.len();let mut closed=pts.clone();closed.push(pts[0]);let area=signed_area(&closed);
+  if area<=1e-9||area>max_area{continue;}
+  let perimeter=closed.windows(2).map(|p|dist(p[0],p[1])).sum::<f64>();
+  if perimeter<=0.||2.*area/perimeter>max_width{continue;}
+  let convex=(0..n).all(|i|{let a=pts[i];let b=pts[(i+1)%n];let c=pts[(i+2)%n];(b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0])>=-1e-10});
+  if !convex{protected+=1;continue;}
+  let adj:Vec<_>=cycle.iter().map(|&(e,_)|if owners[e][0]==ci{owners[e][1]}else{owners[e][0]}).collect();
+  let transitions:Vec<_>=(0..n).filter(|&i|adj[i]!=adj[(i+n-1)%n]).collect();
+  if transitions.len()!=2{protected+=1;continue;}
+  let i=transitions[0];let j=transitions[1];let na=adj[i];let nb=adj[j];
+  if remove[na]||remove[nb]||path_of[na]==path_of[nb]||path_of[na]==path_of[ci]||path_of[nb]==path_of[ci]{continue;}
+  let(Some(c),Some(a),Some(b))=(rgb(&paths[path_of[ci]].tag),rgb(&paths[path_of[na]].tag),rgb(&paths[path_of[nb]].tag))else{continue;};
+  if !blend(c,a,b,power){protected+=1;continue;}
+  let first:Vec<_>=cycle[i..j].to_vec();let second:Vec<_>=cycle[j..].iter().chain(&cycle[..i]).copied().collect();
+  if first.len()<2||second.len()<2||!chain_is_reversed(&first,&cycles[na])||!chain_is_reversed(&second,&cycles[nb]){protected+=1;continue;}
+  let start_node=|e:(usize,bool)|if e.1{edges[e.0].b}else{edges[e.0].a};
+  let x=start_node(cycle[i]);let y=start_node(cycle[j]);
+  if x==y||neighbors[x].len()!=3||neighbors[y].len()!=3||(0..n).any(|k|k!=i&&k!=j&&neighbors[start_node(cycle[k])].len()!=2){protected+=1;continue;}
+  let half_a:Vec<_>=pts[i..=j].iter().copied().chain(std::iter::once(pts[i])).collect();
+  let half_b:Vec<_>=pts[j..].iter().chain(&pts[..=i]).copied().chain(std::iter::once(pts[j])).collect();
+  if signed_area(&half_a)<=1e-9||signed_area(&half_b)<=1e-9{protected+=1;continue;}
+  // A near-straight chord must not travel far outside either original side.
+  // Convexity guarantees both halves lie entirely inside the removed face.
+  let id=curves.len();let mut members=Vec::new();
+  for (reverse,chain) in [(false,&first),(true,&second)]{
+   for &(e,r) in chain{assigned[e]=(id,r^reverse);curves[e].active=false;used[e]=true;members.push((e,r^reverse));}
+  }
+  curves.push(Curve{a:x,b:y,c:None,members,samples:vec![nodes[x],nodes[y]],active:true});
+  remove[ci]=true;touched[na]=true;touched[nb]=true;removed+=1;
+ }
+ (removed,protected)
+}
+
+pub fn clean(svg:&str,min_area:f64,tolerance:f64,protect:bool)->Result<(String,usize,usize,usize,usize),&'static str>{process(svg,min_area,tolerance,protect,false,true,true,0)}
+pub fn regularize(svg:&str,tolerance:f64,straight:bool,curved:bool,protect:bool)->Result<(String,usize,usize,usize,usize),&'static str>{process(svg,0.,tolerance,protect,true,straight,curved,0)}
+pub fn intermediate(svg:&str,strength:u32)->Result<(String,usize,usize,usize,usize),&'static str>{
+ process(svg,0.,0.,true,false,false,false,strength.min(100))
+}
+fn process(svg:&str,min_area:f64,tolerance:f64,protect:bool,regularize:bool,straight:bool,curved:bool,intermediate_strength:u32)->Result<(String,usize,usize,usize,usize),&'static str>{
  if svg.len()>32_000_000{return Err("SVG is too large");}if svg.contains("transform="){return Err("Transformed paths are not supported");}
  
  let root=svg.split('>').next().ok_or("Invalid SVG")?;
@@ -128,6 +199,7 @@ fn process(svg:&str,min_area:f64,tolerance:f64,protect:bool,regularize:bool,stra
   let(mut samples,mut members)=oriented(a,a.a==node);let(ps,ms)=oriented(b,b.b==node);samples.extend(ps.into_iter().skip(1));members.extend(ms);let u=tangent(a,x,&nodes);let v=tangent(b,y,&nodes);let Some(c)=fit(&samples,u,v,tol)else{continue;};
   let id=curves.len();for &(old,r)in &members{assigned[old]=(id,r);}curves[i].active=false;curves[j].active=false;curves.push(Curve{a:x,b:y,c,members,samples,active:true});neighbors[node].clear();neighbors[x].retain(|&e|e!=i);neighbors[y].retain(|&e|e!=j);neighbors[x].push(id);neighbors[y].push(id);merges+=1;
  }if merges==0{break;}}}
+ if intermediate_strength>0{(removed,protected)=intermediate_graph(intermediate_strength,scale,&nodes,&edges,&neighbors,&paths,&path_cycles,&cycles,&mut curves,&mut assigned,&mut remove);}
  let mut after=0;let mut output=String::new();for((path,prefix),ids)in paths.iter().zip(prefixes).zip(path_cycles){output.push_str(&prefix);let mut d=String::new();for ci in ids{if remove[ci]{continue;}let mut list=Vec::new();for &(e,r)in &cycles[ci]{let(id,flip)=assigned[e];let item=(id,r^flip);if list.last()!=Some(&item){list.push(item);}}if list.len()>1&&list.first()==list.last(){list.pop();}if list.is_empty(){continue;}if regularize&&tol>0.{let(original,_)=chain_samples(&cycles[ci],&curves);let mut changed=Vec::new();for &(id,r)in &list{let c=&curves[id];let mut ps=sample(nodes[c.a],nodes[c.b],c.c);if r{ps.reverse();}let skip=usize::from(!changed.is_empty());changed.extend(ps.into_iter().skip(skip));}let a=signed_area(&original);let b=signed_area(&changed);if a.abs()>1e-10&&(a*b<=0.||b.abs()<a.abs()*0.8||b.abs()>a.abs()*1.2){return Err("Regularization would change a contour area");}}after+=list.len();let(g,r)=list[0];let start=nodes[if r{curves[g].b}else{curves[g].a}];write!(d,"M{:.6} {:.6} ",start[0],start[1]).unwrap();for(id,r)in list{let g=&curves[id];let end=nodes[if r{g.a}else{g.b}];if let Some(c)=g.c{let(a,b)=if r{(c[1],c[0])}else{(c[0],c[1])};write!(d,"C{:.6} {:.6} {:.6} {:.6} {:.6} {:.6} ",a[0],a[1],b[0],b[1],end[0],end[1]).unwrap();}else{write!(d,"L{:.6} {:.6} ",end[0],end[1]).unwrap();}}d.push_str("Z ");}
  if !d.is_empty(){output.push_str(&path.tag.replacen(&format!("d=\"{}\"",path.d),&format!("d=\"{d}\""),1));}}
  output.push_str(tail);if before==after&&removed==0{return Ok((svg.to_string(),before,after,removed,protected));}if !output.contains("data-post-cleaned="){output=output.replacen("<svg ","<svg data-post-cleaned=\"true\" ",1);}Ok((output,before,after,removed,protected))

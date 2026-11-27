@@ -5,9 +5,9 @@ try{
  const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
  await page.waitForFunction(()=>window.doctorTracerInputContract==='native-raster-v1');
- assert.match(await page.locator('footer').innerText(),/0\.21\.7/);
+ assert.match(await page.locator('footer').innerText(),/0\.21\.8/);
  const output=await page.evaluate(()=>new Promise((resolve,reject)=>{
-  const worker=new Worker('./worker.js?v=0.21.7',{type:'module'});
+  const worker=new Worker('./worker.js?v=0.21.8',{type:'module'});
   const timer=setTimeout(()=>{worker.terminate();reject(Error('worker timeout'));},30000);
   worker.onerror=e=>{clearTimeout(timer);worker.terminate();reject(Error(e.message));};
   worker.onmessage=({data})=>{clearTimeout(timer);worker.terminate();data.error?reject(Error(data.error)):resolve(data.exactOptimize);};

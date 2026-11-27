@@ -5,6 +5,7 @@ import {gpuPrepare,gpuAssign} from './gpu.js';
 import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs';
 import {auditNative} from './geometry.mjs';
 import {optimizeExactSvg} from './exact-optimizer.mjs';
+import {intermediateResult,reduceNodesResult} from './color-node-tools.mjs';
 import{regularizeResult}from'./regularize.mjs';
 import{cleanResult}from'./post-clean.mjs';
 import {smoothResult} from './post-smooth.mjs';
@@ -17,6 +18,8 @@ self.onmessage=async ({data})=>{
   if(data.operation==='exactOptimize'){const result=optimizeExactSvg(data.svg);if(result.svg!==data.svg)result.geometry=await auditNative(result.svg);self.postMessage({exactOptimize:result,requestId:data.requestId});return;}
   lastProgress=0;emitProgress(1,'Загрузка Rust WASM');
   runtime??=await (loading??=createTracer({onProgress:(progress,stage)=>emitProgress(Math.min(85,progress),stages[stage])}));
+  if(data.operation==='intermediate'){const result=await intermediateResult(runtime,data.svg,data.strength);self.postMessage({intermediate:result,requestId:data.requestId});return;}
+  if(data.operation==='reduceNodes'){const result=await reduceNodesResult(runtime,data.svg,data.strength);self.postMessage({reduceNodes:result,requestId:data.requestId});return;}
   if(data.operation==='regularize'){const result=await regularizeResult(runtime,data.svg,data.tolerance,data.straight,data.curved,data.protect);self.postMessage({regularize:result,requestId:data.requestId});return;}
   if(data.operation==='postClean'){const result=await cleanResult(runtime,data.svg,data.minArea,data.tolerance,data.protect);self.postMessage({postClean:result,requestId:data.requestId});return;}
   if(data.operation==='postSmooth'){const result=await smoothResult(runtime,data.svg,data.strength,data.sharp);self.postMessage({postSmooth:result,requestId:data.requestId});return;}
