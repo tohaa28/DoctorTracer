@@ -88,6 +88,7 @@ jobs:
           Copy-Item rust/target/x86_64-pc-windows-msvc/release/doctortracer_wasm.dll desktop/vendor/quality/doctortracer_quality.dll -Force
       - name: Regression gates and full-size CMYK TIFF trace
         run: |
+          New-Item -ItemType Directory -Force build | Out-Null
           python tests/exact_optimizer.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tests/tile_seams.py
@@ -150,7 +151,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh release create v0.21.8-wasm-preview release/* --target "$GITHUB_SHA" --prerelease --latest=false --title 'DoctorTracer WASM 0.21.8 — color and node tools' --notes 'Independent 0–100% sliders: conservative convex straight-edge intermediate color cleanup and shared-curve reduction with preview/undo. Complex intermediate faces are retained. Existing 150 MB and full-resolution trace regressions retained.'
+        run: |
+          gh release create v0.21.8-wasm-preview release/* --target "$GITHUB_SHA" --prerelease --latest=false --title 'DoctorTracer WASM 0.21.8 — color and node tools' --notes 'Independent 0–100% sliders: conservative convex straight-edge intermediate color cleanup and shared-curve reduction with preview/undo. Complex intermediate faces are retained. Existing 150 MB and full-resolution trace regressions retained.'
   publish-windows:
     needs: windows
     runs-on: ubuntu-24.04
@@ -165,4 +167,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh release create v0.19.3-preview release/* --target "$GITHUB_SHA" --prerelease --latest=false --title 'DoctorTracer Windows 0.19.3 — color and node tools' --notes 'Native Rust DLL rebuilt. Independent 0–100% controls for conservative intermediate-color cleanup and shared-curve node reduction. Complex intermediate faces are retained. Preview and undo.'
+        run: |
+          gh release create v0.19.3-preview release/* --target "$GITHUB_SHA" --prerelease --latest=false --title 'DoctorTracer Windows 0.19.3 — color and node tools' --notes 'Native Rust DLL rebuilt. Independent 0–100% controls for conservative intermediate-color cleanup and shared-curve node reduction. Complex intermediate faces are retained. Preview and undo.'
