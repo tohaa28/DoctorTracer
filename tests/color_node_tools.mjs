@@ -22,8 +22,13 @@ const unrelated=source.replaceAll('#800080','#00ff00');
 assert.equal((await intermediateResult(runtime,unrelated,100)).svg,unrelated);
 const island=svg(fixtures.island);assert.equal((await intermediateResult(runtime,island,100)).svg,island);
 const curved=source.replace('L51 50 L50 48','L51 50 C51 49 50 49 50 48').replace('L51 50 L50 52','C50 49 51 49 51 50 L50 52');
-// The earlier deliberately nonpaired input must remain untouched.
-assert.equal((await intermediateResult(runtime,curved,100)).svg,curved);
+// This formerly excluded but exactly paired cubic insert is now supported.
+const curvedOut=await intermediateResult(runtime,curved,100);
+assert.equal(curvedOut.removed_elements,1);
+assert.equal(svgGroups(curvedOut.svg).length,2);
+assert.ok(Math.abs(area(curved)-area(curvedOut.svg))<.001);
+const nonpaired=curved.replace('C50 49 51 49 51 50','C50 49 51.1 49 51 50');
+assert.equal((await intermediateResult(runtime,nonpaired,100)).svg,nonpaired);
 const circle=svg(fixtures.circle);
 assert.equal((await reduceNodesResult(runtime,circle,0)).svg,circle);
 const reduced=await reduceNodesResult(runtime,circle,100);
