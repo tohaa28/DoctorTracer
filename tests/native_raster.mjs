@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict';
-import {nativeRasterSize,drawInputRaster} from '../web/input-image.mjs';
+import {nativeRasterSize,drawInputRaster,validateInputFile,MAX_INPUT_BYTES} from '../web/input-image.mjs';
 assert.deepEqual(nativeRasterSize({width:3001,height:181}),{width:3001,height:181});
 assert.deepEqual(nativeRasterSize({width:4000,height:2000}),{width:4000,height:2000});
-for(const x of [{width:4097,height:1},{width:4001,height:2000},{width:0,height:10}])assert.throws(()=>nativeRasterSize(x),/предел|Некорректные/);
+for(const x of [{width:4097,height:1},{width:4001,height:2000},{width:5130,height:1685},{width:12000,height:1000}])assert.deepEqual(nativeRasterSize(x),x);
+for(const x of [{width:0,height:10},{width:2**31,height:1},{width:100000,height:100000}])assert.throws(()=>nativeRasterSize(x),/пространство|Некорректные/);
+assert.equal(MAX_INPUT_BYTES,150_000_000);for(const size of [1,149_999_999,150_000_000])assert.equal(validateInputFile({size}).size,size);
+assert.throws(()=>validateInputFile({size:150_000_001}),/150 МБ/);
 const image={width:3001,height:181};let call;
 const ctx={imageSmoothingEnabled:true,drawImage(...v){call=v;}};
 drawInputRaster(ctx,image,3001,181);

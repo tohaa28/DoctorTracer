@@ -46,7 +46,7 @@ async function init(){
  return true;
 }
 export async function gpuStage(pixels,w,h,detail,stage='bilateral'){
- const buffers=[];try{if(!await init()||pixels.byteLength>device.limits.maxStorageBufferBindingSize)return null;
+ const buffers=[];try{if(!await init()||pixels.byteLength>Math.min(device.limits.maxStorageBufferBindingSize,device.limits.maxBufferSize)||Math.ceil(w/16)>device.limits.maxComputeWorkgroupsPerDimension||Math.ceil(h/16)>device.limits.maxComputeWorkgroupsPerDimension)return null;
   const buffer=(size,usage)=>{const b=device.createBuffer({size,usage});buffers.push(b);return b;};
   const source=buffer(pixels.byteLength,GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST);const output=buffer(pixels.byteLength,GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_SRC);const uniform=buffer(16,GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST);const readback=buffer(pixels.byteLength,GPUBufferUsage.MAP_READ|GPUBufferUsage.COPY_DST);
   device.queue.writeBuffer(source,0,pixels);device.queue.writeBuffer(uniform,0,new Uint32Array([w,h,[7,5,3][detail],[900,400,225][detail]]));
@@ -62,7 +62,7 @@ export async function gpuPrepare(pixels,w,h,config){
 }
 
 export async function gpuAssign(pixels,w,h,palette,strength=200){
- const buffers=[];try{if(!await init()||pixels.byteLength>device.limits.maxStorageBufferBindingSize)return null;
+ const buffers=[];try{if(!await init()||pixels.byteLength>Math.min(device.limits.maxStorageBufferBindingSize,device.limits.maxBufferSize)||Math.ceil(w/16)>device.limits.maxComputeWorkgroupsPerDimension||Math.ceil(h/16)>device.limits.maxComputeWorkgroupsPerDimension)return null;
   const buffer=(size,usage)=>{const b=device.createBuffer({size,usage});buffers.push(b);return b;},storage=GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST|GPUBufferUsage.COPY_SRC;
   const source=buffer(pixels.byteLength,GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST),inks=buffer(palette.length*4,GPUBufferUsage.STORAGE|GPUBufferUsage.COPY_DST),uniform=buffer(16,GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST),phases=[0,1].map(()=>buffer(16,GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST)),a=buffer(w*h*4,storage),b=buffer(w*h*4,storage),readback=buffer(w*h*4,GPUBufferUsage.MAP_READ|GPUBufferUsage.COPY_DST);
   device.queue.writeBuffer(source,0,pixels);device.queue.writeBuffer(inks,0,Uint32Array.from(palette,p=>p[0]|(p[1]<<8)|(p[2]<<16)));device.queue.writeBuffer(uniform,0,new Uint32Array([w,h,palette.length,strength]));for(let i=0;i<2;i++)device.queue.writeBuffer(phases[i],0,new Uint32Array([i,0,0,0]));

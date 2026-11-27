@@ -35,17 +35,26 @@ async function pdfBitmap(data) {
  }
 }
 
+const bitmapDpi=new WeakMap();
+export function decodedRasterDpi(bitmap){return bitmapDpi.get(bitmap)??null;}
 async function tiffBitmap(data) {
  const {default: tiff} = await import(TIFF_MODULE.href);
  const [frame] = tiff.decode(data);
  const width = frame?.t256?.[0], height = frame?.t257?.[0];
- if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 ||
-     width > 32767 || height > 32767 || width * height > 40000000) {
-  throw Error('Некорректный размер TIFF или превышен предел 40 млн пикселей');
- }
+ nativeRasterSize({width,height});
  tiff.decodeImage(data, frame);
  if (!frame.data?.length) throw Error('Не удалось декодировать первую страницу TIFF');
- const pixels = tiff.toRGBA8(frame);
+ let pixels;
+ if(frame.t262?.[0]===5&&frame.t277?.[0]===5){
+  if(frame.t284?.[0]!==1&&frame.t284?.[0]!==undefined||frame.t258?.length!==5||frame.t258.some(n=>n!==8)||frame.t338?.[0]!==2||frame.data.length!==width*height*5)
+   throw Error('Поддерживается CMYK TIFF с пятью 8-битными каналами и независимой прозрачностью');
+  pixels=new Uint8Array(width*height*4);
+  for(let i=0,j=0;i<pixels.length;i+=4,j+=5){
+   const black=255-frame.data[j+3];
+   for(let c=0;c<3;c++)pixels[i+c]=Math.round((255-frame.data[j+c])*black/255);
+   pixels[i+3]=frame.data[j+4];
+  }
+ }else pixels=tiff.toRGBA8(frame);
  if (frame.t338?.[0] === 1 && frame.t262?.[0] === 2 && frame.t277?.[0] === 4) {
   for (let i = 0; i < pixels.length; i += 4) {
    const alpha = pixels[i + 3];
@@ -66,16 +75,26 @@ async function tiffBitmap(data) {
   [0,1,1,0,0,0], [0,1,-1,0,height,0], [0,-1,-1,0,height,width], [0,-1,1,0,0,width],
  ];
  const transform = transforms[orientation];
- if (!transform) return createImageBitmap(raw);
+ const unit=frame.t296?.[0]??2,rx=frame.t282?.[0],ry=frame.t283?.[0];
+ const dpi=Number.isFinite(rx)&&rx===ry&&[2,3].includes(unit)?rx*(unit===3?2.54:1):null;
+ const finish=async c=>{const bitmap=await createImageBitmap(c);if(dpi>0)bitmapDpi.set(bitmap,dpi);return bitmap;};
+ if (!transform) return finish(raw);
  const rotated = orientation >= 5;
  const output = canvas(rotated ? height : width, rotated ? width : height);
  const context = output.getContext('2d');
  context.setTransform(...transform);
  context.drawImage(raw, 0, 0);
- return createImageBitmap(output);
+ return finish(output);
 }
 
+export const MAX_INPUT_BYTES=150_000_000;
+export function validateInputFile(file){
+ if(!Number.isSafeInteger(file?.size)||file.size<0)throw Error('Некорректный размер файла');
+ if(file.size>MAX_INPUT_BYTES)throw Error('Файл превышает 150 МБ (150 000 000 байт).');
+ return file;
+}
 export function decodeImage(file) {
+ validateInputFile(file);
  if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) {
   return file.arrayBuffer().then(data => pdfBitmap(new Uint8Array(data)));
  }
@@ -102,15 +121,14 @@ export function drawInputRaster(context,image,width,height,{crisp=false,flatten=
  context.drawImage(image,0,0,width,height);
 }
 
- // Match the shipped Rust valid(w,h) ABI exactly. Never downsample to fit.
-export const NATIVE_RASTER_MAX_SIDE=4096;
-export const NATIVE_RASTER_MAX_PIXELS=8000000;
+// Match actual WASM32 signed allocation/indexing limits, not arbitrary dimensions.
 export function nativeRasterSize(image){
  const {width,height}=image;
  if(!Number.isSafeInteger(width)||!Number.isSafeInteger(height)||width<1||height<1)
   throw Error('Некорректные размеры исходного растра.');
- if(width>NATIVE_RASTER_MAX_SIDE||height>NATIVE_RASTER_MAX_SIDE||width*height>NATIVE_RASTER_MAX_PIXELS)
-  throw Error('Исходный растр '+width+'×'+height+' превышает предел текущего WASM: 4096 px по стороне и 8 млн пикселей. Автоматическое уменьшение запрещено.');
+ const rgba=width*height*4,grid=(width+1)*(height+1)*16;
+ if(!Number.isSafeInteger(rgba)||!Number.isSafeInteger(grid)||rgba>0x7fffffff||grid>0x7fffffff||width>0x3fffffff||height>0x3fffffff)
+  throw Error('Исходный растр '+width+'×'+height+' не помещается в адресное пространство текущего WASM32. Изображение не уменьшено; используйте Windows-версию.');
  return {width,height};
 }
 

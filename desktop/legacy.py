@@ -234,7 +234,7 @@ class MainWindow(QMainWindow):
         self.label('Порог для чёрно-белого режима')
         self.threshold=QSpinBox();self.threshold.setRange(0,255);self.threshold.setValue(160);self.panel.addWidget(self.threshold)
         self.label('Максимальная сторона обработки')
-        self.resolution=self.combo(['1600 px · быстро','2400 px · стандарт','4096 px · подробно']);self.resolution.setCurrentIndex(1)
+        self.resolution=self.combo(['Исходное разрешение']);self.resolution.setCurrentIndex(0)
         self.panel.addStretch(1)
         actions=QWidget();al=QVBoxLayout(actions);al.setContentsMargins(22,16,22,18);al.setSpacing(10);right_layout.addWidget(actions)
         self.run_button=QPushButton('Векторизовать');self.run_button.setObjectName('primary');self.run_button.clicked.connect(self.run_or_cancel);self.run_button.setEnabled(False);al.addWidget(self.run_button)
@@ -255,7 +255,7 @@ class MainWindow(QMainWindow):
         return {'preset':self.preset.currentText(),'detail':self.detail.currentIndex(),'colors':self.colors.value(),
             'mode':['spline','polygon','none'][self.mode.currentIndex()],'speckle':self.speckle.value(),
             'remove_bg':self.remove_bg.isChecked(),'tolerance':self.tolerance.value(),'threshold':self.threshold.value(),
-            'denoise':self.denoise.isChecked(),'max_size':[1600,2400,4096][self.resolution.currentIndex()]}
+            'denoise':self.denoise.isChecked()}
     def preset_changed(self):
         self.colors.setValue([12,0,2][self.preset.currentIndex()])
         self.denoise.setChecked(self.preset.currentIndex()==1)

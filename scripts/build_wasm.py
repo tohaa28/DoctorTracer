@@ -9,7 +9,7 @@ root=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser();parser.add_argument('--cargo',default=shutil.which('cargo'));parser.add_argument('--toolchain');args=parser.parse_args()
 if not args.cargo:raise SystemExit('Install Rust from https://rustup.rs and add wasm32-unknown-unknown.')
 command=[args.cargo]+(['+'+args.toolchain] if args.toolchain else [])
-env=os.environ.copy();env['RUSTFLAGS']=env.get('RUSTFLAGS','')+' -C link-arg=--max-memory=1073741824'
+env=os.environ.copy();env['RUSTFLAGS']=env.get('RUSTFLAGS','')+' -C link-arg=--max-memory=2147483648'
 subprocess.run(command+['build','--manifest-path',str(root/'rust/Cargo.toml'),'--target','wasm32-unknown-unknown','--release','--locked'],check=True,cwd=root,env=env)
 shutil.copy2(root/'rust/target/wasm32-unknown-unknown/release/doctortracer_wasm.wasm',root/'web/doctortracer.wasm')
 metadata=json.loads(subprocess.check_output(command+['metadata','--manifest-path',str(root/'rust/Cargo.toml'),'--format-version','1','--locked'],cwd=root,text=True,encoding='utf8'))
@@ -54,9 +54,9 @@ subprocess.run(['node',str(modules/'esbuild/bin/esbuild'),str(deps/'tiff-entry.m
 for path in site.rglob('*'):
  if '.git' in path.parts or 'pdfjs' in path.parts or path.name=='tiff.mjs' or path.suffix not in ('.js','.mjs','.html'):continue
  text=path.read_text(encoding='utf8')
- text=re.sub(r"(['\"])(\./[^'\"]+\.(?:m?js|wasm|css))\1",lambda m:m[1]+m[2]+'?v=0.21.6'+m[1],text)
- text=re.sub(r'(src|href)="([^"?]+\.(?:m?js|css))"',lambda m:m[1]+'="'+m[2]+'?v=0.21.6"',text)
- text=text.replace("frame.src='./'","frame.src='./?v=0.21.6'")
+ text=re.sub(r"(['\"])(\./[^'\"]+\.(?:m?js|wasm|css))\1",lambda m:m[1]+m[2]+'?v=0.21.7'+m[1],text)
+ text=re.sub(r'(src|href)="([^"?]+\.(?:m?js|css))"',lambda m:m[1]+'="'+m[2]+'?v=0.21.7"',text)
+ text=text.replace("frame.src='./'","frame.src='./?v=0.21.7'")
  path.write_text(text,encoding='utf8')
 (site/'.nojekyll').write_text('')
 print('Built Rust WASM and build/site static artifact')

@@ -2,7 +2,7 @@
 export default async function createTracer({wasmBinary,onProgress=()=>{}}={}){
  const bytes=wasmBinary??await(await fetch(new URL('./doctortracer.wasm',import.meta.url))).arrayBuffer();
  const {instance}=await WebAssembly.instantiate(bytes,{env:{progress:onProgress}});const api=instance.exports;const decode=new TextDecoder();
- function input(bytes){const p=api.alloc(bytes.byteLength);if(!p)throw Error('Недостаточно памяти');new Uint8Array(api.memory.buffer,p,bytes.byteLength).set(new Uint8Array(bytes.buffer,bytes.byteOffset,bytes.byteLength));return p;}
+ function input(bytes){const p=api.alloc(bytes.byteLength);if(!p)throw Error('Недостаточно памяти WASM для исходного разрешения. Изображение не уменьшено.');new Uint8Array(api.memory.buffer,p,bytes.byteLength).set(new Uint8Array(bytes.buffer,bytes.byteOffset,bytes.byteLength));return p;}
  function palette(values=[]){if(!values.length){api.set_palette(0,0);return;}const data=new Uint8Array(values.flatMap(c=>typeof c==='string'?c.replace('#','').match(/../g).map(v=>parseInt(v,16)):Array.from(c)));const p=input(data);try{api.set_palette(p,values.length);}finally{api.dealloc(p,data.length);}}
  function output(pointer,text=false){if(!pointer)throw Error('Некорректные параметры трассировки');const bytes=new Uint8Array(api.memory.buffer,pointer,api.result_len());return text?decode.decode(bytes):bytes.slice();}
  return {
