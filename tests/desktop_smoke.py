@@ -19,7 +19,7 @@ with tempfile.TemporaryDirectory(prefix='doctor-tracer-') as directory:
  assert engine.analyze_image(source)['category']=='aa'
  rng=np.random.default_rng(7);pixels=rng.integers(0,256,(80,96,4),dtype=np.uint8);pixels[:8,:,3]=0;photo=root/'photo.png';Image.fromarray(pixels).save(photo)
  for detail in range(3):
-  output,st=engine.trace(photo,{'category':'photo','detail':detail,'speckle':2});assert st['compute']=='CPU' and st['alpha_threshold']==128;assert render(output)[0,48,3]==0
+  output,st=engine.trace(photo,{'category':'photo','detail':detail,'speckle':2,'compute':'cpu'});assert st['compute']=='OpenCV CPU' and st['alpha_threshold']==128,st;assert render(output)[0,48,3]==0
  flat,_=engine.trace(photo,{'category':'photo','detail':2,'flatten':True});assert render(flat)[0,48,3]>250
  job=root/'job.json';out=root/'result.svg';result=root/'result.json';job.write_text(json.dumps({'input':str(source),'output':str(out),'result':str(result),'config':cfg}),encoding='utf8')
  command=[sys.executable,str(Path(engine.__file__).parent/'app.py'),'--worker-server'];process=subprocess.Popen(command,stdin=subprocess.PIPE,stdout=subprocess.PIPE,text=True,encoding='utf8');stdout,_=process.communicate(json.dumps({'job':str(job)})+'\n'+json.dumps({'job':str(job)})+'\n',timeout=30);assert process.returncode==0 and len(stdout.splitlines())==2 and all(json.loads(line)['exit_code']==0 for line in stdout.splitlines());assert json.loads(result.read_text())['ok'];assert out.read_text()==svg

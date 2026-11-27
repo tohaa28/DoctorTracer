@@ -96,5 +96,5 @@ def trace(path,cfg):
     return svg,{**geometry,**metrics,'width':original[0],'height':original[1],
         'working_size':[labels.shape[1],labels.shape[0]],'colors':geometry['color_groups'],
         'seconds':time.perf_counter()-started,'backend':'shared photographic regions',
-        'palette_mode':'regional means' if unlimited else 'fixed',
+        'palette_mode':'regional means' if unlimited else 'fixed','alpha_threshold':128,
         'palette':['#%02x%02x%02x'%tuple(c) for c in palette] if not unlimited else []}
