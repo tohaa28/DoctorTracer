@@ -4,6 +4,7 @@ import {nativeRasterSize} from './input-image.mjs';
 import {gpuPrepare,gpuAssign} from './gpu.js';
 import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs';
 import {auditNative} from './geometry.mjs';
+import {optimizeExactSvg} from './exact-optimizer.mjs';
 import{regularizeResult}from'./regularize.mjs';
 import{cleanResult}from'./post-clean.mjs';
 import {smoothResult} from './post-smooth.mjs';
@@ -13,6 +14,7 @@ function emitProgress(progress,stage){lastProgress=Math.max(lastProgress,progres
 const stages=['','Подготовка изображения','Определение палитры','Сегментация','Объединение областей','Построение кривых','Готово'];
 self.onmessage=async ({data})=>{
  try{
+  if(data.operation==='exactOptimize'){const result=optimizeExactSvg(data.svg);if(result.svg!==data.svg)result.geometry=await auditNative(result.svg);self.postMessage({exactOptimize:result,requestId:data.requestId});return;}
   lastProgress=0;emitProgress(1,'Загрузка Rust WASM');
   runtime??=await (loading??=createTracer({onProgress:(progress,stage)=>emitProgress(Math.min(85,progress),stages[stage])}));
   if(data.operation==='regularize'){const result=await regularizeResult(runtime,data.svg,data.tolerance,data.straight,data.curved,data.protect);self.postMessage({regularize:result,requestId:data.requestId});return;}
