@@ -6,11 +6,11 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: doctortracer-curve-tools-0216
+  group: doctortracer-curve-tools-${{ github.sha }}
   cancel-in-progress: false
 jobs:
   web:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -54,6 +54,7 @@ jobs:
           path: out/*
           if-no-files-found: error
   windows:
+    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[web-only]') }}
     runs-on: windows-2022
     env:
       QT_QPA_PLATFORM: offscreen
