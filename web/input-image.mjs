@@ -42,7 +42,17 @@ async function tiffBitmap(data) {
  nativeRasterSize({width,height});
  tiff.decodeImage(data, frame);
  if (!frame.data?.length) throw Error('Не удалось декодировать первую страницу TIFF');
- const pixels = tiff.toRGBA8(frame);
+ let pixels;
+ if(frame.t262?.[0]===5&&frame.t277?.[0]===5){
+  if(frame.t284?.[0]!==1&&frame.t284?.[0]!==undefined||frame.t258?.length!==5||frame.t258.some(n=>n!==8)||frame.t338?.[0]!==2||frame.data.length!==width*height*5)
+   throw Error('Поддерживается CMYK TIFF с пятью 8-битными каналами и независимой прозрачностью');
+  pixels=new Uint8Array(width*height*4);
+  for(let i=0,j=0;i<pixels.length;i+=4,j+=5){
+   const black=255-frame.data[j+3];
+   for(let c=0;c<3;c++)pixels[i+c]=Math.round((255-frame.data[j+c])*black/255);
+   pixels[i+3]=frame.data[j+4];
+  }
+ }else pixels=tiff.toRGBA8(frame);
  if (frame.t338?.[0] === 1 && frame.t262?.[0] === 2 && frame.t277?.[0] === 4) {
   for (let i = 0; i < pixels.length; i += 4) {
    const alpha = pixels[i + 3];

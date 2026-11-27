@@ -15,7 +15,7 @@ import cv2
 from geometry import absolute_path
 
 from trace_progress import report
-from input_raster import open_raster
+from input_raster import open_raster, require_raster_memory
 
 NS='http://www.w3.org/2000/svg'
 
@@ -27,7 +27,7 @@ def spatial_photo(cfg):
 def load_source(path,cfg):
     im = open_raster(path)
     original=im.size
-    im.thumbnail((cfg.get('max_size',2400),)*2,Image.Resampling.LANCZOS)
+    require_raster_memory(*original,48)
     a=np.array(im)
     if cfg.get('flatten'):
         bg=np.array([int(cfg.get('flatten_color','#ffffff')[i:i+2],16) for i in (1,3,5)])
@@ -92,7 +92,7 @@ def find_palette(a, count=0, photo=False, merge_distance=24):
 
 def analyze_image(path,cfg=None):
     cfg=cfg or {}
-    a,size=load_source(path,{**cfg,'max_size':900})
+    a,size=load_source(path,cfg)
     palette=find_palette(a)
     rgb=a[:,:,:3]
     # A compact dominant palette indicates graphics rather than a photograph.
@@ -117,6 +117,7 @@ def segment(path,cfg):
     else:
         palette=find_palette(a,cfg.get('colors',0),cfg.get('category')=='photo' or cfg.get('preset')=='Фотография')
     if cfg.get('supersample',1)>1:
+        require_raster_memory(a.shape[1]*cfg['supersample'],a.shape[0]*cfg['supersample'],48)
         a=cv2.resize(a,None,fx=cfg['supersample'],fy=cfg['supersample'],interpolation=cv2.INTER_LINEAR)
     if spatial_photo(cfg):
         from spatial_palette import assign
@@ -184,7 +185,8 @@ def trace_graphic(path,cfg):
         if candidate is not None:return candidate
     # Alpha and every ink are faces of one common boundary graph.
     layered=aa and cfg.get('shape_strategy','auto')!='independent' and bool(np.any(source[0][:,:,3]<128)) and 'supersample' not in cfg
-    supersample=1 if layered else cfg.get('supersample',2 if aa else 1)
+    # Never automatically rescale the input. Explicit supersampling is optional.
+    supersample=1 if layered else cfg.get('supersample',1)
     a,labels,palette,original=segment(path,{**cfg,'supersample':supersample,'_metrics':metrics,'_source':source})
     from shared_regions import trace as shared_trace
     detail=cfg.get('detail',1);polygon=cfg.get('mode','spline')!='spline'
@@ -216,8 +218,7 @@ def trace_graphic(path,cfg):
 def prepare(path, cfg):
     im = open_raster(path)
     original = im.size
-    limit = cfg.get('max_size', 2400)
-    im.thumbnail((limit, limit), Image.Resampling.LANCZOS)
+    require_raster_memory(*original,48)
     if cfg.get('remove_bg'):
         a = np.array(im)
         corners = np.array([a[0, 0, :3], a[0, -1, :3], a[-1, 0, :3], a[-1, -1, :3]])
