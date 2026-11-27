@@ -1,6 +1,6 @@
 
 """Independent audit for two intensity-based postprocessing operations."""
-import ctypes,json,xml.etree.ElementTree as ET
+import ctypes,json,re,xml.etree.ElementTree as ET
 from raster_refit import runtime
 from vector_partition import audit_pieces
 from regularize import regularize
@@ -15,6 +15,7 @@ def intermediate(svg,strength):
         ptr=dll.result_intermediate(buffer,len(data),amount)
         if not ptr:continue
         candidate=ctypes.string_at(ptr,dll.result_len()).decode();stats=json.loads(ctypes.string_at(dll.stats_ptr(),dll.stats_len()));audit={}
+        if stats['removed_elements']:candidate=re.sub(r'<g\b[^>]*\bfill="#[0-9a-f]{6}"[^>]*>\s*</g>','',candidate,flags=re.I)
         try:
             root=ET.fromstring(candidate);audit_pieces([(p.get('fill'),p.get('d')) for p in root.iter('{http://www.w3.org/2000/svg}path')],audit)
             return candidate,{**stats,'applied_strength':amount,'limited':amount!=power,'geometry':audit}

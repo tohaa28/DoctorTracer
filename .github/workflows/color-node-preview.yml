@@ -1,0 +1,168 @@
+name: DoctorTracer color and node tools preview
+on:
+  push:
+    branches: [color-node-tools-0218]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: doctortracer-color-node-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  web:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Rebuild actual native WASM
+        run: |
+          rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown
+          cargo +stable test --manifest-path rust/Cargo.toml --locked
+          RUSTFLAGS="-C link-arg=--max-memory=2147483648" cargo +stable build --manifest-path rust/Cargo.toml --locked --target wasm32-unknown-unknown --release
+          cp rust/target/wasm32-unknown-unknown/release/doctortracer_wasm.wasm web/doctortracer.wasm
+      - name: Regression gates on rebuilt native binary
+        run: |
+          node --check web/app.js
+          node --check web/worker.js
+          node tests/native_raster.mjs
+          node tests/crisp_handoff.mjs
+          node tests/png_dpi_metadata.mjs
+          node tests/exact_optimizer.mjs
+          node tests/tile_seams.mjs
+          node tests/pixel_grid_trace.mjs
+          node tests/rust_wasm.mjs
+          node tests/export_viewbox.mjs
+          node tests/wasm.mjs
+          node tests/large_raster.mjs
+          node tests/color_node_tools.mjs
+      - uses: actions/checkout@v4
+        with:
+          ref: a9074c31349dd954c7590fcc7484a6b928641fb4
+          path: published-site
+      - name: Package new native binary and tested static assets
+        run: python scripts/package_color_node_web.py
+      - name: Chromium exact optimizer and full-resolution CMYK TIFF
+        run: |
+          python -m pip install numpy==2.2.3 tifffile==2025.5.10
+          python tests/large_raster_fixture.py build/site/native-fixture.tif
+          npm install --no-save --no-package-lock playwright@1.51.1
+          npx playwright install --with-deps chromium
+          python -m http.server 8765 --bind 127.0.0.1 --directory build/site >/tmp/doctortracer-http.log 2>&1 &
+          for i in {1..30}; do curl -fsS http://127.0.0.1:8765/version.json && break; sleep 1; done
+          node tests/exact_optimizer_browser.mjs
+          node tests/large_raster_browser.mjs
+          node tests/color_node_browser.mjs
+          rm build/site/native-fixture.tif
+      - name: Package validated static release
+        run: |
+          mkdir -p out
+          (cd build/site && zip -qr ../../out/DoctorTracer-0.21.8-wasm-preview-static.zip .)
+          (cd out && sha256sum DoctorTracer-0.21.8-wasm-preview-static.zip > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DoctorTracer-Web-0.21.8
+          path: out/*
+          if-no-files-found: error
+  windows:
+    runs-on: windows-2022
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install desktop dependencies
+        run: python -m pip install -r desktop/requirements.txt
+      - name: Rebuild Windows quality DLL from the same Rust source
+        run: |
+          rustup toolchain install stable --profile minimal --target x86_64-pc-windows-msvc
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +stable build --manifest-path rust/Cargo.toml --locked --release --target x86_64-pc-windows-msvc
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item rust/target/x86_64-pc-windows-msvc/release/doctortracer_wasm.dll desktop/vendor/quality/doctortracer_quality.dll -Force
+      - name: Regression gates and full-size CMYK TIFF trace
+        run: |
+          python tests/exact_optimizer.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/tile_seams.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/desktop_smoke.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/large_raster.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/color_node_tools.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/post_clean.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/regularize.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build Windows executable
+        run: |
+          Set-Location desktop
+          python -m PyInstaller --noconfirm DoctorTracer.spec --distpath ../rebuilt --workpath ../build
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Smoke test EXE
+        run: python tests/portable_worker_smoke.py
+      - name: ZIP and SHA256
+        run: |
+          New-Item -ItemType Directory -Force out | Out-Null
+          Copy-Item desktop/LICENSE rebuilt/DoctorTracer/LICENSE.txt
+          Copy-Item licenses/RELIEF-FORGE-MIT.txt rebuilt/DoctorTracer/RELIEF-FORGE-MIT.txt
+          $zip='out/DoctorTracer-0.19.3-preview-Windows-x64.zip'
+          Compress-Archive -Path rebuilt/DoctorTracer -DestinationPath $zip -CompressionLevel Optimal
+          $hash=(Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  DoctorTracer-0.19.3-preview-Windows-x64.zip" | Set-Content -Encoding ascii out/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DoctorTracer-Windows-0.19.3
+          path: out/*
+          if-no-files-found: error
+  publish-web:
+    needs: web
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: DoctorTracer-Web-0.21.8
+          path: release
+      - uses: actions/checkout@v4
+        with:
+          ref: a9074c31349dd954c7590fcc7484a6b928641fb4
+          path: page-candidate
+      - name: Prepare tested Pages candidate without changing live branch
+        run: |
+          unzip -oq release/DoctorTracer-0.21.8-wasm-preview-static.zip -d page-candidate
+          cd page-candidate
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.name 'github-actions[bot]'
+          git add -A
+          git commit -m 'Publish tested full-resolution Web 0.21.8 candidate'
+          git push origin HEAD:refs/heads/pages-candidate-0218
+      - name: Publish tested release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release create v0.21.8-wasm-preview release/* --target "$GITHUB_SHA" --prerelease --latest=false --title 'DoctorTracer WASM 0.21.8 — color and node tools' --notes 'Independent 0–100% sliders: conservative convex straight-edge intermediate color cleanup and shared-curve reduction with preview/undo. Complex intermediate faces are retained. Existing 150 MB and full-resolution trace regressions retained.'
+  publish-windows:
+    needs: windows
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: DoctorTracer-Windows-0.19.3
+          path: release
+      - name: Publish tested Windows preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release create v0.19.3-preview release/* --target "$GITHUB_SHA" --prerelease --latest=false --title 'DoctorTracer Windows 0.19.3 — color and node tools' --notes 'Native Rust DLL rebuilt. Independent 0–100% controls for conservative intermediate-color cleanup and shared-curve node reduction. Complex intermediate faces are retained. Preview and undo.'
