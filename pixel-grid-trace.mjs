@@ -3,7 +3,7 @@
 // A 1-pixel cell lattice conveys a +/-0.5-pixel crossing uncertainty.
 // Potrace fits global optimal polygons and subpixel cubic curves; two faces
 // reuse exactly reversed edges to prevent color gaps or overlaps.
-import {contours} from './paths.mjs?v=0.21.6';
+import {contours} from './paths.mjs?v=0.21.7';
 const p=a=>a.map(n=>Number(n.toFixed(2))).join(' ');
 const equal=(a,b)=>a[0]===b[0]&&a[1]===b[1];
 function parse(d){
@@ -72,7 +72,7 @@ export async function fitPixelGrid(labels,palette,w,h,{curveRuntime,traceMask,au
  }
  const {mask:engine}=await curveRuntime();
  // 0.18 px tolerance is (0.18 * 25.4/dpi) millimeters. No raster resampling.
- const raw=traceMask(engine,mask,w,h,.18,1.0);
+ let raw;try{raw=traceMask(engine,mask,w,h,.18,1.0);}catch(error){report({step:'optional Potrace fit unavailable',message:String(error)});return null;}
  if(!raw||!raw.includes('C')){report({step:'curve',len:raw?.length||0});return null;}
  const parts=parse(raw);if(!parts.length)return null;
  const face=print(parts),maxErrors=Math.max(2,Math.floor(perimeter*limitFraction));
