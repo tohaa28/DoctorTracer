@@ -35,6 +35,8 @@ async function pdfBitmap(data) {
  }
 }
 
+const bitmapDpi=new WeakMap();
+export function decodedRasterDpi(bitmap){return bitmapDpi.get(bitmap)??null;}
 async function tiffBitmap(data) {
  const {default: tiff} = await import(TIFF_MODULE.href);
  const [frame] = tiff.decode(data);
@@ -73,13 +75,16 @@ async function tiffBitmap(data) {
   [0,1,1,0,0,0], [0,1,-1,0,height,0], [0,-1,-1,0,height,width], [0,-1,1,0,0,width],
  ];
  const transform = transforms[orientation];
- if (!transform) return createImageBitmap(raw);
+ const unit=frame.t296?.[0]??2,rx=frame.t282?.[0],ry=frame.t283?.[0];
+ const dpi=Number.isFinite(rx)&&rx===ry&&[2,3].includes(unit)?rx*(unit===3?2.54:1):null;
+ const finish=async c=>{const bitmap=await createImageBitmap(c);if(dpi>0)bitmapDpi.set(bitmap,dpi);return bitmap;};
+ if (!transform) return finish(raw);
  const rotated = orientation >= 5;
  const output = canvas(rotated ? height : width, rotated ? width : height);
  const context = output.getContext('2d');
  context.setTransform(...transform);
  context.drawImage(raw, 0, 0);
- return createImageBitmap(output);
+ return finish(output);
 }
 
 export const MAX_INPUT_BYTES=150_000_000;
