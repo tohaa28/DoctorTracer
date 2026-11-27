@@ -1,0 +1,127 @@
+name: DoctorTracer exact curve tools preview
+on:
+  push:
+    branches: [curve-tools-0216]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: doctortracer-curve-tools-0216
+  cancel-in-progress: false
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Exact geometry and existing native WASM regressions
+        run: |
+          node --check web/app.js
+          node --check web/worker.js
+          node tests/exact_optimizer.mjs
+          node tests/tile_seams.mjs
+          node tests/pixel_grid_trace.mjs
+          node tests/rust_wasm.mjs
+          node tests/export_viewbox.mjs
+          node tests/wasm.mjs
+          python tests/exact_optimizer.py
+      - uses: actions/checkout@v4
+        with:
+          ref: 005d72c442a9be942cc72f28686708cd2f9229ad
+          path: published-site
+      - name: Package pinned static site without native changes
+        run: python scripts/package_curve_tools_web.py
+      - name: Chromium real worker and WASM smoke
+        run: |
+          npm install --no-save --no-package-lock playwright@1.51.1
+          npx playwright install --with-deps chromium
+          python -m http.server 8765 --bind 127.0.0.1 --directory build/site > /tmp/doctortracer-http.log 2>&1 &
+          for i in {1..30}; do curl -fsS http://127.0.0.1:8765/version.json && break; sleep 1; done
+          node tests/exact_optimizer_browser.mjs
+      - name: Build ZIP and checksum
+        run: |
+          mkdir -p out
+          (cd build/site && zip -qr ../../out/DoctorTracer-0.21.6-wasm-preview-static.zip .)
+          (cd out && sha256sum DoctorTracer-0.21.6-wasm-preview-static.zip > SHA256SUMS.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DoctorTracer-Web-0.21.6
+          path: out/*
+          if-no-files-found: error
+  windows:
+    runs-on: windows-2022
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install pinned desktop dependencies
+        run: python -m pip install -r desktop/requirements.txt
+      - name: Exact geometry and existing Windows regressions
+        run: |
+          python tests/exact_optimizer.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/tile_seams.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tests/desktop_smoke.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build portable Windows executable
+        run: |
+          Set-Location desktop
+          python -m PyInstaller --noconfirm DoctorTracer.spec --distpath ../rebuilt --workpath ../build
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Smoke test built EXE
+        run: python tests/portable_worker_smoke.py
+      - name: ZIP and SHA256
+        run: |
+          New-Item -ItemType Directory -Force out | Out-Null
+          Copy-Item desktop/LICENSE rebuilt/DoctorTracer/LICENSE.txt
+          Copy-Item licenses/RELIEF-FORGE-MIT.txt rebuilt/DoctorTracer/RELIEF-FORGE-MIT.txt
+          $zip='out/DoctorTracer-0.19.1-preview-Windows-x64.zip'
+          Compress-Archive -Path rebuilt/DoctorTracer -DestinationPath $zip -CompressionLevel Optimal
+          $hash=(Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  DoctorTracer-0.19.1-preview-Windows-x64.zip" | Set-Content -Encoding ascii out/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DoctorTracer-Windows-0.19.1
+          path: out/*
+          if-no-files-found: error
+  publish-web:
+    needs: web
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: DoctorTracer-Web-0.21.6
+          path: release
+      - name: Publish tested Web preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create v0.21.6-wasm-preview release/* --target "$GITHUB_SHA" --prerelease --latest=false --title 'DoctorTracer WASM 0.21.6 — exact curve tools' --notes 'Exact collinear/zero segment reduction and exact cubic half reconstruction; preview, cancel, undo; Chromium and existing WASM regression gates. Native binaries unchanged. No claim of repair of arbitrary self-intersections or approximate node merging.'
+  publish-windows:
+    needs: windows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: DoctorTracer-Windows-0.19.1
+          path: release
+      - name: Publish tested Windows preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create v0.19.1-preview release/* --target "$GITHUB_SHA" --prerelease --latest=false --title 'DoctorTracer Windows 0.19.1 — exact curve tools' --notes 'Shape-preserving exact optimization with preview and undo; native Windows regression and built executable trace smoke gates. Unzip the whole portable application directory.'
