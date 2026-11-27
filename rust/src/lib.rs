@@ -7,8 +7,18 @@ thread_local!{static RESULT:RefCell<Vec<u8>>=const{RefCell::new(Vec::new())};sta
 #[cfg(target_arch="wasm32")]#[link(wasm_import_module="env")]extern "C"{fn progress(value:u32,stage:u32);}
 fn report(value:u32,stage:u32){#[cfg(target_arch="wasm32")]unsafe{progress(value,stage)}#[cfg(not(target_arch="wasm32"))]let _=(value,stage);}
 fn store(bytes:Vec<u8>)->*const u8{RESULT.with(|r|{*r.borrow_mut()=bytes;r.borrow().as_ptr()})}
-fn valid(w:usize,h:usize)->bool{w>0&&h>0&&w<=4096&&h<=4096&&w.checked_mul(h).unwrap_or(usize::MAX)<=8_000_000}
-#[no_mangle]pub extern "C" fn alloc(n:usize)->*mut u8{if n>128_000_000{return std::ptr::null_mut();}Box::into_raw(vec![0u8;n].into_boxed_slice()) as *mut u8}
+// Check actual addressability of RGBA and dense graph arrays; no product resolution cap.
+fn valid(w:usize,h:usize)->bool{
+ if w==0||h==0||w>(i32::MAX as usize/2)||h>(i32::MAX as usize/2){return false;}
+ let rgba=w.checked_mul(h).and_then(|n|n.checked_mul(4));
+ let grid=w.checked_add(1).and_then(|x|h.checked_add(1).and_then(|y|x.checked_mul(y))).and_then(|n|n.checked_mul(16));
+ matches!((rgba,grid),(Some(a),Some(b)) if a<=isize::MAX as usize&&b<=isize::MAX as usize)
+}
+#[no_mangle]pub extern "C" fn alloc(n:usize)->*mut u8{
+ if n>isize::MAX as usize{return std::ptr::null_mut();}
+ let mut bytes=Vec::new();if bytes.try_reserve_exact(n).is_err(){return std::ptr::null_mut();}
+ bytes.resize(n,0u8);Box::into_raw(bytes.into_boxed_slice()) as *mut u8
+}
 #[no_mangle]pub unsafe extern "C" fn dealloc(p:*mut u8,n:usize){if !p.is_null(){drop(Box::from_raw(std::ptr::slice_from_raw_parts_mut(p,n)));}}
 #[no_mangle]pub extern "C" fn result_len()->usize{RESULT.with(|r|r.borrow().len())}
 #[no_mangle]pub extern "C" fn stats_ptr()->*const u8{STATS.with(|r|r.borrow().as_ptr())}
@@ -16,7 +26,7 @@ fn valid(w:usize,h:usize)->bool{w>0&&h>0&&w<=4096&&h<=4096&&w.checked_mul(h).unw
 #[no_mangle]pub unsafe extern "C" fn set_palette(p:*const u8,k:usize){PALETTE.with(|r|{let mut pal=r.borrow_mut();pal.clear();if k>0&&k<=128&&!p.is_null(){for color in std::slice::from_raw_parts(p,k*3).chunks_exact(3){pal.push([color[0],color[1],color[2]]);}}});}
 #[no_mangle]pub unsafe extern "C" fn filter_rgba(p:*const u8,w:usize,h:usize,_detail:usize)->*const u8{if p.is_null()||!valid(w,h){return std::ptr::null();}store(desktop_filters::bilateral(std::slice::from_raw_parts(p,w*h*4),w,h))}
 #[no_mangle]pub unsafe extern "C" fn desktop_stage(p:*const u8,w:usize,h:usize,colors:usize,detail:usize,kind:usize,extra:usize)->*const u8{
- if p.is_null()||!valid(w,h)||detail>2||colors>128{return std::ptr::null();}let a=std::slice::from_raw_parts(p,w*h*4);
+ if p.is_null()||!valid(w,h)||detail>2||colors>128||(kind==6&&(!valid(w*2,h*2))){return std::ptr::null();}let a=std::slice::from_raw_parts(p,w*h*4);
  let output=match kind{0=>desktop_filters::bilateral(a,w,h),1=>desktop_filters::modes(a,w,h,detail),2=>desktop_palette::find(a,w,h,colors,extra!=0).into_iter().flatten().collect(),3=>{let pal=PALETTE.with(|r|r.borrow().clone());if pal.is_empty(){return std::ptr::null();}desktop_filters::segment(a,w,h,&pal,(extra&65535) as i32,extra&65536!=0,if extra>>17==0{3}else{extra>>17})},4=>{let mut labels=a[..w*h].to_vec();let pal=PALETTE.with(|r|r.borrow().clone());if pal.len()==colors{desktop_filters::clean_aware(&mut labels,w,h,&pal,extra&65535,extra>>16);}else{desktop_filters::clean(&mut labels,w,h,colors,extra&65535,extra>>16);}labels},6=>desktop_filters::resize2(a,w,h),_=>return std::ptr::null()};store(output)
 }
 #[no_mangle]pub unsafe extern "C" fn shared_svg(p:*const i32,w:usize,h:usize,detail:usize,flags:usize)->*const u8{if p.is_null()||!valid(w,h)||detail>2{return std::ptr::null();}let pal=PALETTE.with(|r|r.borrow().clone());let labels=std::slice::from_raw_parts(p,w*h);if labels.iter().any(|&v|v>=pal.len() as i32){return std::ptr::null();}store(desktop_shared::trace(labels,&pal,w,h,detail,flags&1!=0,flags&2!=0,flags&4!=0).into_bytes())}
@@ -115,3 +125,5 @@ thread_local!{static LOGO:RefCell<Option<logo::Plan>>=RefCell::new(None);}
  Ok((out,before,after,lines,curves))=>{STATS.with(|r|*r.borrow_mut()=format!("{{\"nodes_before\":{before},\"nodes_after\":{after},\"straightened\":{lines},\"curves_fitted\":{curves}}}").into_bytes());store(out.into_bytes())},Err(_)=>std::ptr::null()
  }
 }
+
+#[cfg(test)]mod large_raster_limits_tests{use super::valid;#[test]fn native_dimensions(){assert!(valid(5130,1685));assert!(valid(9000,3));assert!(!valid(0,1));assert!(!valid(usize::MAX,2));assert!(!valid(i32::MAX as usize,1));}}

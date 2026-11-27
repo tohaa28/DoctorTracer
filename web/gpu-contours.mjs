@@ -44,7 +44,7 @@ export async function gpuContourCoordinates(labels,w,h,passes){
  const buffers=[];try{contourGpuError=null;
   if(!Number.isInteger(w)||!Number.isInteger(h)||w<1||h<1||labels.byteLength!==w*h*4){contourGpuError='Invalid contour grid';return null;}
   const device=await gpuDevice();const n=(w+1)*(h+1),scale=4**passes;
-  if(!device||!Number.isInteger(passes)||passes<0||passes>10||Math.max(w,h)*scale>0xffffffff||n*8>device.limits.maxStorageBufferBindingSize)return null;
+  if(!device||!Number.isInteger(passes)||passes<0||passes>10||Math.max(w,h)*scale>0xffffffff||n*8>Math.min(device.limits.maxStorageBufferBindingSize,device.limits.maxBufferSize)||Math.ceil(n/128)>device.limits.maxComputeWorkgroupsPerDimension){contourGpuError='GPU device limits: using full-resolution CPU fallback';return null;}
   if(!cached||cached.device!==device){
    const entries=Array.from({length:6},(_,binding)=>({binding,visibility:GPUShaderStage.COMPUTE,buffer:{type:binding===0?'read-only-storage':binding===5?'uniform':'storage'}}));
    const group=device.createBindGroupLayout({entries}),layout=device.createPipelineLayout({bindGroupLayouts:[group]});

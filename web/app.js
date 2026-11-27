@@ -95,8 +95,7 @@ function updateProgress(){if($('progress')){$('progress').value=progress;$('proc
 async function run(){
  if(!source||busy||!readConfig())return;busy=true;if(step!==5){pageHistory.push(step);step=5;}svg='';progress=0;stage='Подготовка изображения';$('outlines').checked=false;$('vector').disabled=true;show();
  if(config.colors>0&&!config.palette?.length&&hasTransparentSlot()){try{const generation=loadToken,palette=await requestPalette(config.colors);if(generation!==loadToken||!busy)return;config.palette=palette;config.palette_generated=true;}catch(error){busy=false;step=pageHistory.pop()??4;show();status(error.message);return;}}
- const canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;const context=canvas.getContext('2d',{willReadFrequently:true});
- drawInputRaster(context,source,canvas.width,canvas.height,{crisp:crispRaster,flatten:config.flatten});const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
+ let pixels;try{const canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;const context=canvas.getContext('2d',{willReadFrequently:true});if(!context)throw Error('Браузер не выделил память для исходного растра');drawInputRaster(context,source,canvas.width,canvas.height,{crisp:crispRaster,flatten:config.flatten});pixels=context.getImageData(0,0,canvas.width,canvas.height).data;}catch(error){busy=false;step=pageHistory.pop()??0;show();status('Не удалось обработать исходное разрешение: '+error.message);return;}
  worker??=new Worker(new URL('./worker.js',import.meta.url),{type:'module'});
  worker.onmessage=({data})=>{
   if(data.progress!==undefined){progress=data.progress;stage=data.stage;updateProgress();return;}

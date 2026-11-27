@@ -39,10 +39,7 @@ async function tiffBitmap(data) {
  const {default: tiff} = await import(TIFF_MODULE.href);
  const [frame] = tiff.decode(data);
  const width = frame?.t256?.[0], height = frame?.t257?.[0];
- if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 ||
-     width > 32767 || height > 32767 || width * height > 40000000) {
-  throw Error('Некорректный размер TIFF или превышен предел 40 млн пикселей');
- }
+ nativeRasterSize({width,height});
  tiff.decodeImage(data, frame);
  if (!frame.data?.length) throw Error('Не удалось декодировать первую страницу TIFF');
  const pixels = tiff.toRGBA8(frame);
@@ -75,7 +72,14 @@ async function tiffBitmap(data) {
  return createImageBitmap(output);
 }
 
+export const MAX_INPUT_BYTES=150_000_000;
+export function validateInputFile(file){
+ if(!Number.isSafeInteger(file?.size)||file.size<0)throw Error('Некорректный размер файла');
+ if(file.size>MAX_INPUT_BYTES)throw Error('Файл превышает 150 МБ (150 000 000 байт).');
+ return file;
+}
 export function decodeImage(file) {
+ validateInputFile(file);
  if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) {
   return file.arrayBuffer().then(data => pdfBitmap(new Uint8Array(data)));
  }
@@ -102,15 +106,14 @@ export function drawInputRaster(context,image,width,height,{crisp=false,flatten=
  context.drawImage(image,0,0,width,height);
 }
 
- // Match the shipped Rust valid(w,h) ABI exactly. Never downsample to fit.
-export const NATIVE_RASTER_MAX_SIDE=4096;
-export const NATIVE_RASTER_MAX_PIXELS=8000000;
+// Match actual WASM32 signed allocation/indexing limits, not arbitrary dimensions.
 export function nativeRasterSize(image){
  const {width,height}=image;
  if(!Number.isSafeInteger(width)||!Number.isSafeInteger(height)||width<1||height<1)
   throw Error('Некорректные размеры исходного растра.');
- if(width>NATIVE_RASTER_MAX_SIDE||height>NATIVE_RASTER_MAX_SIDE||width*height>NATIVE_RASTER_MAX_PIXELS)
-  throw Error('Исходный растр '+width+'×'+height+' превышает предел текущего WASM: 4096 px по стороне и 8 млн пикселей. Автоматическое уменьшение запрещено.');
+ const rgba=width*height*4,grid=(width+1)*(height+1)*16;
+ if(!Number.isSafeInteger(rgba)||!Number.isSafeInteger(grid)||rgba>0x7fffffff||grid>0x7fffffff||width>0x3fffffff||height>0x3fffffff)
+  throw Error('Исходный растр '+width+'×'+height+' не помещается в адресное пространство текущего WASM32. Изображение не уменьшено; используйте Windows-версию.');
  return {width,height};
 }
 

@@ -72,7 +72,7 @@ export async function fitPixelGrid(labels,palette,w,h,{curveRuntime,traceMask,au
  }
  const {mask:engine}=await curveRuntime();
  // 0.18 px tolerance is (0.18 * 25.4/dpi) millimeters. No raster resampling.
- const raw=traceMask(engine,mask,w,h,.18,1.0);
+ let raw;try{raw=traceMask(engine,mask,w,h,.18,1.0);}catch(error){report({step:'optional Potrace fit unavailable',message:String(error)});return null;}
  if(!raw||!raw.includes('C')){report({step:'curve',len:raw?.length||0});return null;}
  const parts=parse(raw);if(!parts.length)return null;
  const face=print(parts),maxErrors=Math.max(2,Math.floor(perimeter*limitFraction));
