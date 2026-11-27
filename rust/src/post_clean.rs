@@ -149,6 +149,107 @@ fn intermediate_graph(strength:u32,scale:f64,nodes:&[P],edges:&[Edge],neighbors:
  (removed,protected)
 }
 
+
+// Fringe cycle 2. Retain one original interface verbatim and give the narrow
+// intervening face to its other neighbour. No independent curve fitting,
+// rasterization or deletion of an entire palette entry.
+fn fringe_points(chain:&[(usize,bool)],curves:&[Curve])->Vec<P>{chain_samples(chain,curves).0}
+fn fringe_len(p:&[P])->f64{p.windows(2).map(|s|dist(s[0],s[1])).sum()}
+fn fringe_reverse(c:&[(usize,bool)])->Vec<(usize,bool)>{c.iter().rev().map(|&(i,r)|(i,!r)).collect()}
+fn fringe_color(c:[f64;3],a:[f64;3],b:[f64;3],power:f64)->bool{
+ if c.iter().chain(&a).chain(&b).any(|x|!x.is_finite()){return false;}
+ if blend(c,a,b,power){return true;}
+ // JPEG halos may desaturate or shift towards the background rather than
+ // lying on a literal RGB segment. Restrict relaxation to high strengths.
+ if power<0.5||rgb_dist(a,b)<50.{return false;}
+ let light=|v:[f64;3]|0.2126*v[0]+0.7152*v[1]+0.0722*v[2];
+ let l=light(c);let la=light(a);let lb=light(b);
+ if l<la.min(lb)-12.*power||l>la.max(lb)+12.*power{return false;}
+ let chroma=|v:[f64;3]|[v[0]-v[1],v[2]-v[1]];
+ let u=chroma(c);let un=u[0].hypot(u[1]);
+ if un<5.{return rgb_dist(c,a).min(rgb_dist(c,b))<=95.*power;}
+ [a,b].into_iter().any(|v|{let z=chroma(v);let zn=z[0].hypot(z[1]);zn>5.&&u[0]*z[0]+u[1]*z[1]>=0.93*un*zn&&un<=zn+20.*power&&rgb_dist(c,v)<=115.*power})
+}
+fn rgb_dist(a:[f64;3],b:[f64;3])->f64{(0..3).map(|i|(a[i]-b[i]).powi(2)).sum::<f64>().sqrt()}
+fn near_fringe(a:&[P],b:&[P],width:f64,area:f64)->bool{
+ let al=fringe_len(a);let bl=fringe_len(b);
+ if a.len()<2||b.len()<2||al.min(bl)<1e-8||al.max(bl)>3.*al.min(bl)||area<=1e-9||2.*area/(al+bl)>width{return false;}
+ // Bounded verification cost. Distance is sampled, not a certified
+ // continuous Hausdorff bound. Retain complex or ambiguous faces.
+ if a.len().saturating_mul(b.len())>2_000_000{return false;}
+ a.iter().all(|&p|distance(p,b)<=width)&&b.iter().all(|&p|distance(p,a)<=width)
+}
+fn fringe_replace(target:&[(usize,bool)],old:&[(usize,bool)],new:&[(usize,bool)])->Option<Vec<(usize,bool)>>{
+ if !chain_is_reversed(old,target){return None;}
+ let needle=fringe_reverse(old);
+ let i=target.iter().enumerate().find(|(i,v)|**v==needle[0]&&needle.iter().enumerate().all(|(j,x)|target[(*i+j)%target.len()]==*x))?.0;
+ let mut out=new.to_vec();out.extend((old.len()..target.len()).map(|j|target[(i+j)%target.len()]));Some(out)
+}
+fn fringe_inside(p:P,ring:&[P])->bool{
+ let mut inside=false;for v in ring.windows(2){let a=v[0];let b=v[1];if (a[1]>p[1])!=(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0]{inside=!inside;}}inside
+}
+fn fringe_graph(strength:u32,scale:f64,nodes:&[P],edges:&[Edge],neighbors:&[Vec<usize>],paths:&[Path],path_cycles:&[Vec<usize>],cycles:&mut[Vec<(usize,bool)>],curves:&[Curve],assigned:&[(usize,bool)],remove:&mut[bool])->usize{
+ let power=strength as f64/100.;let width=3.*power*scale;
+ if !width.is_finite()||width<=0.{return 0;}
+ let mut path_of=vec![usize::MAX;cycles.len()];for(p,ids)in path_cycles.iter().enumerate(){for &i in ids{path_of[i]=p;}}
+ let mut owners=vec![Vec::<usize>::new();edges.len()];for(i,cycle)in cycles.iter().enumerate(){for &(e,_)in cycle{owners[e].push(i);}}
+ let mut touched:Vec<bool>=cycles.iter().enumerate().map(|(i,c)|remove[i]||c.iter().any(|&(e,_)|assigned[e]!=(e,false))).collect();
+ let original=cycles.to_vec();let mut count=0;
+ let color=|i:usize|rgb(&paths[path_of[i]].tag);
+ let adj=|i:usize,e:usize|->Option<usize>{let o=&owners[e];if o.len()!=2||o[0]==o[1]{None}else if o[0]==i{Some(o[1])}else if o[1]==i{Some(o[0])}else{None}};
+ // Whole annulus: outer ring and exactly one contained hole; both must
+ // have an entire exactly reversed owner ring in another colour.
+ for (pi,ids) in path_cycles.iter().enumerate(){
+  if ids.len()<2{continue;}
+  // Bounding boxes cheaply limit containment searches for grouped colours.
+  let bounds:Vec<_>=ids.iter().map(|&i|{let p=fringe_points(&original[i],curves);let lo=[p.iter().map(|x|x[0]).fold(f64::INFINITY,f64::min),p.iter().map(|x|x[1]).fold(f64::INFINITY,f64::min)];let hi=[p.iter().map(|x|x[0]).fold(f64::NEG_INFINITY,f64::max),p.iter().map(|x|x[1]).fold(f64::NEG_INFINITY,f64::max)];(p,lo,hi)}).collect();
+  for (oi,&o) in ids.iter().enumerate(){
+   if touched[o]||original[o].len()<2{continue;}
+   let (op,lo,hi)=&bounds[oi];let oa=signed_area(op);if oa<=0.{continue;}
+   let inside:Vec<_>=ids.iter().enumerate().filter(|(k,_)|*k!=oi&&bounds[*k].1[0]>=lo[0]&&bounds[*k].1[1]>=lo[1]&&bounds[*k].2[0]<=hi[0]&&bounds[*k].2[1]<=hi[1]&&bounds[*k].0.first().is_some_and(|&p|fringe_inside(p,op))).collect();
+   if inside.len()!=1{continue;}
+   let (ii,&h)=inside[0];if touched[h]||original[h].len()<2{continue;}
+   let hp=&bounds[ii].0;let ha=signed_area(hp);if ha>=0.||!hp.iter().all(|&p|fringe_inside(p,op)){continue;}
+   if !near_fringe(op,hp,width,oa+ha){continue;}
+   let(Some(a),Some(b))=(adj(o,original[o][0].0),adj(h,original[h][0].0))else{continue;};
+   if a==b||touched[a]||touched[b]||path_of[a]==pi||path_of[b]==pi||path_of[a]==path_of[b]{continue;}
+   let paired=|i:usize,j:usize|original[i].len()==original[j].len()&&original[i].iter().all(|&(e,_)|adj(i,e)==Some(j)&&neighbors[edges[e].a].len()==2&&neighbors[edges[e].b].len()==2);
+   if !paired(o,a)||!paired(h,b){continue;}
+   let(Some(c),Some(ca),Some(cb))=(color(o),color(a),color(b))else{continue;};
+   if !fringe_color(c,ca,cb,power){continue;}
+   // Prefer absorbing into the closest ink; leave the opposite contour
+   // exactly as authored. All covered area remains covered.
+   if rgb_dist(c,ca)<=rgb_dist(c,cb){cycles[a]=original[h].clone();}else{cycles[b]=original[o].clone();}
+   remove[o]=true;remove[h]=true;for i in [o,h,a,b]{touched[i]=true;}count+=1;
+  }
+ }
+ // Open-ended crescent or thin curved band: exactly two neighbours with
+ // two junctions, and no third connection along either shared chain.
+ for(ci,cycle)in original.iter().enumerate(){
+  if touched[ci]||cycle.len()<2{continue;}
+  let Some(adjacent)=cycle.iter().map(|&(e,_)|adj(ci,e)).collect::<Option<Vec<_>>>()else{continue;};
+  let n=cycle.len();let t:Vec<_>=(0..n).filter(|&i|adjacent[i]!=adjacent[(i+n-1)%n]).collect();
+  if t.len()!=2{continue;}
+  let(i,j)=(t[0],t[1]);let(a,b)=(adjacent[i],adjacent[j]);
+  if touched[a]||touched[b]||path_of[a]==path_of[b]||path_of[a]==path_of[ci]||path_of[b]==path_of[ci]{continue;}
+  // A positive outer cycle must not contain a hole from this colour.
+  let full=fringe_points(cycle,curves);let area=signed_area(&full);if area<=0.{continue;}
+  if path_cycles[path_of[ci]].iter().any(|&k|k!=ci&&fringe_points(&original[k],curves).first().is_some_and(|&p|fringe_inside(p,&full))){continue;}
+  let start=|e:(usize,bool)|if e.1{edges[e.0].b}else{edges[e.0].a};
+  let x=start(cycle[i]);let y=start(cycle[j]);
+  if x==y||neighbors[x].len()!=3||neighbors[y].len()!=3||(0..n).any(|k|k!=i&&k!=j&&neighbors[start(cycle[k])].len()!=2){continue;}
+  let first=cycle[i..j].to_vec();let second:Vec<_>=cycle[j..].iter().chain(&cycle[..i]).copied().collect();
+  if !near_fringe(&fringe_points(&first,curves),&fringe_points(&second,curves),width,area){continue;}
+  let(Some(c),Some(ca),Some(cb))=(color(ci),color(a),color(b))else{continue;};
+  if !fringe_color(c,ca,cb,power){continue;}
+  if !chain_is_reversed(&first,&original[a])||!chain_is_reversed(&second,&original[b]){continue;}
+  if rgb_dist(c,ca)<=rgb_dist(c,cb){let Some(v)=fringe_replace(&original[a],&first,&second)else{continue;};cycles[a]=v;}
+  else{let Some(v)=fringe_replace(&original[b],&second,&first)else{continue;};cycles[b]=v;}
+  remove[ci]=true;for k in [ci,a,b]{touched[k]=true;}count+=1;
+ }
+ count
+}
+
 pub fn clean(svg:&str,min_area:f64,tolerance:f64,protect:bool)->Result<(String,usize,usize,usize,usize),&'static str>{process(svg,min_area,tolerance,protect,false,true,true,0)}
 pub fn regularize(svg:&str,tolerance:f64,straight:bool,curved:bool,protect:bool)->Result<(String,usize,usize,usize,usize),&'static str>{process(svg,0.,tolerance,protect,true,straight,curved,0)}
 pub fn intermediate(svg:&str,strength:u32)->Result<(String,usize,usize,usize,usize),&'static str>{
@@ -199,7 +300,7 @@ fn process(svg:&str,min_area:f64,tolerance:f64,protect:bool,regularize:bool,stra
   let(mut samples,mut members)=oriented(a,a.a==node);let(ps,ms)=oriented(b,b.b==node);samples.extend(ps.into_iter().skip(1));members.extend(ms);let u=tangent(a,x,&nodes);let v=tangent(b,y,&nodes);let Some(c)=fit(&samples,u,v,tol)else{continue;};
   let id=curves.len();for &(old,r)in &members{assigned[old]=(id,r);}curves[i].active=false;curves[j].active=false;curves.push(Curve{a:x,b:y,c,members,samples,active:true});neighbors[node].clear();neighbors[x].retain(|&e|e!=i);neighbors[y].retain(|&e|e!=j);neighbors[x].push(id);neighbors[y].push(id);merges+=1;
  }if merges==0{break;}}}
- if intermediate_strength>0{(removed,protected)=intermediate_graph(intermediate_strength,scale,&nodes,&edges,&neighbors,&paths,&path_cycles,&cycles,&mut curves,&mut assigned,&mut remove);}
+ if intermediate_strength>0{(removed,protected)=intermediate_graph(intermediate_strength,scale,&nodes,&edges,&neighbors,&paths,&path_cycles,&cycles,&mut curves,&mut assigned,&mut remove);removed+=fringe_graph(intermediate_strength,scale,&nodes,&edges,&neighbors,&paths,&path_cycles,&mut cycles,&curves,&assigned,&mut remove);}
  let mut after=0;let mut output=String::new();for((path,prefix),ids)in paths.iter().zip(prefixes).zip(path_cycles){output.push_str(&prefix);let mut d=String::new();for ci in ids{if remove[ci]{continue;}let mut list=Vec::new();for &(e,r)in &cycles[ci]{let(id,flip)=assigned[e];let item=(id,r^flip);if list.last()!=Some(&item){list.push(item);}}if list.len()>1&&list.first()==list.last(){list.pop();}if list.is_empty(){continue;}if regularize&&tol>0.{let(original,_)=chain_samples(&cycles[ci],&curves);let mut changed=Vec::new();for &(id,r)in &list{let c=&curves[id];let mut ps=sample(nodes[c.a],nodes[c.b],c.c);if r{ps.reverse();}let skip=usize::from(!changed.is_empty());changed.extend(ps.into_iter().skip(skip));}let a=signed_area(&original);let b=signed_area(&changed);if a.abs()>1e-10&&(a*b<=0.||b.abs()<a.abs()*0.8||b.abs()>a.abs()*1.2){return Err("Regularization would change a contour area");}}after+=list.len();let(g,r)=list[0];let start=nodes[if r{curves[g].b}else{curves[g].a}];write!(d,"M{:.6} {:.6} ",start[0],start[1]).unwrap();for(id,r)in list{let g=&curves[id];let end=nodes[if r{g.a}else{g.b}];if let Some(c)=g.c{let(a,b)=if r{(c[1],c[0])}else{(c[0],c[1])};write!(d,"C{:.6} {:.6} {:.6} {:.6} {:.6} {:.6} ",a[0],a[1],b[0],b[1],end[0],end[1]).unwrap();}else{write!(d,"L{:.6} {:.6} ",end[0],end[1]).unwrap();}}d.push_str("Z ");}
  if !d.is_empty(){output.push_str(&path.tag.replacen(&format!("d=\"{}\"",path.d),&format!("d=\"{d}\""),1));}}
  output.push_str(tail);if before==after&&removed==0{return Ok((svg.to_string(),before,after,removed,protected));}if !output.contains("data-post-cleaned="){output=output.replacen("<svg ","<svg data-post-cleaned=\"true\" ",1);}Ok((output,before,after,removed,protected))

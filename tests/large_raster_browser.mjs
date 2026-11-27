@@ -5,7 +5,7 @@ try{
  const page=await browser.newPage();
  await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle'});
  const result=await page.evaluate(async()=>{
-  const {decodeImage,decodedRasterDpi,validateInputFile}=await import('./input-image.mjs?v=0.21.8');
+  const {decodeImage,decodedRasterDpi,validateInputFile}=await import('./input-image.mjs?v=0.21.9');
   validateInputFile({size:150_000_000});
   let rejected=false;try{validateInputFile({size:150_000_001});}catch{rejected=true;}
   const blob=await(await fetch('./native-fixture.tif')).blob();

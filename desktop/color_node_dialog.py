@@ -14,7 +14,7 @@ class Dialog(SmoothDialog):
     def __init__(self,owner,color):
         QDialog.__init__(self,owner);self.owner=owner;self.base=owner.svg_text;self.candidate=self.base;self.token=0;self.closed=False;self.color=color
         self.setWindowTitle('Очистка промежуточных цветов' if color else 'Сокращение узлов кривых');self.setMinimumWidth(460)
-        box=QVBoxLayout(self);label=QLabel('Мелкие области цвета-смеси делятся общей границей двух соседей. Неоднозначные и криволинейные области сохраняются.' if color else 'Аппроксимация общих кривых, защита углов. 100% = допуск 2 пикселя, не процент удалённых узлов.');label.setWordWrap(True);box.addWidget(label)
+        box=QVBoxLayout(self);label=QLabel('Убираются тонкие промежуточные прослойки, в том числе кривые и замкнутые ореолы. 100% — до 3 пкс для криволинейных прослоек. Широкие и неоднозначные области сохраняются.' if color else 'Аппроксимация общих кривых, защита углов. 100% = допуск 2 пикселя, не процент удалённых узлов.');label.setWordWrap(True);box.addWidget(label)
         self.value=QLabel();box.addWidget(self.value);self.slider=QSlider(Qt.Horizontal);self.slider.setRange(0,100);self.slider.setValue(35);box.addWidget(self.slider)
         self.preview=QCheckBox('Предпросмотр на изображении');self.preview.setChecked(True);box.addWidget(self.preview)
         self.info=QLabel();self.info.setWordWrap(True);box.addWidget(self.info)

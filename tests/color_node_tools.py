@@ -26,3 +26,19 @@ assert b and set(b)<=set(a) and all(a[k]+b[k]==0 for k in b)
 assert b'/Subtype /Image' not in pdf_bytes(reduced)
 assert reduce_nodes(circle,100)[0]==reduced
 print('PASS native DLL intermediate colors and paired node reduction:',s)
+
+fringes=json.loads((root/'tests/fringe_cases.json').read_text())
+for key in ('annulus','crescent'):
+    source=svg(fringes[key])
+    assert intermediate(source,0)[0]==source
+    assert intermediate(source,20)[0]==source
+    cleaned,s=intermediate(source,100)
+    assert s['removed_elements']==1,(key,s)
+    assert len(paths(cleaned))==2,key
+    gold_before=next(p for p in paths(source) if p.get('fill')=='#d39f50')
+    gold_after=next(p for p in paths(cleaned) if p.get('fill')=='#d39f50')
+    assert sorted(segments(gold_before.get('d'),True))==sorted(segments(gold_after.get('d'),True)),key
+    assert intermediate(cleaned,100)[0]==cleaned
+for key in ('wide','unrelated','alpha'):
+    source=svg(fringes[key]);assert intermediate(source,100)[0]==source,key
+print('PASS native curved and ring gray fringe, preserve authentic colors and transparency')
