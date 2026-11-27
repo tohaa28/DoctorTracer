@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import createTracer from './rust-tracer.mjs?v=0.21.7';
-import {nativeRasterSize} from './input-image.mjs?v=0.21.7';
-import {gpuPrepare,gpuAssign} from './gpu.js?v=0.21.7';
-import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs?v=0.21.7';
-import {auditNative} from './geometry.mjs?v=0.21.7';
-import {optimizeExactSvg} from './exact-optimizer.mjs?v=0.21.7';
-import{regularizeResult}from'./regularize.mjs?v=0.21.7';
-import{cleanResult}from'./post-clean.mjs?v=0.21.7';
-import {smoothResult} from './post-smooth.mjs?v=0.21.7';
-import {traceFixed} from './desktop-curves.mjs?v=0.21.7';
+import createTracer from './rust-tracer.mjs?v=0.21.8';
+import {nativeRasterSize} from './input-image.mjs?v=0.21.8';
+import {gpuPrepare,gpuAssign} from './gpu.js?v=0.21.8';
+import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs?v=0.21.8';
+import {auditNative} from './geometry.mjs?v=0.21.8';
+import {optimizeExactSvg} from './exact-optimizer.mjs?v=0.21.8';
+import {intermediateResult,reduceNodesResult} from './color-node-tools.mjs?v=0.21.8';
+import{regularizeResult}from'./regularize.mjs?v=0.21.8';
+import{cleanResult}from'./post-clean.mjs?v=0.21.8';
+import {smoothResult} from './post-smooth.mjs?v=0.21.8';
+import {traceFixed} from './desktop-curves.mjs?v=0.21.8';
 let runtime,loading,lastProgress=0;
 function emitProgress(progress,stage){lastProgress=Math.max(lastProgress,progress);self.postMessage({progress:lastProgress,stage});}
 const stages=['','Подготовка изображения','Определение палитры','Сегментация','Объединение областей','Построение кривых','Готово'];
@@ -17,6 +18,8 @@ self.onmessage=async ({data})=>{
   if(data.operation==='exactOptimize'){const result=optimizeExactSvg(data.svg);if(result.svg!==data.svg)result.geometry=await auditNative(result.svg);self.postMessage({exactOptimize:result,requestId:data.requestId});return;}
   lastProgress=0;emitProgress(1,'Загрузка Rust WASM');
   runtime??=await (loading??=createTracer({onProgress:(progress,stage)=>emitProgress(Math.min(85,progress),stages[stage])}));
+  if(data.operation==='intermediate'){const result=await intermediateResult(runtime,data.svg,data.strength);self.postMessage({intermediate:result,requestId:data.requestId});return;}
+  if(data.operation==='reduceNodes'){const result=await reduceNodesResult(runtime,data.svg,data.strength);self.postMessage({reduceNodes:result,requestId:data.requestId});return;}
   if(data.operation==='regularize'){const result=await regularizeResult(runtime,data.svg,data.tolerance,data.straight,data.curved,data.protect);self.postMessage({regularize:result,requestId:data.requestId});return;}
   if(data.operation==='postClean'){const result=await cleanResult(runtime,data.svg,data.minArea,data.tolerance,data.protect);self.postMessage({postClean:result,requestId:data.requestId});return;}
   if(data.operation==='postSmooth'){const result=await smoothResult(runtime,data.svg,data.strength,data.sharp);self.postMessage({postSmooth:result,requestId:data.requestId});return;}
