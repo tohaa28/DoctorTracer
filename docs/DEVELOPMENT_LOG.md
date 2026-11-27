@@ -121,3 +121,15 @@ Base 41e67b108b65e28191b25157a77e6b13483ff900. Source file limit 150,000,000 byt
 
 ## 2026-11-27 — Windows 0.19.3 / WASM 0.21.8 candidate
 Base 42efc25c733db8fe379ad02ebb9773861438807c. Two independent postprocessing sliders 0–100%, preview and undo. Intermediate color: conservative vector graph split of convex straight-edge face with exactly two contiguous opposite fully paired neighboring faces; area <=100*power px², effective width 2A/P<=4*power px, RGB mixture tolerance 3+15*power, t 0.12–0.88; explicit protection of true different colors, isolated details, curved/concave/transparent and ambiguous faces. Replace both sides with one chord (shared exactly reversed), no whole-palette deletion or retracing. This is first-cycle limited geometry, not generic curved band cleanup. Node reduction uses existing global shared-chain regularize, protected corners, sampled two-sided fitting tolerance power/50 px, independent audit and only accept node-count reduction; 0% unchanged. Both native Rust binaries rebuilt; new fixtures diamond, real saturated third ink, isolated island, paired round 64-edge boundary, full coverage, PDF/EPS, browser worker, retained full-size TIFF and seam tests. User's real artwork not published or tested in this cycle. Publication gated by CI.
+
+
+## 2026-11-27 — Windows 0.19.4 / WASM 0.21.9 candidate
+# Задача: очистка промежуточного цвета (цикл 2)
+
+Пользовательский пример: вокруг золотистых точек, прямоугольников и линий на тёмном сине-сером фоне есть светло-серые локальные ореолы. Настоящие широкие серые и голубые полосы макета должны сохраняться. JPEG клиента не публикуется.
+
+Требования: процент 0–100, предпросмотр/отмена, локальная обработка готового вектора; не удалять цвет глобально; сохранять общий силуэт, отверстия, углы и точные кубические кривые, не создавать зазоры и перекрытия.
+
+Реализация цикла: добавлены два случая — открытые тонкие криволинейные прослойки с двумя узлами стыка и замкнутое кольцо с одним отверстием. Проверяется максимальное расстояние между выборками границ (до 3 пикселей при 100%), средняя толщина, отношение длин, совпадение общих рёбер. Старый режим малых выпуклых вставок сохраняется. При >=50% допускается локальный JPEG-сдвиг оттенка, если яркость промежуточная и цвет близок по направлению хромы к одному соседу. Прослойка целиком передаётся ближайшему по RGB соседу, другая граница сохраняется дословно; не обещается геометрическое деление пополам. Сложные многосвязные, непарные или неоднозначные случаи оставляются неизменными. Дистанция проверяется по выборкам, не является доказанным непрерывным расстоянием Хаусдорфа. Предел стоимости 2 млн сравнений для пары цепей. Отдельный аудит пересечений обязателен. Приёмка: кольцо и длинный серый ореол, реальные широкие области, прозрачность, насыщенный третий цвет, ранее пройденные тесты; EXE и WASM из одного Rust. Реальный JPEG требует отдельного запуска трассировки; синтетические аналоги не выдавать за него.
+
+Base bde52f68cc0f539d186aaa823abe51ffca15bdaf. Publication only after CI.
