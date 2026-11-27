@@ -1,18 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import createTracer from './rust-tracer.mjs?v=0.21.5';
-import {nativeRasterSize} from './input-image.mjs?v=0.21.5';
-import {gpuPrepare,gpuAssign} from './gpu.js?v=0.21.5';
-import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs?v=0.21.5';
-import {auditNative} from './geometry.mjs?v=0.21.5';
-import{regularizeResult}from'./regularize.mjs?v=0.21.5';
-import{cleanResult}from'./post-clean.mjs?v=0.21.5';
-import {smoothResult} from './post-smooth.mjs?v=0.21.5';
-import {traceFixed} from './desktop-curves.mjs?v=0.21.5';
+import createTracer from './rust-tracer.mjs?v=0.21.6';
+import {nativeRasterSize} from './input-image.mjs?v=0.21.6';
+import {gpuPrepare,gpuAssign} from './gpu.js?v=0.21.6';
+import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs?v=0.21.6';
+import {auditNative} from './geometry.mjs?v=0.21.6';
+import {optimizeExactSvg} from './exact-optimizer.mjs?v=0.21.6';
+import{regularizeResult}from'./regularize.mjs?v=0.21.6';
+import{cleanResult}from'./post-clean.mjs?v=0.21.6';
+import {smoothResult} from './post-smooth.mjs?v=0.21.6';
+import {traceFixed} from './desktop-curves.mjs?v=0.21.6';
 let runtime,loading,lastProgress=0;
 function emitProgress(progress,stage){lastProgress=Math.max(lastProgress,progress);self.postMessage({progress:lastProgress,stage});}
 const stages=['','Подготовка изображения','Определение палитры','Сегментация','Объединение областей','Построение кривых','Готово'];
 self.onmessage=async ({data})=>{
  try{
+  if(data.operation==='exactOptimize'){const result=optimizeExactSvg(data.svg);if(result.svg!==data.svg)result.geometry=await auditNative(result.svg);self.postMessage({exactOptimize:result,requestId:data.requestId});return;}
   lastProgress=0;emitProgress(1,'Загрузка Rust WASM');
   runtime??=await (loading??=createTracer({onProgress:(progress,stage)=>emitProgress(Math.min(85,progress),stages[stage])}));
   if(data.operation==='regularize'){const result=await regularizeResult(runtime,data.svg,data.tolerance,data.straight,data.curved,data.protect);self.postMessage({regularize:result,requestId:data.requestId});return;}

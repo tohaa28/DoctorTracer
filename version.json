@@ -1,6 +1,6 @@
 {
-  "version": "0.21.5-wasm-preview",
-  "sourceCommit": "2a8236250c714996f4d3feef4164b29adc8ecd85",
+  "version": "0.21.6-wasm-preview",
+  "sourceCommit": "6885446147db5b617ffa5db23ef4ef361ab4a9be",
   "wasmSha256": "ad4a9153cc955b9c9a2ecd281e00febc400f1579073e6fd4e445ad02528b3a55",
   "auditWasmSha256": "d32f4695481bfdd175f64a83e92c354fa0984bd80401e229612c7eff17b5a079"
 }
