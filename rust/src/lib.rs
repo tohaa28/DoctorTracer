@@ -113,6 +113,14 @@ fn raster_pass(svg:String,a:&[u8],w:usize,h:usize)->String{
  }
 }
 
+#[no_mangle]pub unsafe extern "C" fn result_intermediate(p:*const u8,n:usize,strength:u32)->*const u8{
+ if p.is_null()||n>32_000_000{return std::ptr::null();}
+ let Ok(svg)=std::str::from_utf8(std::slice::from_raw_parts(p,n))else{return std::ptr::null();};
+ match post_clean::intermediate(svg,strength){
+  Ok((out,before,after,removed,protected))=>{STATS.with(|r|*r.borrow_mut()=format!("{{\"nodes_before\":{before},\"nodes_after\":{after},\"removed_elements\":{removed},\"protected_elements\":{protected}}}").into_bytes());store(out.into_bytes())},
+  Err(_)=>std::ptr::null()
+ }
+}
 thread_local!{static LOGO:RefCell<Option<logo::Plan>>=RefCell::new(None);}
 #[no_mangle]pub unsafe extern "C" fn logo_prepare(p:*const u8,w:usize,h:usize)->*const u8{
  LOGO.with(|r|*r.borrow_mut()=None);if p.is_null()||!valid(w,h){return std::ptr::null();}let source=std::slice::from_raw_parts(p,w*h*4);let palette=PALETTE.with(|r|r.borrow().clone());let Some(plan)=logo::prepare(source,w,h,&palette)else{return std::ptr::null();};let mask=plan.mask.clone();STATS.with(|r|*r.borrow_mut()=format!("{{\"ellipse_rings\":{},\"stars\":{},\"scale\":8}}",plan.rings.len(),plan.stars.len()).into_bytes());LOGO.with(|r|*r.borrow_mut()=Some(plan));store(mask)
