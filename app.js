@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import {icon} from './icons.js?v=0.21.8';
-import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs?v=0.21.8';
-import {zip} from './zip.mjs?v=0.21.8';
-import {opaqueCount,paletteKey,paintPalette,transparentSwatch,latestSelection} from './palette-ui.mjs?v=0.21.8';
-import {partitionPreview} from './preview.mjs?v=0.21.8';
-import {decodeImage,acceptedImages,isCrispRasterHandoff,drawInputRaster,nativeRasterSize,pngRasterDpi,decodedRasterDpi} from './input-image.mjs?v=0.21.8';
+import {icon} from './icons.js?v=0.21.9';
+import {pdfBytes,svgGroups,epsText,connectedPaths} from './exports.mjs?v=0.21.9';
+import {zip} from './zip.mjs?v=0.21.9';
+import {opaqueCount,paletteKey,paintPalette,transparentSwatch,latestSelection} from './palette-ui.mjs?v=0.21.9';
+import {partitionPreview} from './preview.mjs?v=0.21.9';
+import {decodeImage,acceptedImages,isCrispRasterHandoff,drawInputRaster,nativeRasterSize,pngRasterDpi,decodedRasterDpi} from './input-image.mjs?v=0.21.9';
 const $=id=>document.getElementById(id);
 const hasTransparentSlot=()=>sourceHasAlpha&&!config.flatten;
 // Only the same-origin Relief Forge frame (or explicit raster=crisp URL)
@@ -96,7 +96,7 @@ async function run(){
  if(!source||busy||!readConfig())return;busy=true;if(step!==5){pageHistory.push(step);step=5;}svg='';progress=0;stage='Подготовка изображения';$('outlines').checked=false;$('vector').disabled=true;show();
  if(config.colors>0&&!config.palette?.length&&hasTransparentSlot()){try{const generation=loadToken,palette=await requestPalette(config.colors);if(generation!==loadToken||!busy)return;config.palette=palette;config.palette_generated=true;}catch(error){busy=false;step=pageHistory.pop()??4;show();status(error.message);return;}}
  let pixels;try{const canvas=document.createElement('canvas');canvas.width=source.width;canvas.height=source.height;const context=canvas.getContext('2d',{willReadFrequently:true});if(!context)throw Error('Браузер не выделил память для исходного растра');drawInputRaster(context,source,canvas.width,canvas.height,{crisp:crispRaster,flatten:config.flatten});pixels=context.getImageData(0,0,canvas.width,canvas.height).data;}catch(error){busy=false;step=pageHistory.pop()??0;show();status('Не удалось обработать исходное разрешение: '+error.message);return;}
- worker??=new Worker(new URL('./worker.js?v=0.21.8',import.meta.url),{type:'module'});
+ worker??=new Worker(new URL('./worker.js?v=0.21.9',import.meta.url),{type:'module'});
  worker.onmessage=({data})=>{
   if(data.progress!==undefined){progress=data.progress;stage=data.stage;updateProgress();return;}
   busy=false;if(data.error){worker?.terminate();worker=null;status(data.error);step=pageHistory.pop()??0;show();return;}svg=data.svg;vectorUndo=[];vectorRedo=[];elapsed=data.seconds;backend=data.backend;panX=0;panY=0;if(data.segments)awaitSegments(data.segments);$('segments').hidden=!data.segments;
@@ -206,7 +206,7 @@ new ResizeObserver(()=>{if(source)refreshView();}).observe(viewport);
 
 let batchAbort=null;
 async function runBatch(files){
- if(!files.length||busy)return;const options=structuredClone(config),result=[];busy=true;step=5;progress=0;stage='Пакетная Обработка';show();const batchWorker=new Worker(new URL('./worker.js?v=0.21.8',import.meta.url),{type:'module'});let aborted=false,rejectJob;
+ if(!files.length||busy)return;const options=structuredClone(config),result=[];busy=true;step=5;progress=0;stage='Пакетная Обработка';show();const batchWorker=new Worker(new URL('./worker.js?v=0.21.9',import.meta.url),{type:'module'});let aborted=false,rejectJob;
  batchAbort=()=>{aborted=true;batchWorker.terminate();rejectJob?.(Error('Трассировка отменена'));};
  try{for(const [index,file] of files.entries()){if(aborted)break;const image=await decodeImage(file);const inputDpi=decodedRasterDpi(image)??await pngRasterDpi(file);if(aborted){image.close();break;}let dimensions;try{dimensions=nativeRasterSize(image);}catch(error){image.close();throw error;}const c=document.createElement('canvas');c.width=dimensions.width;c.height=dimensions.height;const ctx=c.getContext('2d');drawInputRaster(ctx,image,c.width,c.height,{crisp:crispRaster,flatten:options.flatten});image.close();const pixels=ctx.getImageData(0,0,c.width,c.height).data;
  const traced=await new Promise((resolve,reject)=>{rejectJob=reject;batchWorker.onerror=e=>reject(Error(e.message));batchWorker.onmessage=({data})=>{if(data.progress!==undefined){progress=Math.floor((index+data.progress/100)/files.length*100);stage=(index+1)+' / '+files.length+' · '+data.stage;updateProgress();}else if(data.error)reject(Error(data.error));else resolve(data.svg);};batchWorker.postMessage({pixels:pixels.buffer,width:c.width,height:c.height,...options,inputDpi},[pixels.buffer]);});
@@ -264,7 +264,7 @@ function buildVectorEditor(parent){
 }
 
 function paletteService(){
- if(!paletteWorker){paletteWorker=new Worker(new URL('./worker.js?v=0.21.8',import.meta.url),{type:'module'});paletteWorker.onmessage=({data})=>{if(data.requestId!==undefined&&(data.palette||data.analysis||data.error)){const resolve=pendingPalettes.get(data.requestId);pendingPalettes.delete(data.requestId);resolve?.(data.palette||data.analysis||null);}};}return paletteWorker;
+ if(!paletteWorker){paletteWorker=new Worker(new URL('./worker.js?v=0.21.9',import.meta.url),{type:'module'});paletteWorker.onmessage=({data})=>{if(data.requestId!==undefined&&(data.palette||data.analysis||data.error)){const resolve=pendingPalettes.get(data.requestId);pendingPalettes.delete(data.requestId);resolve?.(data.palette||data.analysis||null);}};}return paletteWorker;
 }
 async function analyzeSource(){
  const c=document.createElement('canvas');c.width=source.width;c.height=source.height;const ctx=c.getContext('2d');drawInputRaster(ctx,source,c.width,c.height,{crisp:crispRaster});const pixels=ctx.getImageData(0,0,c.width,c.height).data,id=++requestId,promise=new Promise(resolve=>pendingPalettes.set(id,resolve));paletteService().postMessage({operation:'analyze',requestId:id,pixels:pixels.buffer,width:c.width,height:c.height},[pixels.buffer]);return promise;
@@ -285,10 +285,10 @@ function openPostSmooth(cleanup=false,regularize=false,exact=false,extra=''){
  if(cleanup){dialog.querySelector('h3').textContent='Очистка и упрощение результата';dialog.querySelector('p').innerHTML='Удаление замкнутых мелких островков и отверстий. Детали на стыках цветов сохраняются.<br><label>Площадь до (пкс²): <input id="postArea" type="number" min="0" max="10000" step="0.25" value="4" style="width:90px"></label>';dialog.querySelector('#postStrength').value=25;dialog.querySelector('#postSharp').parentElement.lastChild.textContent=' Защищать углы и тонкие элементы';}
  if(regularize){dialog.querySelector('h3').textContent='Выравнивание контуров';dialog.querySelector('p').textContent='Подгонка длинных общих участков целиком. Более высокий допуск сильнее меняет форму.';dialog.querySelector('#postStrength').max=200;dialog.querySelector('#postStrength').value=15;const options=document.createElement('p');options.innerHTML='<label><input id="postStraight" type="checkbox" checked> Выпрямлять почти прямые участки</label><br><label><input id="postCurved" type="checkbox" checked> Выравнивать плавные кривые</label>';dialog.querySelector('#postSharp').closest('p').before(options);dialog.querySelector('#postSharp').parentElement.lastChild.textContent=' Сохранять углы и мелкие детали';}
  if(exact){dialog.querySelector('h3').textContent='Точная оптимизация узлов';dialog.querySelector('p').textContent='Удаление совпадающих и строго коллинеарных узлов, объединение точных половин Безье. Форма и цвета не меняются.';dialog.querySelector('#postStrength').parentElement.hidden=true;dialog.querySelector('#postSharp').closest('p').hidden=true;dialog.querySelector('#postReset').hidden=true;}
- if(extra){const color=extra==='intermediate';dialog.querySelector('h3').textContent=color?'Очистка промежуточных цветов':'Сокращение узлов кривых';dialog.querySelector('p').textContent=color?'Мелкие области цвета-смеси между двумя соседями разделяются общей границей. Сложные, криволинейные и неоднозначные области сохраняются.':'Аппроксимация общих кривых с защитой углов и отверстий. 100% = допуск до 2 пкс, а не удаление всех узлов.';dialog.querySelector('#postStrength').parentElement.firstChild.textContent='Интенсивность: ';dialog.querySelector('#postStrength').setAttribute('aria-label','Интенсивность');dialog.querySelector('#postSharp').closest('p').hidden=true;}
+ if(extra){const color=extra==='intermediate';dialog.querySelector('h3').textContent=color?'Очистка промежуточных цветов':'Сокращение узлов кривых';dialog.querySelector('p').textContent=color?'Убираются тонкие промежуточные прослойки между двумя цветами, включая замкнутые ореолы и кривые. 100% — до 3 пкс для криволинейных прослоек. Широкие и неоднозначные области сохраняются.':'Аппроксимация общих кривых с защитой углов и отверстий. 100% = допуск до 2 пкс, а не удаление всех узлов.';dialog.querySelector('#postStrength').parentElement.firstChild.textContent='Интенсивность: ';dialog.querySelector('#postStrength').setAttribute('aria-label','Интенсивность');dialog.querySelector('#postSharp').closest('p').hidden=true;}
  document.body.append(dialog);const range=dialog.querySelector('#postStrength'),sharp=dialog.querySelector('#postSharp'),preview=dialog.querySelector('#postPreview'),info=dialog.querySelector('#postInfo'),apply=dialog.querySelector('#postApply');
  const area=dialog.querySelector('#postArea');if(cleanup||regularize){range.parentElement.firstChild.textContent=regularize?'Допуск изменения формы: ':'Допуск упрощения: ';range.setAttribute('aria-label',regularize?'Допуск изменения формы':'Допуск упрощения');}
- const service=new Worker(new URL('./worker.js?v=0.21.8',import.meta.url),{type:'module'});
+ const service=new Worker(new URL('./worker.js?v=0.21.9',import.meta.url),{type:'module'});
  function paint(value){svg=value;if(vectorUrl)URL.revokeObjectURL(vectorUrl);if(outlineUrl)URL.revokeObjectURL(outlineUrl);outlineUrl='';vectorUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));display(true);}
  function draw(){paint(preview.checked?candidate:base);}
  function schedule(){token++;apply.disabled=true;dialog.querySelector('output').textContent=(cleanup||regularize)?(Number(range.value)/100).toFixed(2)+' пкс':range.value+'%';info.textContent='Расчёт предпросмотра…';clearTimeout(timer);timer=setTimeout(()=>service.postMessage({operation:extra||(exact?'exactOptimize':regularize?'regularize':cleanup?'postClean':'postSmooth'),svg:base,strength:Number(range.value),sharp:sharp.checked,minArea:area?Math.max(0,Math.min(10000,Number(area.value))):0,tolerance:Number(range.value)/100,protect:sharp.checked,straight:dialog.querySelector('#postStraight')?.checked,curved:dialog.querySelector('#postCurved')?.checked,requestId:token}),180);}

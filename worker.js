@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-import createTracer from './rust-tracer.mjs?v=0.21.8';
-import {nativeRasterSize} from './input-image.mjs?v=0.21.8';
-import {gpuPrepare,gpuAssign} from './gpu.js?v=0.21.8';
-import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs?v=0.21.8';
-import {auditNative} from './geometry.mjs?v=0.21.8';
-import {optimizeExactSvg} from './exact-optimizer.mjs?v=0.21.8';
-import {intermediateResult,reduceNodesResult} from './color-node-tools.mjs?v=0.21.8';
-import{regularizeResult}from'./regularize.mjs?v=0.21.8';
-import{cleanResult}from'./post-clean.mjs?v=0.21.8';
-import {smoothResult} from './post-smooth.mjs?v=0.21.8';
-import {traceFixed} from './desktop-curves.mjs?v=0.21.8';
+import createTracer from './rust-tracer.mjs?v=0.21.9';
+import {nativeRasterSize} from './input-image.mjs?v=0.21.9';
+import {gpuPrepare,gpuAssign} from './gpu.js?v=0.21.9';
+import {gpuContourCoordinates,preferGpuContours,contourGpuError} from './gpu-contours.mjs?v=0.21.9';
+import {auditNative} from './geometry.mjs?v=0.21.9';
+import {optimizeExactSvg} from './exact-optimizer.mjs?v=0.21.9';
+import {intermediateResult,reduceNodesResult} from './color-node-tools.mjs?v=0.21.9';
+import{regularizeResult}from'./regularize.mjs?v=0.21.9';
+import{cleanResult}from'./post-clean.mjs?v=0.21.9';
+import {smoothResult} from './post-smooth.mjs?v=0.21.9';
+import {traceFixed} from './desktop-curves.mjs?v=0.21.9';
 let runtime,loading,lastProgress=0;
 function emitProgress(progress,stage){lastProgress=Math.max(lastProgress,progress);self.postMessage({progress:lastProgress,stage});}
 const stages=['','Подготовка изображения','Определение палитры','Сегментация','Объединение областей','Построение кривых','Готово'];

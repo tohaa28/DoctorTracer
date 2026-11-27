@@ -1,6 +1,6 @@
 
-import {auditNative} from './geometry.mjs?v=0.21.8';
-import {regularizeResult} from './regularize.mjs?v=0.21.8';
+import {auditNative} from './geometry.mjs?v=0.21.9';
+import {regularizeResult} from './regularize.mjs?v=0.21.9';
 // Slider controls tolerance, not a promise to remove a percentage of nodes.
 export async function intermediateResult(runtime,svg,strength=35){
  const requested=Math.max(0,Math.min(100,Math.round(strength)));

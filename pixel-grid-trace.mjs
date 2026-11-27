@@ -3,7 +3,7 @@
 // A 1-pixel cell lattice conveys a +/-0.5-pixel crossing uncertainty.
 // Potrace fits global optimal polygons and subpixel cubic curves; two faces
 // reuse exactly reversed edges to prevent color gaps or overlaps.
-import {contours} from './paths.mjs?v=0.21.8';
+import {contours} from './paths.mjs?v=0.21.9';
 const p=a=>a.map(n=>Number(n.toFixed(2))).join(' ');
 const equal=(a,b)=>a[0]===b[0]&&a[1]===b[1];
 function parse(d){

@@ -1,5 +1,5 @@
 const PDF_ASSETS = new URL('./vendor/pdfjs/', import.meta.url);
-const TIFF_MODULE = new URL('./vendor/tiff.mjs?v=0.21.8', import.meta.url);
+const TIFF_MODULE = new URL('./vendor/tiff.mjs?v=0.21.9', import.meta.url);
 export const acceptedImages = 'image/png,image/jpeg,image/webp,image/bmp,image/tiff,.tif,.tiff,application/pdf,.pdf';
 
 function canvas(width, height) {
